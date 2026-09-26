@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/pages/chat_details/participant_list_item.dart';
@@ -328,6 +329,7 @@ class ChatDetailsView extends StatelessWidget {
                               '/rooms/${room.id}/details/permissions',
                             ),
                           ),
+                          GruppechatSettingsTiles(room: room),
                         ],
                         Divider(color: theme.dividerColor),
                         ListTile(

@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -64,7 +65,7 @@ class TypingIndicators extends StatelessWidget {
                         Avatar(
                           size: avatarSize,
                           mxContent: typingUsers.first.avatarUrl,
-                          name: typingUsers.first.calcDisplayname(),
+                          name: typingUsers.first.groupDisplayname(),
                         ),
                       if (typingUsers.length == 2)
                         Padding(
@@ -75,7 +76,7 @@ class TypingIndicators extends StatelessWidget {
                                 ? typingUsers.last.avatarUrl
                                 : null,
                             name: typingUsers.length == 2
-                                ? typingUsers.last.calcDisplayname()
+                                ? typingUsers.last.groupDisplayname()
                                 : '+${typingUsers.length - 1}',
                           ),
                         ),

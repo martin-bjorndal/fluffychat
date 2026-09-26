@@ -6,6 +6,7 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/markdown_context_builder.dart';
@@ -158,6 +159,7 @@ class InputBar extends StatelessWidget {
     final userMatch = RegExp(r'(?:\s|^)@([-\w]+)$').firstMatch(searchText);
     if (userMatch != null) {
       final userSearch = userMatch[1]!.toLowerCase();
+      ret.addAll(gruppechatRoleSuggestions(room, userSearch));
       for (final user in room.getParticipants()) {
         if ((user.displayName != null &&
                 (user.displayName!.toLowerCase().contains(userSearch) ||
@@ -301,6 +303,16 @@ class InputBar extends StatelessWidget {
         ),
       );
     }
+    if (suggestion['type'] == 'role') {
+      return ListTile(
+        onTap: () => onSelected(suggestion),
+        leading: const CircleAvatar(
+          radius: size / 2,
+          child: Icon(Icons.people_outlined, size: 18),
+        ),
+        title: Text(suggestion['displayname'] ?? suggestion['mention']!),
+      );
+    }
     if (suggestion['type'] == 'user' || suggestion['type'] == 'room') {
       final url = Uri.parse(suggestion['avatar_url'] ?? '');
       return ListTile(
@@ -372,6 +384,109 @@ class InputBar extends StatelessWidget {
       insertText = '${suggestion['mention']!} ';
       startText = replaceText.replaceAllMapped(
         RegExp(r'(\s|^)(@[-\w]+)$'),
+        (Match m) => '${m[1]}$insertText',
+      );
+    }
+    if (suggestion['type'] == 'role') {
+      insertText = '${suggestion['mention']!} ';
+      startText = replaceText.replaceAllMapped(
+        RegExp(r'(\s|^)(@[-\w]+)      startText = replaceText.replaceAllMapped(
+        RegExp(r'(\s|^)(#[-\w]+)$'),
+        (Match m) => '${m[1]}$insertText',
+      );
+    }
+
+    return startText + afterText;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Autocomplete<Map<String, String?>>(
+      key: Key('chat_input_field'),
+      focusNode: focusNode,
+      textEditingController: controller,
+      optionsBuilder: getSuggestions,
+      fieldViewBuilder: (context, controller, focusNode, _) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(AppSettings.fontSizeFactor.value),
+        ),
+        child: TextField(
+          controller: controller,
+          focusNode: focusNode,
+          readOnly: readOnly,
+          onEditingComplete: () {
+            // To not lose focus on iOS:
+            // https://github.com/krille-chan/fluffychat/issues/2784
+          },
+          contextMenuBuilder: (c, e) => MarkdownContextBuilder(
+            editableTextState: e,
+            controller: controller,
+          ),
+          contentInsertionConfiguration: ContentInsertionConfiguration(
+            onContentInserted: (KeyboardInsertedContent content) async {
+              final proceed = await showTrustUserInRoomDialog(context, room);
+              if (!proceed) return;
+              final data = content.data;
+              if (data == null) return;
+
+              final file = MatrixFile(
+                mimeType: content.mimeType,
+                bytes: data,
+                name: content.uri.split('/').last,
+              );
+              room.sendFileEvent(file, shrinkImageMaxDimension: 1600);
+            },
+          ),
+          minLines: minLines,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          autofocus: autofocus!,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
+          ],
+          onSubmitted: (text) {
+            // fix for library for now
+            // it sets the types for the callback incorrectly
+            onSubmitted!(text);
+          },
+          maxLength: AppSettings.textMessageMaxLength.value,
+          decoration: decoration,
+          onChanged: (text) {
+            // fix for the library for now
+            // it sets the types for the callback incorrectly
+            onChanged!(text);
+          },
+          textCapitalization: TextCapitalization.sentences,
+        ),
+      ),
+      optionsViewBuilder: (c, onSelected, s) {
+        final suggestions = s.toList();
+        return Material(
+          elevation: theme.appBarTheme.scrolledUnderElevation ?? 4,
+          shadowColor: theme.appBarTheme.shadowColor,
+          borderRadius: BorderRadius.circular(AppConfig.borderRadius),
+          clipBehavior: Clip.hardEdge,
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: suggestions.length,
+            itemBuilder: (context, i) => buildSuggestion(
+              c,
+              suggestions[i],
+              onSelected,
+              Matrix.of(context).client,
+            ),
+          ),
+        );
+      },
+      displayStringForOption: insertSuggestion,
+      optionsViewOpenDirection: OptionsViewOpenDirection.up,
+    );
+  }
+}
+),
         (Match m) => '${m[1]}$insertText',
       );
     }

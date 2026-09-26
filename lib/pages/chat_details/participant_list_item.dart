@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/member_actions_popup_menu_button.dart';
 import 'package:material_ui/material_ui.dart';
@@ -55,7 +56,7 @@ class ParticipantListItem extends StatelessWidget {
             ),
           Expanded(
             child: Text(
-              user.calcDisplayname(),
+              user.groupDisplayname(),
               overflow: TextOverflow.ellipsis,
             ),
           ),

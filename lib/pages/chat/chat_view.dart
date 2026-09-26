@@ -7,6 +7,8 @@ import 'dart:ui' as ui;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/pages/chat/chat_app_bar_list_tile.dart';
@@ -51,6 +53,9 @@ class ChatView extends StatelessWidget {
     final scrollUpBannerEventId = controller.scrollUpBannerEventId;
 
     final accountConfig = Matrix.of(context).client.applicationAccountConfig;
+    final groupBackground = controller.room.gruppechatBackground(
+      enabled: Matrix.of(context).client.showGroupBackgrounds,
+    );
 
     return PopScope(
       canPop:
@@ -345,7 +350,9 @@ class ChatView extends StatelessWidget {
                     top: false,
                     child: Stack(
                       children: <Widget>[
-                        if (accountConfig.wallpaperUrl != null)
+                        if (groupBackground != null)
+                          GroupBackgroundLayer(background: groupBackground)
+                        else if (accountConfig.wallpaperUrl != null)
                           Opacity(
                             opacity: accountConfig.wallpaperOpacity ?? 0.5,
                             child: ImageFiltered(

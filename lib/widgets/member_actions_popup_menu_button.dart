@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/permission_slider_dialog.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,6 +26,8 @@ Future<void> showMemberActionsPopupMenu({
   final theme = Theme.of(context);
   final displayname = user.calcDisplayname();
   final isMe = user.room.client.userID == user.id;
+  final group = GruppechatGroup.of(user.room);
+  final nicknameLocked = isMe && (group?.state.isNicknameLocked(user.id) ?? false);
 
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -63,6 +67,43 @@ Future<void> showMemberActionsPopupMenu({
           ],
         ),
       ),
+      if (group != null && (group.canSetNicknames || isMe))
+        PopupMenuItem(
+          value: _MemberActions.groupNickname,
+          child: const Row(
+            children: [
+              Icon(Icons.edit_outlined),
+              SizedBox(width: 18),
+              Text('Nickname in group'),
+            ],
+          ),
+        ),
+      if (group != null && isMe)
+        PopupMenuItem(
+          value: _MemberActions.groupNicknameLock,
+          child: Row(
+            children: [
+              const Icon(Icons.lock_outlined),
+              const SizedBox(width: 18),
+              Text(
+                nicknameLocked
+                    ? 'Let others rename me'
+                    : 'Stop others renaming me',
+              ),
+            ],
+          ),
+        ),
+      if (group != null && group.canManageRoles)
+        PopupMenuItem(
+          value: _MemberActions.groupRoles,
+          child: const Row(
+            children: [
+              Icon(Icons.people_outlined),
+              SizedBox(width: 18),
+              Text('Roles'),
+            ],
+          ),
+        ),
       if (onMention != null)
         PopupMenuItem(
           value: _MemberActions.mention,
@@ -218,6 +259,18 @@ Future<void> showMemberActionsPopupMenu({
   if (!context.mounted) return;
 
   switch (action) {
+    case _MemberActions.groupNickname:
+      if (group == null) return;
+      await showGroupNicknameDialog(context: context, group: group, user: user);
+      return;
+    case _MemberActions.groupNicknameLock:
+      if (group == null) return;
+      await toggleOwnNicknameLock(context: context, group: group);
+      return;
+    case _MemberActions.groupRoles:
+      if (group == null) return;
+      await showMemberRolesMenu(context: context, group: group, userId: user.id);
+      return;
     case _MemberActions.mention:
       onMention?.call();
       return;
@@ -374,4 +427,7 @@ enum _MemberActions {
   approve,
   unban,
   report,
+  groupNickname,
+  groupNicknameLock,
+  groupRoles,
 }

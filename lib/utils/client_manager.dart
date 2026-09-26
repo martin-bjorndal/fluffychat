@@ -6,6 +6,7 @@
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/custom_http_client.dart';
 import 'package:fluffychat/utils/custom_image_resizer.dart';
@@ -131,6 +132,8 @@ abstract class ClientManager {
         'im.ponies.room_emotes',
         // To display call state in chat list
         MatrixRtcCallMember.eventType,
+        // Gruppechat roles, nicknames and backgrounds live in the space room
+        ...GruppechatEventTypes.all,
       },
       customImageResizer: PlatformInfos.supportsCustomImageResizer
           ? customImageResizer

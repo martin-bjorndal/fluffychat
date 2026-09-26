@@ -11,6 +11,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/call_kit_params.dart';
 import 'package:fluffychat/utils/client_manager.dart';
@@ -176,7 +177,8 @@ Future<void> _tryPushHelper(
 
   Logs().v('Push helper got notification event of type ${event.type}.');
 
-  if (!client.pushruleEvaluator.match(event).notify) {
+  if (!client.pushruleEvaluator.match(event).notify &&
+      !event.mentionsOwnGroupRole) {
     Logs().i('Push helper: filtered by client-side push rules.');
     return;
   }
@@ -227,7 +229,7 @@ Future<void> _tryPushHelper(
 
   final id = '${client.clientName}_${notification.roomId}'.hashCode;
 
-  final senderName = event.senderFromMemoryOrFallback.calcDisplayname();
+  final senderName = event.senderFromMemoryOrFallback.groupDisplayname();
   // Show notification
 
   final newMessage = Message(
