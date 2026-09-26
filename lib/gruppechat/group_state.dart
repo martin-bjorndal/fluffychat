@@ -283,10 +283,8 @@ class GroupState {
           .toList()
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-  GroupRole? roleById(String id) => GroupRole.fromContent(
-    id,
-    _reader.content(GruppechatEventTypes.role, id),
-  );
+  GroupRole? roleById(String id) =>
+      GroupRole.fromContent(id, _reader.content(GruppechatEventTypes.role, id));
 
   /// The roles [userId] has, ignoring roles that were deleted.
   Set<String> roleIdsOf(String userId) {
@@ -327,8 +325,9 @@ class GroupState {
     );
   }
 
-  GroupBackground? get background =>
-      GroupBackground.fromContent(_reader.content(GruppechatEventTypes.background));
+  GroupBackground? get background => GroupBackground.fromContent(
+    _reader.content(GruppechatEventTypes.background),
+  );
 }
 
 RegExp _mentionPattern(String token) => RegExp(

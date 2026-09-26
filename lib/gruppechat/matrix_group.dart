@@ -104,13 +104,12 @@ class GruppechatGroup {
 
   /// Stops (or allows) other people from renaming the current user. The
   /// state key is the user's own ID, so only they can change it.
-  Future<void> setOwnNicknameLocked(bool locked) =>
-      _client.setRoomStateWithKey(
-        space.id,
-        GruppechatEventTypes.nicknameLock,
-        _client.userID!,
-        {'locked': locked},
-      );
+  Future<void> setOwnNicknameLocked(bool locked) => _client.setRoomStateWithKey(
+    space.id,
+    GruppechatEventTypes.nicknameLock,
+    _client.userID!,
+    {'locked': locked},
+  );
 
   Future<String> createRole(String name) async {
     final id = roleIdFromName(
@@ -208,8 +207,7 @@ extension GruppechatClientExtension on Client {
 
   /// Whether group backgrounds are shown on this account's devices.
   bool get showGroupBackgrounds =>
-      accountData[_preferencesType]?.content['show_group_backgrounds'] !=
-      false;
+      accountData[_preferencesType]?.content['show_group_backgrounds'] != false;
 
   Future<void> setShowGroupBackgrounds(bool show) => setAccountData(
     userID!,
@@ -219,10 +217,7 @@ extension GruppechatClientExtension on Client {
 }
 
 /// Input bar suggestions for `@role` mentions matching [search].
-List<Map<String, String?>> gruppechatRoleSuggestions(
-  Room room,
-  String search,
-) {
+List<Map<String, String?>> gruppechatRoleSuggestions(Room room, String search) {
   final state = GruppechatGroup.of(room)?.state;
   if (state == null) return [];
   return [

@@ -30,7 +30,7 @@ class GroupBackgroundLayer extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
     final colors = background.colors.map(Color.new).toList();
     final url = background.url;
-    final Widget layer = switch (background.kind) {
+    final layer = switch (background.kind) {
       GroupBackgroundKind.solid => ColoredBox(
         color: colors.first,
         child: SizedBox(width: size.width, height: size.height),
@@ -113,9 +113,7 @@ class GruppechatSettingsTiles extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.brush_outlined),
           title: const Text('Group background'),
-          subtitle: Text(
-            background == null ? 'None' : background.kind.name,
-          ),
+          subtitle: Text(background == null ? 'None' : background.kind.name),
           trailing: const Icon(Icons.chevron_right_outlined),
           onTap: () => showGroupBackgroundMenu(context: context, group: group),
         ),
@@ -331,7 +329,8 @@ Future<void> showGroupNicknameDialog({
     await showOkCancelAlertDialog(
       context: context,
       title: 'Nickname locked',
-      message: '${user.calcDisplayname()} has chosen to set their own nickname.',
+      message:
+          '${user.calcDisplayname()} has chosen to set their own nickname.',
     );
     return;
   }

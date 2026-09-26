@@ -27,7 +27,8 @@ Future<void> showMemberActionsPopupMenu({
   final displayname = user.calcDisplayname();
   final isMe = user.room.client.userID == user.id;
   final group = GruppechatGroup.of(user.room);
-  final nicknameLocked = isMe && (group?.state.isNicknameLocked(user.id) ?? false);
+  final nicknameLocked =
+      isMe && (group?.state.isNicknameLocked(user.id) ?? false);
 
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -269,7 +270,11 @@ Future<void> showMemberActionsPopupMenu({
       return;
     case _MemberActions.groupRoles:
       if (group == null) return;
-      await showMemberRolesMenu(context: context, group: group, userId: user.id);
+      await showMemberRolesMenu(
+        context: context,
+        group: group,
+        userId: user.id,
+      );
       return;
     case _MemberActions.mention:
       onMention?.call();

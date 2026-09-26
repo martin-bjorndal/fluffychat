@@ -83,9 +83,7 @@ void main() {
       'kind': 'solid',
       'colors': ['#1B1F3B'],
     });
-    expect(channel.gruppechatBackground(enabled: true)?.colors, [
-      0xFF1B1F3B,
-    ]);
+    expect(channel.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
     expect(channel.gruppechatBackground(enabled: false), isNull);
 
     setState(channel, GruppechatEventTypes.background, '', {'kind': 'none'});
