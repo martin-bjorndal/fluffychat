@@ -138,7 +138,11 @@ class GroupBackground {
 
   /// Gradient rotation in degrees.
   final double rotation;
+
+  /// From 0 to 1.
   final double opacity;
+
+  /// Blur radius, from 0 to 50.
   final double blur;
 
   /// `mxc://` URI of an image background.
@@ -154,6 +158,9 @@ class GroupBackground {
   });
 
   /// Returns null for missing, cleared (`{}`) or invalid content.
+  ///
+  /// Matrix event content can't contain floats, so opacity is stored as a
+  /// percentage and rotation and blur as whole numbers.
   static GroupBackground? fromContent(Map<String, Object?>? content) {
     if (content == null) return null;
     final kind = GroupBackgroundKind.values.asNameMap()[content['kind']];
@@ -166,7 +173,7 @@ class GroupBackground {
           ? rawColors.map(parseHexColor).whereType<int>().toList()
           : const [],
       rotation: _toDouble(content['rotation']) ?? 0,
-      opacity: (_toDouble(content['opacity']) ?? 1).clamp(0, 1).toDouble(),
+      opacity: (_toDouble(content['opacity']) ?? 100).clamp(0, 100) / 100,
       blur: (_toDouble(content['blur']) ?? 0).clamp(0, 50).toDouble(),
       url: url is String ? Uri.tryParse(url) : null,
     );
@@ -185,9 +192,9 @@ class GroupBackground {
     return {
       'kind': kind.name,
       if (colors.isNotEmpty) 'colors': colors.map(formatHexColor).toList(),
-      if (kind == GroupBackgroundKind.gradient) 'rotation': rotation,
-      'opacity': opacity,
-      if (blur > 0) 'blur': blur,
+      if (kind == GroupBackgroundKind.gradient) 'rotation': rotation.round(),
+      'opacity': (opacity * 100).round(),
+      if (blur > 0) 'blur': blur.round(),
       if (url != null) 'url': url.toString(),
     };
   }

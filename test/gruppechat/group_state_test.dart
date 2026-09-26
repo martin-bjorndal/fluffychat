@@ -232,7 +232,7 @@ void main() {
         'kind': 'gradient',
         'colors': ['#FF6B6B', '#556270'],
         'rotation': 135,
-        'opacity': 0.6,
+        'opacity': 60,
       })!;
       expect(background.kind, GroupBackgroundKind.gradient);
       expect(background.colors, [0xFFFF6B6B, 0xFF556270]);
@@ -244,7 +244,7 @@ void main() {
       final background = GroupBackground.fromContent({
         'kind': 'solid',
         'colors': ['#000000'],
-        'opacity': 3,
+        'opacity': 300,
         'blur': 500,
       })!;
       expect(background.opacity, 1);
@@ -278,6 +278,23 @@ void main() {
       expect(parsed.url.toString(), 'mxc://example.org/abc');
       expect(parsed.opacity, 0.5);
       expect(parsed.blur, 4);
+    });
+
+    test('content never contains floats, which Matrix rejects', () {
+      final contents = [
+        for (final (_, preset) in groupBackgroundPresets) preset.toContent(),
+        const GroupBackground(
+          kind: GroupBackgroundKind.solid,
+          colors: [0xFF000000],
+          opacity: 0.33,
+          blur: 2.5,
+        ).toContent(),
+      ];
+      for (final content in contents) {
+        expect(content.values.whereType<double>(), isEmpty, reason: '$content');
+      }
+      expect(contents.last['opacity'], 33);
+      expect(contents.last['blur'], 3);
     });
 
     test('every preset is valid and survives a round trip', () {
