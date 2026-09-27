@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/sign_up_page.dart';
 import 'package:fluffychat/pages/archive/archive.dart';
 import 'package:fluffychat/pages/bootstrap/bootstrap_page.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -92,6 +93,15 @@ abstract class AppRoutes {
             context,
             state,
             Login(client: state.extra as Client),
+          ),
+          redirect: loggedInRedirect,
+        ),
+        GoRoute(
+          path: 'create_account',
+          pageBuilder: (context, state) => defaultPageBuilder(
+            context,
+            state,
+            GruppechatSignUpPage(client: state.extra as Client),
           ),
           redirect: loggedInRedirect,
         ),
@@ -311,6 +321,15 @@ abstract class AppRoutes {
                             context,
                             state,
                             Login(client: state.extra as Client),
+                          ),
+                          redirect: loggedOutRedirect,
+                        ),
+                        GoRoute(
+                          path: 'create_account',
+                          pageBuilder: (context, state) => defaultPageBuilder(
+                            context,
+                            state,
+                            GruppechatSignUpPage(client: state.extra as Client),
                           ),
                           redirect: loggedOutRedirect,
                         ),

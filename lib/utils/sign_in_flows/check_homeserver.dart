@@ -68,7 +68,8 @@ Future<void> connectToHomeserverFlow(
         GoRouter.of(context).routeInformationProvider.value.uri.pathSegments,
       );
       if (pathSegments.last != 'home') pathSegments.removeLast();
-      pathSegments.add('login');
+      // Gruppechat: servers without a sign-up website get our invite-code form
+      pathSegments.add(signUp && regLink == null ? 'create_account' : 'login');
       context.push('/${pathSegments.join('/')}', extra: client);
       setState(AsyncSnapshot.withData(ConnectionState.done, true));
       return;
