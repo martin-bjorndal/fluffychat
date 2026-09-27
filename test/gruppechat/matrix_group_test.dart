@@ -44,6 +44,17 @@ void main() {
     client.rooms.add(space);
   });
 
+  test('power levels stay loaded for unopened space rooms', () {
+    expect(
+      gruppechatImportantStateEvents.containsAll(GruppechatEventTypes.all),
+      isTrue,
+    );
+    expect(
+      gruppechatImportantStateEvents.contains(EventTypes.RoomPowerLevels),
+      isTrue,
+    );
+  });
+
   test('a space is its own group', () {
     expect(GruppechatGroup.of(space)?.space.id, space.id);
   });

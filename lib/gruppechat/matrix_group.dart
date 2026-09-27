@@ -6,6 +6,15 @@ import 'package:matrix/matrix.dart';
 
 import 'group_state.dart';
 
+/// State the app keeps in memory even for rooms that were never opened: our
+/// event types, plus the power levels every permission check depends on. The
+/// SDK doesn't keep power levels loaded by default, so without this a group
+/// whose space room was never opened can't even be set up.
+const Set<String> gruppechatImportantStateEvents = {
+  ...GruppechatEventTypes.all,
+  EventTypes.RoomPowerLevels,
+};
+
 /// Reads group state straight from a room's state events.
 class RoomStateReader implements GroupStateReader {
   final Room room;
