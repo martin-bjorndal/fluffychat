@@ -9,7 +9,6 @@ import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/adaptive_dialog_action.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 abstract class UpdateNotifier {
   static const String versionStoreKey = 'last_known_version';
@@ -36,50 +35,12 @@ abstract class UpdateNotifier {
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 256),
-              child: Column(
-                mainAxisSize: .min,
-                spacing: 16,
-                children: [
-                  Text(
-                    l10n.updateInstalled(currentVersion),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Text(
-                    l10n.possibleByYou,
-                    textAlign: .center,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ],
+              child: Text(
+                l10n.updateInstalled(currentVersion),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             actions: [
-              AdaptiveDialogAction(
-                bigButtons: true,
-                targetPlatform: TargetPlatform.android,
-                onPressed: () => launchUrlString(AppConfig.helpUrl),
-                child: Row(
-                  mainAxisSize: .min,
-                  spacing: 4,
-                  children: [
-                    Icon(
-                      Icons.favorite,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    Text(
-                      l10n.support,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AdaptiveDialogAction(
-                bigButtons: true,
-                targetPlatform: TargetPlatform.android,
-                onPressed: () => launchUrlString(AppConfig.changelogUrl),
-                child: Text(l10n.changelog),
-              ),
               AdaptiveDialogAction(
                 bigButtons: true,
                 targetPlatform: TargetPlatform.android,

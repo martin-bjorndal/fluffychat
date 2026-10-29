@@ -29,6 +29,7 @@ Future<void> oidcLoginFlow(
       kIsWeb &&
       kReleaseMode &&
       redirectUrl.scheme == 'https' &&
+      clientUri.host.isNotEmpty &&
       redirectUrl.host.contains(clientUri.host);
   if (kIsWeb && !supportWebPlatform) {
     Logs().w(

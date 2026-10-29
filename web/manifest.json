@@ -1,11 +1,11 @@
 {
-    "name": "FluffyChat",
-    "short_name": "FluffyChat",
+    "name": "Hanne Chat",
+    "short_name": "Hanne Chat",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#41a2bc",
-    "description": "The cutest messenger in the Matrix network",
+    "theme_color": "#5625BA",
+    "description": "Chat with your friends.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

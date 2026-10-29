@@ -29,17 +29,12 @@ abstract class AppConfig {
       'https://ko-fi.com/post/How-to-use-end-to-end-encryption-in-FluffyChat-A5O725WDR5';
   static const String howDoIGetStickersTutorial =
       'https://ko-fi.com/post/How-to-add-a-sticker-pack-to-FluffyChat-N4N01OXATI';
-  static const String appId = 'im.fluffychat.FluffyChat';
+  static const String appId = 'chatapp.marbjo.no';
   static const String appOpenUrlScheme = 'im.fluffychat';
   static const String appSsoUrlScheme = 'im.fluffychat.auth';
 
   static const String sourceCodeUrl =
       'https://github.com/krille-chan/fluffychat';
-  static const String supportUrl =
-      'https://github.com/krille-chan/fluffychat/issues';
-  static const String changelogUrl = 'https://fluffychat.im/changelog/';
-  static const String helpUrl =
-      'https://ko-fi.com/post/How-can-I-support-FluffyChat-J2G325WE6I';
 
   static const Set<String> defaultReactions = {'👍', '❤️', '😂', '😮', '😢'};
 

@@ -5,6 +5,14 @@ SPDX-FileCopyrightText: 2019-Present Contributors to FluffyChat
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
+# Hanne Chat
+
+Hanne Chat is a private chat app built on [FluffyChat](https://github.com/krille-chan/fluffychat), an open source Matrix client. Like FluffyChat, it is licensed under AGPL-3.0-or-later.
+
+Everything below this line is FluffyChat's original README.
+
+---
+
 [FluffyChat](https://fluffy.chat) is an open source, nonprofit and cute [[matrix](https://matrix.org)] client written in [Flutter](https://flutter.dev). The goal of the app is to create an easy to use instant messenger which is open source and accessible for everyone.
 
 ### Links:

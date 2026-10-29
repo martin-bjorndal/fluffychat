@@ -1,9 +1,9 @@
 {
-  "applicationName": "FluffyChat",
+  "applicationName": "Hanne Chat",
   "defaultHomeserver": "matrix.org",
   "presetHomeserver": "",
   "welcomeText": "",
-  "privacyUrl": "https://github.com/krille-chan/fluffychat/blob/main/PRIVACY.md",
+  "privacyUrl": "",
   "audioRecordingNumChannels": 1,
   "audioRecordingAutoGain": true,
   "audioRecordingEchoCancel": false,

@@ -29,7 +29,7 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Share your location with your contacts in FluffyChat.</string>
+	<string>Share your location with your contacts in Hanne Chat.</string>
 </dict>
 </plist>
  

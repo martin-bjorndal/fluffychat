@@ -66,7 +66,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "chat.fluffy.fluffychat"
+        applicationId = "chatapp.marbjo.no"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

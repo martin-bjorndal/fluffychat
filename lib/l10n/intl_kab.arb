@@ -753,7 +753,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "newMessageInFluffyChat": "💬 Izen amaynut deg FluffyChat",
+    "newMessageInFluffyChat": "💬 Izen amaynut deg Hanne Chat",
     "@newMessageInFluffyChat": {
         "type": "String",
         "placeholders": {}
@@ -1139,18 +1139,6 @@
         }
     },
     "noChatDescriptionYet": "Ulac aglam n udiwenni i d-yenulfan yakan.",
-    "inviteText": "{username} yeɛreḍ-ik·m ɣer FluffyChat.\n1. Rzu ɣer fluffychat.im syin sbedd asnas \n2. Jerred neɣ kcem \n3. Ldi aseɣwen n tinubga: \n {link}",
-    "@inviteText": {
-        "type": "String",
-        "placeholders": {
-            "username": {
-                "type": "String"
-            },
-            "link": {
-                "type": "String"
-            }
-        }
-    },
     "configureChat": "Swel adiwenni",
     "@configureChat": {
         "type": "String",
@@ -1697,7 +1685,7 @@
     "clientWellKnownInformation": "Talɣut yettwasnen ɣef umsaɣ:",
     "advancedConfigs": "Tawila leqqayen",
     "advancedConfigurations": "Tawila tinaẓiyin",
-    "signUpGreeting": "FluffyChat d araslemmes! Fren aqeddac anda tebɣiḍ ad ternuḍ amiḍan-ik·im, u yyaw ad neddu!",
+    "signUpGreeting": "Hanne Chat d araslemmes! Fren aqeddac anda tebɣiḍ ad ternuḍ amiḍan-ik·im, u yyaw ad neddu!",
     "signInGreeting": "Tesɛiḍ yakan amiḍan deg Matriks? Anṣuf yes-k·m tikkelt niḍen! Fren aqeddac-ik·im, u tkecmeḍ.",
     "theProcessWasCanceled": "Tettwasefsex ukala-nni.",
     "searchOrEnterHomeserverAddress": "Nadi neɣ sekcem tansa n uqeddac agejdan",

@@ -52,7 +52,7 @@ enum AppSettings<T> {
   ),
   displayChatDetailsColumn('chat.fluffy.display_chat_details_column', false),
   // AppConfig-mirrored settings
-  applicationName<String>('chat.fluffy.application_name', 'FluffyChat'),
+  applicationName<String>('chat.fluffy.application_name', 'Hanne Chat'),
   // Gruppechat: our homeserver, chat.cø.no, in the ASCII (punycode) form that
   // Matrix server names and Dart's Uri require.
   defaultHomeserver<String>(
@@ -69,16 +69,12 @@ enum AppSettings<T> {
     'chat.xn--c-5ga.no',
   ),
   welcomeText<String>('chat.fluffy.welcome_text', ''),
-  website<String>('chat.fluffy.website_url', 'https://fluffychat.im'),
-  logoUrl<String>(
-    'chat.fluffy.logo_url',
-    'https://fluffychat.im/assets/favicon.png',
-  ),
-  privacyPolicy<String>(
-    'chat.fluffy.privacy_policy_url',
-    'https://fluffychat.im/privacy',
-  ),
-  tos<String>('chat.fluffy.tos_url', 'https://fluffychat.im/tos'),
+  // Hanne Chat: put your own URLs here. While a value is empty, the app hides
+  // the link that would open it.
+  website<String>('chat.fluffy.website_url', ''),
+  logoUrl<String>('chat.fluffy.logo_url', ''),
+  privacyPolicy<String>('chat.fluffy.privacy_policy_url', ''),
+  tos<String>('chat.fluffy.tos_url', ''),
   sendTimelineEventTimeout<int>('chat.fluffy.send_timeline_event_timeout', 15),
   webNotificationSound<bool>('chat.fluffy.web_notification_sound', true),
   chatFilter<String>('chat.fluffy.chat_filter', 'allChats'),
