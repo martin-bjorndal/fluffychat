@@ -34,19 +34,25 @@ class RoomStateReader implements GroupStateReader {
       room.states[type]?.keys ?? const <String>[];
 }
 
-/// A group chat: a Matrix space whose rooms are its channels. All shared
-/// data (roles, nicknames, background) lives in the space room's state.
+/// A group chat: a Matrix space whose rooms are its channels, or a single
+/// group chat that isn't in a space. All shared data (roles, nicknames,
+/// background) lives in the state of [space].
 class GruppechatGroup {
+  /// The room holding the group's shared state: the space, or the chat
+  /// itself when it isn't in a space.
   final Room space;
 
   const GruppechatGroup(this.space);
 
   /// The group [room] belongs to: the room itself if it is a space,
-  /// otherwise the first joined space that lists it as a child.
+  /// otherwise the first joined space that lists it as a child. A group chat
+  /// outside any space is its own group. Direct chats, and channels of a
+  /// space the user hasn't joined, have no group.
   static GruppechatGroup? of(Room room) {
     if (room.isSpace) return GruppechatGroup(room);
     final client = room.client;
-    for (final parent in room.spaceParents) {
+    final parents = room.spaceParents;
+    for (final parent in parents) {
       final parentId = parent.roomId;
       if (parentId == null) continue;
       final space = client.getRoomById(parentId);
@@ -58,7 +64,8 @@ class GruppechatGroup {
         return GruppechatGroup(candidate);
       }
     }
-    return null;
+    if (parents.isNotEmpty || room.isDirectChat) return null;
+    return GruppechatGroup(room);
   }
 
   static bool _isJoinedSpace(Room room) =>

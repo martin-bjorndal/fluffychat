@@ -7,7 +7,8 @@
 // state event content, so it can be unit tested without a Matrix client.
 // `matrix_group.dart` connects it to real rooms.
 
-/// Custom state event types, all stored in the group's space room.
+/// Custom state event types, all stored in the group's space room, or in the
+/// chat itself for a group chat that isn't in a space.
 abstract final class GruppechatEventTypes {
   static const String role = 'im.gruppechat.role';
   static const String memberRoles = 'im.gruppechat.member_roles';

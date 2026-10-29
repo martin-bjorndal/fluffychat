@@ -9,6 +9,8 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
+import 'package:fluffychat/gruppechat/thread_list.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/pages/chat/chat_app_bar_list_tile.dart';
@@ -265,6 +267,16 @@ class ChatView extends StatelessWidget {
                         icon: Icon(Icons.call_outlined),
                         onPressed: controller.startOrJoinVideoCall,
                       ),
+                    // Gruppechat: list of all threads in the chat
+                    if (activeThreadId == null)
+                      IconButton(
+                        icon: const Icon(Icons.forum_outlined),
+                        tooltip: 'Threads',
+                        onPressed: () => showGruppechatThreadList(
+                          context: context,
+                          controller: controller,
+                        ),
+                      ),
                     ChatSettingsPopupMenu(controller.room, true),
                   ],
                 ],
@@ -373,7 +385,11 @@ class ChatView extends StatelessWidget {
                           ),
                         GestureDetector(
                           onTap: controller.clearSingleSelectedEvent,
-                          child: ChatEventList(controller: controller),
+                          // Gruppechat: how far down everyone has read
+                          child: GruppechatReadPositions(
+                            controller: controller,
+                            child: ChatEventList(controller: controller),
+                          ),
                         ),
                         Positioned(
                           bottom: 0,

@@ -63,9 +63,40 @@ void main() {
     expect(GruppechatGroup.of(channel)?.space.id, space.id);
   });
 
-  test('rooms outside any space have no group', () {
+  test('a group chat outside any space is its own group', () {
     final loose = Room(id: '!loose:example.invalid', client: client);
-    expect(GruppechatGroup.of(loose), isNull);
+    expect(GruppechatGroup.of(loose)?.space.id, loose.id);
+  });
+
+  test('direct chats have no group', () {
+    final dm = Room(id: '!dm:example.invalid', client: client);
+    client.accountData['m.direct'] = BasicEvent(
+      type: 'm.direct',
+      content: {bob: [dm.id]},
+    );
+    expect(GruppechatGroup.of(dm), isNull);
+  });
+
+  test('channels of a space you have not joined have no group', () {
+    final other = Room(id: '!other:example.invalid', client: client);
+    setState(other, EventTypes.SpaceParent, '!space2:example.invalid', {
+      'via': ['example.invalid'],
+    });
+    expect(GruppechatGroup.of(other), isNull);
+  });
+
+  test('a group chat outside a space keeps its own state', () {
+    final loose = Room(id: '!loose:example.invalid', client: client);
+    setState(loose, GruppechatEventTypes.nickname, userStateKey(bob), {
+      'name': 'Pingu',
+    });
+    setState(loose, GruppechatEventTypes.background, '', {
+      'kind': 'solid',
+      'colors': ['#1B1F3B'],
+    });
+    expect(User(bob, room: loose).groupDisplayname(), 'Pingu');
+    expect(loose.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
+    expect(User(bob, room: channel).groupDisplayname(), isNot('Pingu'));
   });
 
   test('reads state keys and senders from the room', () {

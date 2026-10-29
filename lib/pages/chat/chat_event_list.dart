@@ -7,11 +7,11 @@ import 'package:collection/collection.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/pages/chat/encryption_info.dart';
 import 'package:fluffychat/pages/chat/events/message.dart';
-import 'package:fluffychat/pages/chat/seen_by_row.dart';
 import 'package:fluffychat/pages/chat/typing_indicators.dart';
 import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
@@ -95,7 +95,8 @@ class ChatEventList extends StatelessWidget {
                 return Column(
                   mainAxisSize: .min,
                   children: [
-                    if (events.isNotEmpty) SeenByRow(event: events.first),
+                    // Gruppechat: read receipts are shown under every
+                    // message by GruppechatReadByRow instead of SeenByRow.
                     TypingIndicators(controller),
                     EncryptionInfo(room: controller.room),
                   ],
@@ -238,6 +239,7 @@ class ChatEventList extends StatelessWidget {
                             )
                           : null,
                     ),
+                    GruppechatReadByRow(event: event),
                   ],
                 ),
               );
