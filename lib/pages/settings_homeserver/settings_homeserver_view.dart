@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
@@ -36,7 +37,7 @@ class SettingsHomeserverView extends StatelessWidget {
         title: Text(
           L10n.of(
             context,
-          ).aboutHomeserver(client.userID?.domain ?? 'Homeserver'),
+          ).aboutHomeserver(displayHost(client.userID?.domain ?? 'Homeserver')),
         ),
       ),
       body: MaxWidthBody(
@@ -122,64 +123,9 @@ class SettingsHomeserverView extends StatelessWidget {
                   );
                 },
               ),
-              FutureBuilder(
-                future: controller.fetchServerInfo(),
-                builder: (context, snapshot) {
-                  final error = snapshot.error;
-                  if (error != null) {
-                    return Column(
-                      mainAxisAlignment: .center,
-                      children: [
-                        Icon(
-                          Icons.error_outlined,
-                          color: theme.colorScheme.error,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          error.toLocalizedString(context),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: theme.colorScheme.error),
-                        ),
-                      ],
-                    );
-                  }
-                  final data = snapshot.data;
-                  if (data == null) {
-                    return const Center(
-                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-                    );
-                  }
-                  return Column(
-                    mainAxisSize: .min,
-                    children: [
-                      ListTile(
-                        title: Text(L10n.of(context).name),
-                        subtitle: Text(data.name),
-                      ),
-                      ListTile(
-                        title: Text(L10n.of(context).version),
-                        subtitle: Text(data.version),
-                      ),
-                      ListTile(
-                        title: Text(L10n.of(context).federationBaseUrl),
-                        subtitle: Linkify(
-                          text: data.federationBaseUrl.toString(),
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          textScaleFactor: MediaQuery.textScalerOf(
-                            context,
-                          ).scale(1),
-                          options: const LinkifyOptions(humanize: false),
-                          linkStyle: TextStyle(
-                            color: theme.colorScheme.primary,
-                            decorationColor: theme.colorScheme.primary,
-                          ),
-                          onOpen: (link) => launchUrlString(link.url),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+              // Gruppechat: no server name and version here. FluffyChat reads
+              // them from the federation API, which is off on our server, so
+              // this only ever showed an error.
               Divider(color: theme.dividerColor),
               FutureBuilder(
                 future: client.getWellknown(),
