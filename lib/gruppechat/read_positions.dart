@@ -13,6 +13,11 @@ import 'package:matrix/matrix.dart';
 /// receipts as (user ID, event ID) pairs; when a user has several, the one
 /// furthest down the chat counts.
 ///
+/// [senders] maps loaded events to who sent them. Sending something counts
+/// as having read up to it, since apps don't send a receipt for their own
+/// messages; otherwise someone who just wrote would stay above their own
+/// message.
+///
 /// A receipt can point at something the list doesn't show, such as a
 /// reaction or a thread reply, so the reader moves up to the closest shown
 /// message above it. Readers aren't shown under their own messages, the same
@@ -22,6 +27,7 @@ Map<String, List<String>> readPositions({
   required List<String> timeline,
   required Map<String, String> shown,
   required Iterable<(String, String)> receipts,
+  Map<String, String> senders = const {},
   String? ownUserId,
 }) {
   final indexOf = <String, int>{};
@@ -36,6 +42,12 @@ Map<String, List<String>> readPositions({
     if (index == null) continue;
     final known = readUpTo[userId];
     if (known == null || index < known) readUpTo[userId] = index;
+  }
+  for (var i = 0; i < timeline.length; i++) {
+    final sender = senders[timeline[i]];
+    if (sender == null || sender == ownUserId) continue;
+    final known = readUpTo[sender];
+    if (known == null || i < known) readUpTo[sender] = i;
   }
 
   final positions = <String, List<String>>{};
@@ -85,6 +97,10 @@ Map<String, List<String>> gruppechatReadPositions({
       ? [receiptState.global, ?mainThread]
       : [?thread];
 
+  final hasLeft = <String, bool>{};
+  bool present(String userId) =>
+      !hasLeft.putIfAbsent(userId, () => _hasLeft(room, userId));
+
   return readPositions(
     timeline: [for (final event in events) event.eventId],
     shown: shown,
@@ -92,8 +108,12 @@ Map<String, List<String>> gruppechatReadPositions({
       for (final source in sources)
         for (final MapEntry(key: userId, value: receipt)
             in source.otherUsers.entries)
-          if (!_hasLeft(room, userId)) (userId, receipt.eventId),
+          if (present(userId)) (userId, receipt.eventId),
     ],
+    senders: {
+      for (final event in events)
+        if (present(event.senderId)) event.eventId: event.senderId,
+    },
     ownUserId: room.client.userID,
   );
 }
