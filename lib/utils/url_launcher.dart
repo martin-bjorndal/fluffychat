@@ -66,8 +66,9 @@ class UrlLauncher {
       // just launch non-https / non-http uris directly
 
       // we need to transmute geo URIs on desktop and on iOS
-      if ((!PlatformInfos.isMobile || PlatformInfos.isIOS) &&
-          uri.scheme == 'geo') {
+      // Hanne Chat: and on Android, where Google Maps ignores a geo URI with
+      // an accuracy (;u=…) and only drops a pin for ?q=
+      if (uri.scheme == 'geo') {
         final latlong = uri.path
             .split(';')
             .first
@@ -77,7 +78,10 @@ class UrlLauncher {
         if (latlong.length == 2 &&
             latlong.first != null &&
             latlong.last != null) {
-          if (PlatformInfos.isIOS) {
+          if (PlatformInfos.isAndroid) {
+            final ll = '${latlong.first},${latlong.last}';
+            launchUrlString('geo:$ll?q=$ll');
+          } else if (PlatformInfos.isIOS) {
             // iOS is great at not following standards, so we need to transmute the geo URI
             // to an apple maps thingy
             // https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
