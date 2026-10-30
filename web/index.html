@@ -50,8 +50,20 @@
         serviceWorker: {
           serviceWorkerVersion: {{flutter_service_worker_version}},
         },
+        // Hanne Chat: Flutter's renderer from our own server, and fallback
+        // fonts (such as emoji) through it, so browsers don't contact Google
+        // (the server's Caddyfile proxies /fonts/gstatic/)
+        config: {
+          canvasKitBaseUrl: "canvaskit/",
+          fontFallbackBaseUrl: "fonts/gstatic/s/",
+        },
       onEntrypointLoaded: function (engineInitializer) {
-        engineInitializer.initializeEngine({ useColorEmoji: true }).then(function (appRunner) {
+        // Hanne Chat: the engine reads the font URL from here, not from the
+        // loader config above
+        engineInitializer.initializeEngine({
+          useColorEmoji: true,
+          fontFallbackBaseUrl: "fonts/gstatic/s/",
+        }).then(function (appRunner) {
           appRunner.runApp();
         });
       }
