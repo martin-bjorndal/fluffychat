@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
@@ -93,7 +94,7 @@ class AudioPlayerState extends State<AudioPlayerWidget> {
                     '/rooms/${widget.event.room.id}?event=${widget.event.eventId}',
                   ),
                   child: Text(
-                    '🎙️ ${audioPlayer.position.minuteSecondString} / ${audioPlayer.duration?.minuteSecondString} - ${widget.event.senderFromMemoryOrFallback.calcDisplayname()}',
+                    '🎙️ ${audioPlayer.position.minuteSecondString} / ${audioPlayer.duration?.minuteSecondString} - ${widget.event.senderFromMemoryOrFallback.groupDisplayname()}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

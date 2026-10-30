@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/utd_dialog.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
@@ -63,7 +64,7 @@ class StateMessage extends StatelessWidget {
                                   padding: const EdgeInsets.only(right: 4.0),
                                   child: Avatar(
                                     name: event.senderFromMemoryOrFallback
-                                        .calcDisplayname(),
+                                        .groupDisplayname(),
                                     size: 14,
                                     mxContent: event
                                         .senderFromMemoryOrFallback

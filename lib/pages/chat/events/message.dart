@@ -303,7 +303,8 @@ class Message extends StatelessWidget {
                             final user = snapshot.data ?? sender;
                             return Avatar(
                               mxContent: user.avatarUrl,
-                              name: user.calcDisplayname(),
+                              // Gruppechat: letter and colour from the nickname
+                              name: user.groupDisplayname(),
                               onTap: () => showMemberActionsPopupMenu(
                                 context: context,
                                 user: user,

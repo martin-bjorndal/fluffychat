@@ -6,6 +6,7 @@
 import 'dart:math';
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/events/poll.dart';
 import 'package:fluffychat/pages/chat/events/video_player.dart';
@@ -221,8 +222,8 @@ class MessageContent extends StatelessWidget {
           builder: (context, snapshot) {
             return _ButtonContent(
               label: L10n.of(context).startedACall(
-                snapshot.data?.calcDisplayname() ??
-                    event.senderFromMemoryOrFallback.calcDisplayname(),
+                snapshot.data?.groupDisplayname() ??
+                    event.senderFromMemoryOrFallback.groupDisplayname(),
               ),
               icon: '📞',
               textColor: buttonTextColor,
@@ -237,8 +238,8 @@ class MessageContent extends StatelessWidget {
           builder: (context, snapshot) {
             return _ButtonContent(
               label: L10n.of(context).userSentUnknownEvent(
-                snapshot.data?.calcDisplayname() ??
-                    event.senderFromMemoryOrFallback.calcDisplayname(),
+                snapshot.data?.groupDisplayname() ??
+                    event.senderFromMemoryOrFallback.groupDisplayname(),
                 event.type,
               ),
               icon: 'ℹ️',
@@ -273,7 +274,7 @@ class RedactionWidget extends StatelessWidget {
       builder: (context, snapshot) {
         final reason = event.redactedBecause?.content.tryGet<String>('reason');
         final redactedBy =
-            snapshot.data?.calcDisplayname() ??
+            snapshot.data?.groupDisplayname() ??
             event.redactedBecause?.senderId.localpart ??
             L10n.of(context).user;
         return _ButtonContent(

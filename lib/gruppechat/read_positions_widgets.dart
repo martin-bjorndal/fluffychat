@@ -137,12 +137,11 @@ class GruppechatReadByRow extends StatelessWidget {
                 for (final reader in readers)
                   Tooltip(
                     message: reader.groupDisplayname(),
-                    // The same avatar as next to their messages, so the
-                    // letter and colour come from their name, not the
-                    // group nickname
+                    // The same avatar as next to their messages: letter
+                    // and colour from the group nickname
                     child: Avatar(
                       mxContent: reader.avatarUrl,
-                      name: reader.calcDisplayname(),
+                      name: reader.groupDisplayname(),
                       size: 16,
                     ),
                   ),

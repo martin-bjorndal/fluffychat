@@ -5,6 +5,7 @@
 
 import 'package:async/async.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:fluffychat/widgets/avatar.dart';
@@ -155,7 +156,7 @@ class PollWidget extends StatelessWidget {
                                     child: Avatar(
                                       mxContent: user?.avatarUrl,
                                       name:
-                                          user?.calcDisplayname() ??
+                                          user?.groupDisplayname() ??
                                           userId.localpart,
                                       size: 12,
                                     ),
