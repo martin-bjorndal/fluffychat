@@ -216,7 +216,10 @@ class BackgroundPush {
 
     final legacyPushers = pushers.where(
       (pusher) =>
-          pusher.appId == thisAppId || // To migrate older app-id format:
+          pusher.appId == thisAppId ||
+          // Hanne Chat: pushers registered before our own app ID
+          pusher.appId == 'chat.fluffy.fluffychat.${client.deviceID}' ||
+          // To migrate older app-id format:
           ((pusher.appId == 'chat.fluffy.fluffychat.data_message' ||
                   pusher.appId == 'chat.fluffy.fluffychat') &&
               pusher.pushkey == token),
