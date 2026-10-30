@@ -7,6 +7,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/init_with_restore.dart';
@@ -177,6 +179,8 @@ class MatrixState extends State<Matrix> {
   final onRoomKeyRequestSub = <String, StreamSubscription>{};
   final onKeyVerificationRequestSub = <String, StreamSubscription>{};
   final onNotification = <String, StreamSubscription>{};
+  final onRoleMention = <String, StreamSubscription>{};
+  final gruppechatWakeRules = <String, GruppechatWakeRules>{};
   final onLogoutSub = <String, StreamSubscription<LoginState>>{};
   final onUiaRequest = <String, StreamSubscription<UiaRequest>>{};
 
@@ -281,6 +285,8 @@ class MatrixState extends State<Matrix> {
           FluffyChatApp.router.go('/');
         });
     onUiaRequest[name] ??= c.onUiaRequest.stream.listen(uiaRequestHandler);
+    // Gruppechat: keep muted channels able to wake the phone for mentions
+    gruppechatWakeRules.putIfAbsent(name, () => GruppechatWakeRules(c)).start();
     if (PlatformInfos.isWeb || PlatformInfos.isLinux) {
       FlutterLocalNotificationsPlugin().initialize(
         settings: InitializationSettings(
@@ -300,6 +306,14 @@ class MatrixState extends State<Matrix> {
         onNotification[name] ??= c.onNotification.stream.listen(
           showLocalNotification,
         );
+        // Gruppechat: @role mentions notify even where push rules don't
+        onRoleMention[name] ??= c.onTimelineEvent.stream
+            .where(
+              (event) =>
+                  event.mentionsOwnGroupRole &&
+                  !c.pushruleEvaluator.match(event).notify,
+            )
+            .listen(showLocalNotification);
       });
     }
   }
@@ -313,6 +327,9 @@ class MatrixState extends State<Matrix> {
     onLogoutSub.remove(name);
     onNotification[name]?.cancel();
     onNotification.remove(name);
+    onRoleMention[name]?.cancel();
+    onRoleMention.remove(name);
+    gruppechatWakeRules.remove(name)?.cancel();
   }
 
   void initMatrix() {
