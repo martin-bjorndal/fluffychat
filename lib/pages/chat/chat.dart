@@ -1332,6 +1332,10 @@ class ChatController extends State<ChatPageWithRoom>
     _startEditingEvent(selectedEvents.first, clearSelection: true);
   }
 
+  // Gruppechat: double tapping your own message edits it
+  void editEventAction(Event event) =>
+      _startEditingEvent(event, clearSelection: true);
+
   void _editLastSentMessage() {
     final timeline = this.timeline;
     if (timeline == null) return;

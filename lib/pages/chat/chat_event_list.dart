@@ -216,7 +216,8 @@ class ChatEventList extends StatelessWidget {
                       singleSelected:
                           controller.selectedEvents.singleOrNull?.eventId ==
                           event.eventId,
-                      onEdit: controller.editSelectedEventAction,
+                      // Gruppechat: edits this message (on double tap)
+                      onEdit: () => controller.editEventAction(event),
                       timeline: timeline,
                       displayReadMarker:
                           i > 0 &&

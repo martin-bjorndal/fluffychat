@@ -10,6 +10,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
@@ -394,6 +395,12 @@ class Message extends StatelessWidget {
                                     AppSettings.doubleTapToReact.value &&
                                         event.room.canSendDefaultMessages
                                     ? () {
+                                        // Gruppechat: double tapping your own
+                                        // text message edits it
+                                        if (event.editsOnDoubleTap) {
+                                          onEdit();
+                                          return;
+                                        }
                                         HapticFeedback.lightImpact();
                                         final emoji =
                                             AppSettings.doubleTapReaction.value;
