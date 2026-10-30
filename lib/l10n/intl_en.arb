@@ -3169,5 +3169,15 @@
                 "type": "String"
             }
         }
+    },
+    "gruppechatMatrixVersion": "Matrix version",
+    "@gruppechatMatrixVersion": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatMaxUploadSize": "Largest file you can send",
+    "@gruppechatMaxUploadSize": {
+        "type": "String",
+        "placeholders": {}
     }
 }

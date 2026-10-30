@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/server_info.dart';
 import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
@@ -123,9 +124,10 @@ class SettingsHomeserverView extends StatelessWidget {
                   );
                 },
               ),
-              // Gruppechat: no server name and version here. FluffyChat reads
-              // them from the federation API, which is off on our server, so
-              // this only ever showed an error.
+              // Gruppechat: FluffyChat reads the server's name and version
+              // from the federation API, which is off on our server, so show
+              // what the client API tells instead
+              GruppechatServerInfoTiles(client: client),
               Divider(color: theme.dividerColor),
               FutureBuilder(
                 future: client.getWellknown(),

@@ -3197,5 +3197,15 @@
                 "type": "String"
             }
         }
+    },
+    "gruppechatMatrixVersion": "Matrix-versjon",
+    "@gruppechatMatrixVersion": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatMaxUploadSize": "Største fil du kan sende",
+    "@gruppechatMaxUploadSize": {
+        "type": "String",
+        "placeholders": {}
     }
 }
