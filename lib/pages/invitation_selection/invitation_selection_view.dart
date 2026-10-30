@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/user_ids.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/invitation_selection/invitation_selection.dart';
 import 'package:fluffychat/widgets/avatar.dart';
@@ -190,7 +191,7 @@ class _InviteContactListTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        profile.userId,
+        Matrix.of(context).client.displayUserId(profile.userId),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: theme.colorScheme.secondary),

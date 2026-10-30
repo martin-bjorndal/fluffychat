@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/user_ids.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/new_private_chat/new_private_chat.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
@@ -111,7 +112,9 @@ class NewPrivateChatView extends StatelessWidget {
                                     text: L10n.of(context).yourGlobalUserIdIs,
                                   ),
                                   TextSpan(
-                                    text: Matrix.of(context).client.userID,
+                                    text: Matrix.of(
+                                      context,
+                                    ).client.displayUserId(userId),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -273,7 +276,11 @@ class NewPrivateChatView extends StatelessWidget {
                                   presenceUserId: contact.userId,
                                 ),
                                 title: Text(displayname),
-                                subtitle: Text(contact.userId),
+                                subtitle: Text(
+                                  Matrix.of(
+                                    context,
+                                  ).client.displayUserId(contact.userId),
+                                ),
                                 onTap: () => controller.openUserModal(contact),
                               );
                             },

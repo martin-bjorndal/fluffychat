@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list.dart';
 import 'package:fluffychat/pages/chat_list/client_chooser_button.dart';
@@ -134,8 +135,10 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
                             ),
                             icon: const Icon(Icons.edit_outlined, size: 16),
                             label: Text(
-                              controller.searchServer ??
-                                  Matrix.of(context).client.homeserver!.host,
+                              displayHost(
+                                controller.searchServer ??
+                                    Matrix.of(context).client.homeserver!.host,
+                              ),
                               maxLines: 2,
                             ),
                           )

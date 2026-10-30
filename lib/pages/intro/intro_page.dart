@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/intro/flows/restore_backup_flow.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -66,8 +67,7 @@ class IntroPage extends StatelessWidget {
               ),
               if (AppSettings.privacyPolicy.value.isNotEmpty)
                 PopupMenuItem(
-                  onTap: () =>
-                      launchUrlString(AppSettings.privacyPolicy.value),
+                  onTap: () => launchUrlString(AppSettings.privacyPolicy.value),
                   child: Row(
                     mainAxisSize: .min,
                     spacing: 12,
@@ -99,7 +99,11 @@ class IntroPage extends StatelessWidget {
                 children: [
                   CircularProgressIndicator.adaptive(),
                   if (loggingInToHomeserver != null)
-                    Text(L10n.of(context).logInTo(loggingInToHomeserver)),
+                    Text(
+                      L10n.of(
+                        context,
+                      ).logInTo(displayHost(loggingInToHomeserver)),
+                    ),
                 ],
               ),
             )

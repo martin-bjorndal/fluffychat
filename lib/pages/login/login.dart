@@ -5,6 +5,7 @@
 
 import 'dart:async';
 
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
@@ -72,7 +73,10 @@ class LoginController extends State<Login> {
           address: username,
         );
       } else {
-        identifier = AuthenticationUserIdentifier(user: username);
+        // Gruppechat: a username on our server, or a whole Matrix ID
+        identifier = AuthenticationUserIdentifier(
+          user: normalizeUsername(username),
+        );
       }
       final client = await matrix.getLoginClient();
       await client.login(
@@ -81,7 +85,7 @@ class LoginController extends State<Login> {
         // To stay compatible with older server versions
         // ignore: deprecated_member_use
         user: identifier.type == AuthenticationIdentifierTypes.userId
-            ? username
+            ? normalizeUsername(username)
             : null,
         password: passwordController.text,
         initialDeviceDisplayName: PlatformInfos.appDisplayName,

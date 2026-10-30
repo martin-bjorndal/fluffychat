@@ -2089,7 +2089,7 @@
     "makeAdminDescription": "Once you make this user admin, you may not be able to undo this as they will then have the same permissions as you.",
     "pushNotificationsNotAvailable": "Push notifications not available",
     "learnMore": "Learn more",
-    "yourGlobalUserIdIs": "Your global user-ID is: ",
+    "yourGlobalUserIdIs": "Your username is: ",
     "noUsersFoundWithQuery": "Unfortunately no user could be found with \"{query}\". Please check whether you made a typo.",
     "@noUsersFoundWithQuery": {
         "type": "String",

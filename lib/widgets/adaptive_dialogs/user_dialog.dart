@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/user_ids.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
@@ -140,7 +141,11 @@ class UserDialog extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      TextSpan(text: profile.userId),
+                                      TextSpan(
+                                        text: client.displayUserId(
+                                          profile.userId,
+                                        ),
+                                      ),
                                     ],
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontSize: 10,

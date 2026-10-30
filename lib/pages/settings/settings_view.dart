@@ -5,6 +5,7 @@
 
 import 'package:async/async.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -187,7 +188,9 @@ class SettingsView extends StatelessWidget {
               leading: const Icon(Icons.dns_outlined),
               title: Text(
                 L10n.of(context).aboutHomeserver(
-                  Matrix.of(context).client.userID?.domain ?? 'homeserver',
+                  displayHost(
+                    Matrix.of(context).client.userID?.domain ?? 'homeserver',
+                  ),
                 ),
               ),
               onTap: () => context.go('/rooms/settings/homeserver'),

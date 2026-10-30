@@ -1741,7 +1741,7 @@
     },
     "chatDescriptionHasBeenChanged": "Chatbeskrivelsen er endret",
     "whyIsThisMessageEncrypted": "Hvorfor er denne meldingen uleselig?",
-    "yourGlobalUserIdIs": "Din globale bruker-ID er: ",
+    "yourGlobalUserIdIs": "Brukernavnet ditt er: ",
     "searchChatsRooms": "Søk etter #chatter, @brukere...",
     "groupName": "Gruppenavn",
     "createGroupAndInviteUsers": "Opprett en gruppe og inviter brukere",

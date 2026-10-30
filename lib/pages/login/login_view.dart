@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/layouts/login_scaffold.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,7 +24,7 @@ class LoginView extends StatelessWidget {
         .replaceFirst('https://', '');
     final title = homeserver == null
         ? L10n.of(context).loginWithMatrixId
-        : L10n.of(context).logInTo(homeserver);
+        : L10n.of(context).logInTo(displayHost(homeserver));
 
     return LoginScaffold(
       appBar: AppBar(
@@ -58,7 +59,8 @@ class LoginView extends StatelessWidget {
                     readOnly: controller.loading,
                     autocorrect: false,
                     autofocus: true,
-                    onChanged: controller.checkWellKnownWithCoolDown,
+                    // Gruppechat: no server lookup from what is typed (FluffyChat
+                    // switches servers for a full Matrix ID); we only use ours
                     controller: controller.usernameController,
                     textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.emailAddress,
@@ -69,8 +71,9 @@ class LoginView extends StatelessWidget {
                       prefixIcon: const Icon(Icons.account_box_outlined),
                       errorText: controller.usernameError,
                       errorStyle: const TextStyle(color: Colors.orange),
-                      hintText: '@username:domain',
-                      labelText: L10n.of(context).matrixId,
+                      // Gruppechat: our server only, so just the username
+                      hintText: L10n.of(context).gruppechatUsernameHint,
+                      labelText: L10n.of(context).gruppechatUsername,
                     ),
                   ),
                 ),
