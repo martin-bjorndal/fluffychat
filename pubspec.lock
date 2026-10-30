@@ -911,6 +911,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "18.0.1"
+  gruppechat_bubbles:
+    dependency: "direct main"
+    description:
+      path: "packages/gruppechat_bubbles"
+      relative: true
+    source: path
+    version: "1.0.0"
   gsettings:
     dependency: transitive
     description:

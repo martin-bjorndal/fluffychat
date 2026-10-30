@@ -8,6 +8,7 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
+import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/push_helper.dart';
@@ -206,6 +207,10 @@ Future<void> notificationTap(
         case FluffyChatNotificationActions.enterCall:
           router?.go('/rooms/$roomId?client=${client.clientName}&action=call');
       }
+      await GruppechatBubbles.clearAfterAction(
+        notificationResponse,
+        actionType,
+      );
     case NotificationResponseType.notificationDismissed:
       return;
   }

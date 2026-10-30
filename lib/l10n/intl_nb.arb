@@ -3268,5 +3268,95 @@
     "@gruppechatLater": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatBubbles": "Chatbobler",
+    "@gruppechatBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowChatsAsBubbles": "Vis chatter som bobler",
+    "@gruppechatShowChatsAsBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesDescription": "Nye meldinger kan åpnes i en boble som ligger over andre apper.",
+    "@gruppechatBubblesDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesTurnedOff": "Bobler er slått av på telefonen",
+    "@gruppechatBubblesTurnedOff": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesTurnOnHint": "Trykk her, slå på bobler og velg «Alle samtaler kan vises som bobler».",
+    "@gruppechatBubblesTurnOnHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesNotAllowed": "Android viser ikke bobler fra Hanne Chat ennå",
+    "@gruppechatBubblesNotAllowed": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesAllowHint": "Trykk her og velg «Alle samtaler kan vises som bobler».",
+    "@gruppechatBubblesAllowHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesOnlySelected": "Bare valgte chatter vises som bobler",
+    "@gruppechatBubblesOnlySelected": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesSelectedHint": "Trykk på bobleknappen i et varsel for å velge en chat, eller trykk her for å tillate alle.",
+    "@gruppechatBubblesSelectedHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOff": "Varsler fra Hanne Chat er slått av",
+    "@gruppechatNotificationsOff": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOffHint": "Trykk her for å slå dem på.",
+    "@gruppechatNotificationsOffHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowAsBubble": "Vis som boble",
+    "@gruppechatShowAsBubble": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOpenInApp": "Åpne i appen",
+    "@gruppechatOpenInApp": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatAllowBubbles": "Tillat bobler",
+    "@gruppechatAllowBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatAllowBubblesMessage": "Android må tillate at Hanne Chat viser chatter som bobler. Velg «Alle samtaler kan vises som bobler» i innstillingene som åpnes.",
+    "@gruppechatAllowBubblesMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesOffMessage": "Bobler er slått av på telefonen. Slå på bobler i innstillingene som åpnes, og velg «Alle samtaler kan vises som bobler».",
+    "@gruppechatBubblesOffMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOffMessage": "Varsler fra Hanne Chat er slått av, så chatter kan ikke vises som bobler. Slå dem på i innstillingene som åpnes.",
+    "@gruppechatNotificationsOffMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOpenSettings": "Åpne innstillinger",
+    "@gruppechatOpenSettings": {
+        "type": "String",
+        "placeholders": {}
     }
 }

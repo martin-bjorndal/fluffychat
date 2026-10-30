@@ -12,6 +12,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
@@ -429,8 +430,11 @@ class ChatController extends State<ChatPageWithRoom>
         ? lastEventThreadId ?? room.fullyRead
         : '';
     WidgetsBinding.instance.addObserver(this);
+    GruppechatBubbles.room.addListener(_onBubbleChanged);
     _tryLoadTimeline();
   }
+
+  void _onBubbleChanged() => setState(() {});
 
   Future<void> _checkMatrixRtcCallSupport() async {
     try {
@@ -667,6 +671,7 @@ class ChatController extends State<ChatPageWithRoom>
     inputFocus.dispose();
     _displayChatDetailsColumn.dispose();
     web.window.removeEventListener('paste', _handleClipboardFilePasteWeb);
+    GruppechatBubbles.room.removeListener(_onBubbleChanged);
     if (currentlyTyping) room.setTyping(false);
     MxcImage.clearCache(widget.room.id);
     super.dispose();

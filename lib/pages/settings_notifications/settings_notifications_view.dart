@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/bubble_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/settings_notifications/push_rule_extensions.dart';
 import 'package:fluffychat/utils/background_push.dart';
@@ -75,6 +76,7 @@ class SettingsNotificationsView extends StatelessWidget {
                       title: L10n.of(context).playSoundOnNotification,
                       setting: AppSettings.webNotificationSound,
                     ),
+                  if (PlatformInfos.isAndroid) const GruppechatBubbleSettings(),
                   if (pushRules != null)
                     for (final category in pushCategories) ...[
                       ListTile(

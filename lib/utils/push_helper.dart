@@ -11,6 +11,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -139,7 +140,7 @@ Future<void> _tryPushHelper(
   if (event == null) {
     Logs().v('Notification is a clearing indicator.');
     if (clients?.length == 1 && (notification.counts?.unread == 0)) {
-      await flutterLocalNotificationsPlugin.cancelAll();
+      await GruppechatBubbles.dismissAll(flutterLocalNotificationsPlugin);
     } else {
       // Make sure client is fully loaded and synced before dismiss notifications:
       await client.roomsLoading;
@@ -161,7 +162,10 @@ Future<void> _tryPushHelper(
               activeNotification.id,
         );
         if (room != null && !room.isUnreadOrInvited) {
-          flutterLocalNotificationsPlugin.cancel(id: activeNotification.id!);
+          await GruppechatBubbles.dismiss(
+            flutterLocalNotificationsPlugin,
+            activeNotification.id!,
+          );
           if (PlatformInfos.isAndroid) needsUpdateForSummaryNotification = true;
         }
       }
@@ -281,6 +285,11 @@ Future<void> _tryPushHelper(
       >()
       ?.createNotificationChannel(roomsChannel);
 
+  // Chat bubbles: the notification gets bubble metadata, and its actions
+  // leave it for notificationTap to clear, since cancelling would close the
+  // bubble (lib/gruppechat/bubbles.dart)
+  final bubble = await GruppechatBubbles.isEnabled();
+
   final androidPlatformChannelSpecifics = AndroidNotificationDetails(
     AppConfig.pushNotificationsChannelId,
     l10n.incomingMessages,
@@ -322,16 +331,19 @@ Future<void> _tryPushHelper(
           inputs: [AndroidNotificationActionInput(label: l10n.writeAMessage)],
           allowGeneratedReplies: true,
           semanticAction: SemanticAction.reply,
+          cancelNotification: !bubble,
         ),
         AndroidNotificationAction(
           FluffyChatNotificationActions.markAsRead.name,
           l10n.markAsRead,
           semanticAction: SemanticAction.markAsRead,
+          cancelNotification: !bubble,
         ),
         AndroidNotificationAction(
           FluffyChatNotificationActions.mute.name,
           l10n.mute,
           semanticAction: SemanticAction.mute,
+          cancelNotification: !bubble,
         ),
       ],
       RtcNotificationContent.eventType => [
@@ -365,22 +377,31 @@ Future<void> _tryPushHelper(
 
   final title = event.room.getLocalizedDisplayname(MatrixLocals(l10n));
 
+  // A letter avatar for rooms without a picture: a bubble shows the
+  // picture of the room's shortcut
+  final roomIcon =
+      roomAvatarFile ?? await GruppechatBubbles.placeholderAvatar(title);
+
   if (PlatformInfos.isAndroid && messagingStyleInformation == null) {
-    await _setShortcut(event, l10n, title, roomAvatarFile);
+    await setRoomShortcut(event.room, title, roomIcon);
   }
 
   final needsTitleAndBody = !PlatformInfos.isAndroid;
 
-  await flutterLocalNotificationsPlugin.show(
+  await GruppechatBubbles.showNotification(
+    flutterLocalNotificationsPlugin,
     id: notification.notificationId,
     title: needsTitleAndBody ? title : null,
     body: needsTitleAndBody ? body : null,
-    notificationDetails: platformChannelSpecifics,
+    details: platformChannelSpecifics,
     payload: FluffyChatPushPayload(
       client.clientName,
       event.room.id,
       event.eventId,
     ).toString(),
+    roomId: event.room.id,
+    icon: roomIcon,
+    bubble: bubble,
   );
 
   // Send summary notification on Android
@@ -410,9 +431,16 @@ Future<void> updateSummaryNotification({
   required String clientName,
   required L10n l10n,
 }) async {
+  // Notifications kept only for their bubble aren't in the shade
+  final hidden = await GruppechatBubbles.hiddenNotificationIds();
   final activeNotifications =
       (await flutterLocalNotificationsPlugin.getActiveNotifications())
-          .where((n) => n.groupKey == clientName && n.id != clientName.hashCode)
+          .where(
+            (n) =>
+                n.groupKey == clientName &&
+                n.id != clientName.hashCode &&
+                !hidden.contains(n.id),
+          )
           .toList();
 
   if (activeNotifications.length <= 1) {
@@ -465,9 +493,8 @@ class FluffyChatPushPayload {
 /// Creates a shortcut for Android platform but does not block displaying the
 /// notification. This is optional but provides a nicer view of the
 /// notification popup.
-Future<void> _setShortcut(
-  Event event,
-  L10n l10n,
+Future<void> setRoomShortcut(
+  Room room,
   String title,
   Uint8List? avatarFile,
 ) async {
@@ -475,15 +502,15 @@ Future<void> _setShortcut(
   await flutterShortcuts.initialize(debug: !kReleaseMode);
   await flutterShortcuts.pushShortcutItem(
     shortcut: ShortcutItem(
-      id: event.room.id,
-      action: AppConfig.inviteLinkPrefix + event.room.id,
+      id: room.id,
+      action: AppConfig.inviteLinkPrefix + room.id,
       shortLabel: title,
       conversationShortcut: true,
       icon: avatarFile == null ? null : base64Encode(avatarFile),
       shortcutIconAsset: avatarFile == null
           ? ShortcutIconAsset.androidAsset
           : ShortcutIconAsset.memoryAsset,
-      isImportant: event.room.isFavourite,
+      isImportant: room.isFavourite,
     ),
   );
 }

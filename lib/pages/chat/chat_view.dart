@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
@@ -60,7 +61,9 @@ class ChatView extends StatelessWidget {
     );
 
     return PopScope(
+      // In a bubble, back at the chat collapses the bubble
       canPop:
+          !GruppechatBubbles.active &&
           controller.selectedEvents.isEmpty &&
           !controller.showEmojiPicker &&
           controller.activeThreadId == null,
@@ -72,6 +75,8 @@ class ChatView extends StatelessWidget {
           controller.emojiPickerAction();
         } else if (controller.activeThreadId != null) {
           controller.closeThread();
+        } else if (GruppechatBubbles.active) {
+          GruppechatBubbles.collapse();
         }
       },
       child: StreamBuilder(
@@ -127,10 +132,15 @@ class ChatView extends StatelessWidget {
                         tooltip: L10n.of(context).backToMainChat,
                         color: theme.colorScheme.onSecondaryContainer,
                       )
-                    : FluffyThemes.isColumnMode(context)
+                    : FluffyThemes.isColumnMode(context) ||
+                          GruppechatBubbles.active
                     ? null
                     : const Center(child: BackButton()),
-                titleSpacing: FluffyThemes.isColumnMode(context) ? 24 : 0,
+                titleSpacing: FluffyThemes.isColumnMode(context)
+                    ? 24
+                    : GruppechatBubbles.active
+                    ? 16
+                    : 0,
                 title: ChatAppBarTitle(controller),
                 actions: [
                   if (controller.selectMode) ...[

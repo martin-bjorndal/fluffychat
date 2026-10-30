@@ -102,6 +102,24 @@
             </intent-filter>
         </activity>
 
+        <!-- A chat in a bubble over other apps (Android 11+), opened by the
+             bubbles plugin's notifications -->
+        <activity
+            android:name=".BubbleActivity"
+            android:theme="@style/BubbleTheme"
+            android:allowEmbedded="true"
+            android:documentLaunchMode="always"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="chatapp.marbjo.no.action.BUBBLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity
           android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
           android:exported="true">

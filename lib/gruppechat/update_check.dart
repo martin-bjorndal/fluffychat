@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/fluffy_chat_app.dart';
 import 'package:flutter/foundation.dart';
@@ -82,7 +83,8 @@ abstract final class GruppechatUpdateCheck {
         final running = (await PackageInfo.fromPlatform()).buildNumber;
         newer = isNewerRelease(published, running);
       }
-      if (newer && _shownFor != published.build) {
+      // Not in a bubble: it's told when the app opens
+      if (newer && _shownFor != published.build && !GruppechatBubbles.active) {
         _shownFor = published.build;
         _show(published);
       }

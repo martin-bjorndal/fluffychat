@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Martin Bjørndal
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: gruppechat_bubbles
+description: Android chat bubbles for Hanne Chat. The Dart side lives in the app, in lib/gruppechat/bubbles.dart.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.11.1 <4.0.0"
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # The Android code builds notifications with this plugin's own builder, so
+  # Gradle needs it on the plugin's classpath.
+  flutter_local_notifications: ^22.3.1
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: no.marbjo.chatapp.bubbles
+        pluginClass: GruppechatBubblesPlugin

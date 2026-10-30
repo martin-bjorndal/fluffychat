@@ -1,0 +1,36 @@
+// SPDX-FileCopyrightText: 2026 Martin Bjørndal
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+group = "no.marbjo.chatapp.bubbles"
+version = "1.0"
+
+// The app's build provides the Android and Kotlin Gradle plugins.
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+android {
+    namespace = "no.marbjo.chatapp.bubbles"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
+}

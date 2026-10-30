@@ -3240,5 +3240,95 @@
     "@gruppechatLater": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatBubbles": "Chat bubbles",
+    "@gruppechatBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowChatsAsBubbles": "Show chats as bubbles",
+    "@gruppechatShowChatsAsBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesDescription": "New messages can open in a bubble that floats over other apps.",
+    "@gruppechatBubblesDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesTurnedOff": "Bubbles are turned off on this phone",
+    "@gruppechatBubblesTurnedOff": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesTurnOnHint": "Tap here, turn on bubbles and choose “All conversations can bubble”.",
+    "@gruppechatBubblesTurnOnHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesNotAllowed": "Android doesn't show bubbles from Hanne Chat yet",
+    "@gruppechatBubblesNotAllowed": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesAllowHint": "Tap here and choose “All conversations can bubble”.",
+    "@gruppechatBubblesAllowHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesOnlySelected": "Only selected chats show as bubbles",
+    "@gruppechatBubblesOnlySelected": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesSelectedHint": "Tap the bubble button on a notification to pick a chat, or tap here to allow all.",
+    "@gruppechatBubblesSelectedHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOff": "Notifications from Hanne Chat are turned off",
+    "@gruppechatNotificationsOff": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOffHint": "Tap here to turn them on.",
+    "@gruppechatNotificationsOffHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowAsBubble": "Show as bubble",
+    "@gruppechatShowAsBubble": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOpenInApp": "Open in app",
+    "@gruppechatOpenInApp": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatAllowBubbles": "Allow bubbles",
+    "@gruppechatAllowBubbles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatAllowBubblesMessage": "Android has to let Hanne Chat show chats as bubbles. In the settings that open, choose “All conversations can bubble”.",
+    "@gruppechatAllowBubblesMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBubblesOffMessage": "Bubbles are turned off on this phone. In the settings that open, turn on bubbles and choose “All conversations can bubble”.",
+    "@gruppechatBubblesOffMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNotificationsOffMessage": "Notifications from Hanne Chat are turned off, so chats can't show as bubbles. Turn them on in the settings that open.",
+    "@gruppechatNotificationsOffMessage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOpenSettings": "Open settings",
+    "@gruppechatOpenSettings": {
+        "type": "String",
+        "placeholders": {}
     }
 }
