@@ -3179,5 +3179,66 @@
     "@gruppechatMaxUploadSize": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatInviteFriend": "Invite a friend",
+    "@gruppechatInviteFriend": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOnlyAdminsInvite": "Only admins can create invite codes. Ask one of them for a code.",
+    "@gruppechatOnlyAdminsInvite": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteCodeValid": "Works once, until {until}.",
+    "@gruppechatInviteCodeValid": {
+        "type": "String",
+        "placeholders": {
+            "until": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatInviteMessage": "Join me on Hanne Chat!\n\n1. Get the app: {playLink}\n   or use {webAddress} in your browser\n2. Tap \"Create new account\"\n3. Use this invite code: {code}\n\nThe code works once, until {until}.",
+    "@gruppechatInviteMessage": {
+        "type": "String",
+        "placeholders": {
+            "playLink": {
+                "type": "String"
+            },
+            "webAddress": {
+                "type": "String"
+            },
+            "code": {
+                "type": "String"
+            },
+            "until": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUpdateAvailable": "Hanne Chat {version} is available.",
+    "@gruppechatUpdateAvailable": {
+        "type": "String",
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUpdate": "Update",
+    "@gruppechatUpdate": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatReload": "Reload",
+    "@gruppechatReload": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatLater": "Later",
+    "@gruppechatLater": {
+        "type": "String",
+        "placeholders": {}
     }
 }

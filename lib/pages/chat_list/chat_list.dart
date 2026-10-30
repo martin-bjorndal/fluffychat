@@ -9,6 +9,7 @@ import 'package:collection/collection.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/update_check.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
@@ -434,6 +435,8 @@ class ChatListController extends State<ChatList>
         ).store.getString(_serverStoreNamespace);
         Matrix.of(context).backgroundPush?.setupPush(context);
         UpdateNotifier.showUpdateDialog(context);
+        // Gruppechat: say when a newer version is out
+        GruppechatUpdateCheck.start(Matrix.of(context).client);
       }
 
       // Workaround for system UI overlay style not applied on app start

@@ -3207,5 +3207,66 @@
     "@gruppechatMaxUploadSize": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatInviteFriend": "Inviter en venn",
+    "@gruppechatInviteFriend": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatOnlyAdminsInvite": "Bare administratorer kan lage invitasjonskoder. Spør en av dem om en kode.",
+    "@gruppechatOnlyAdminsInvite": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteCodeValid": "Gjelder én gang, til {until}.",
+    "@gruppechatInviteCodeValid": {
+        "type": "String",
+        "placeholders": {
+            "until": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatInviteMessage": "Bli med i Hanne Chat!\n\n1. Last ned appen: {playLink}\n   eller bruk {webAddress} i nettleseren\n2. Trykk «Opprett ny konto»\n3. Bruk denne invitasjonskoden: {code}\n\nKoden gjelder én gang, til {until}.",
+    "@gruppechatInviteMessage": {
+        "type": "String",
+        "placeholders": {
+            "playLink": {
+                "type": "String"
+            },
+            "webAddress": {
+                "type": "String"
+            },
+            "code": {
+                "type": "String"
+            },
+            "until": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUpdateAvailable": "Hanne Chat {version} er klar.",
+    "@gruppechatUpdateAvailable": {
+        "type": "String",
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUpdate": "Oppdater",
+    "@gruppechatUpdate": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatReload": "Last inn på nytt",
+    "@gruppechatReload": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatLater": "Senere",
+    "@gruppechatLater": {
+        "type": "String",
+        "placeholders": {}
     }
 }
