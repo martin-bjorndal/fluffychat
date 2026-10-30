@@ -38,7 +38,9 @@ void main() {
       for (final unsigned in <Map<String, Object?>?>[
         null,
         {},
-        {'m.relations': {'m.annotation': <String, Object?>{}}},
+        {
+          'm.relations': {'m.annotation': <String, Object?>{}},
+        },
         {'m.relations': 'not a map'},
       ]) {
         final summary = ThreadSummary.fromUnsigned(unsigned);

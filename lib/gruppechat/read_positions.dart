@@ -82,8 +82,8 @@ Map<String, List<String>> gruppechatReadPositions({
   final mainThread = receiptState.mainThread;
   final thread = threadId == null ? null : receiptState.byThread[threadId];
   final sources = threadId == null
-      ? [receiptState.global, if (mainThread != null) mainThread]
-      : [if (thread != null) thread];
+      ? [receiptState.global, ?mainThread]
+      : [?thread];
 
   return readPositions(
     timeline: [for (final event in events) event.eventId],

@@ -2801,19 +2801,373 @@
     "unexpectedErrorOccurded": "Unfortunately, an unexpected error has occurred: {msg}",
     "@unexpectedErrorOccurded": {
         "placeholders": {
-            "msg": {"type": "String"}
+            "msg": {
+                "type": "String"
+            }
         }
     },
     "incomingCallFrom": "Incoming call from {user}",
     "@incomingCallFrom": {
         "placeholders": {
-            "user": {"type": "String"}
+            "user": {
+                "type": "String"
+            }
         }
     },
     "serverRespondedWithError": "The server has replied with an error message: {error}",
     "@serverRespondedWithError": {
         "placeholders": {
-            "error": {"type": "String"}
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatSetUpGroupFeatures": "Set up group features",
+    "@gruppechatSetUpGroupFeatures": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSetUpGroupFeaturesDescription": "Lets members set nicknames and the background, and moderators manage roles.",
+    "@gruppechatSetUpGroupFeaturesDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRoles": "Roles",
+    "@gruppechatRoles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoRolesYet": "No roles yet",
+    "@gruppechatNoRolesYet": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRolesIntro": "Roles let you notify several people at once with @role.",
+    "@gruppechatRolesIntro": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRolesHowToMention": "Mention a role with @ and its ID to notify everyone who has it.",
+    "@gruppechatRolesHowToMention": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatCreateRole": "Create role…",
+    "@gruppechatCreateRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNewRole": "New role",
+    "@gruppechatNewRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRoleNameHint": "e.g. Gamers",
+    "@gruppechatRoleNameHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRename": "Rename",
+    "@gruppechatRename": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRenameRole": "Rename role",
+    "@gruppechatRenameRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatDeleteRole": "Delete @{role}?",
+    "@gruppechatDeleteRole": {
+        "type": "String",
+        "placeholders": {
+            "role": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDeleteRoleWarning": "Everyone loses this role. This cannot be undone.",
+    "@gruppechatDeleteRoleWarning": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatCreateRolesFirst": "Create roles from the details page of the group first.",
+    "@gruppechatCreateRolesFirst": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatTapRoleToToggle": "Tap a role to add or remove it.",
+    "@gruppechatTapRoleToToggle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatGroupBackground": "Group background",
+    "@gruppechatGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChannelBackground": "Channel background",
+    "@gruppechatChannelBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackground": "None",
+    "@gruppechatNoBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSameAsGroup": "Same as the group's",
+    "@gruppechatSameAsGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundSolid": "Color",
+    "@gruppechatBackgroundSolid": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundGradient": "Gradient",
+    "@gruppechatBackgroundGradient": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundImage": "Image",
+    "@gruppechatBackgroundImage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundForEveryone": "Everyone in the group sees this background.",
+    "@gruppechatBackgroundForEveryone": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChannelBackgroundForEveryone": "Everyone sees this background in this channel instead of the group's.",
+    "@gruppechatChannelBackgroundForEveryone": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackgroundPermission": "You do not have permission to change the background here.",
+    "@gruppechatNoBackgroundPermission": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetMidnight": "Midnight",
+    "@gruppechatPresetMidnight": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetForest": "Forest",
+    "@gruppechatPresetForest": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetSand": "Sand",
+    "@gruppechatPresetSand": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetSunset": "Sunset",
+    "@gruppechatPresetSunset": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetAurora": "Aurora",
+    "@gruppechatPresetAurora": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetFjord": "Fjord",
+    "@gruppechatPresetFjord": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatImageFromDevice": "Image from device…",
+    "@gruppechatImageFromDevice": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRemoveGroupBackground": "Remove group background",
+    "@gruppechatRemoveGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUseGroupBackground": "Use the group's background",
+    "@gruppechatUseGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackgroundHere": "No background in this channel",
+    "@gruppechatNoBackgroundHere": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatHideGroupBackgrounds": "Hide group backgrounds on my devices",
+    "@gruppechatHideGroupBackgrounds": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowGroupBackgrounds": "Show group backgrounds on my devices",
+    "@gruppechatShowGroupBackgrounds": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameInGroup": "Nickname in group",
+    "@gruppechatNicknameInGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatLetOthersRenameMe": "Let others give me a nickname",
+    "@gruppechatLetOthersRenameMe": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatStopOthersRenamingMe": "Stop others giving me a nickname",
+    "@gruppechatStopOthersRenamingMe": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameLocked": "Nickname locked",
+    "@gruppechatNicknameLocked": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameLockedDescription": "{name} has chosen to set their own nickname.",
+    "@gruppechatNicknameLockedDescription": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatNicknameFor": "Nickname for {name}",
+    "@gruppechatNicknameFor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatNicknameDescription": "Everyone in the group sees this name. Leave it empty to remove it.",
+    "@gruppechatNicknameDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameSetBy": "Currently set by {name}. Leave it empty to remove it.",
+    "@gruppechatNicknameSetBy": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatInviteRole": "Invite a role",
+    "@gruppechatInviteRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteRoleDescription": "Invites everyone who has the role. Make the channel invite-only in its access settings to keep it for them.",
+    "@gruppechatInviteRoleDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatEveryoneWithRoleIsHere": "Everyone with @{role} is already in this channel.",
+    "@gruppechatEveryoneWithRoleIsHere": {
+        "type": "String",
+        "placeholders": {
+            "role": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatSignUpIntro": "Create an account on {homeserver}. You need an invite code from the group admin.",
+    "@gruppechatSignUpIntro": {
+        "type": "String",
+        "placeholders": {
+            "homeserver": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUsername": "Username",
+    "@gruppechatUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUsernameHint": "e.g. martin",
+    "@gruppechatUsernameHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteCode": "Invite code",
+    "@gruppechatInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChooseUsername": "Choose a username",
+    "@gruppechatChooseUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPasswordTooShort": "Use at least 8 characters",
+    "@gruppechatPasswordTooShort": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatEnterInviteCode": "Enter the invite code you were given",
+    "@gruppechatEnterInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInvalidInviteCode": "This invite code is wrong, used up or expired",
+    "@gruppechatInvalidInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUsernameTaken": "That username is taken",
+    "@gruppechatUsernameTaken": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInvalidUsername": "Use only lowercase letters, numbers, dots, dashes and underscores",
+    "@gruppechatInvalidUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSignUpDisabled": "This server does not accept new accounts right now.",
+    "@gruppechatSignUpDisabled": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSignUpUnsupported": "This server does not support signing up with an invite code.",
+    "@gruppechatSignUpUnsupported": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatThreads": "Threads",
+    "@gruppechatThreads": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatMine": "Mine",
+    "@gruppechatMine": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoOwnThreads": "You have not started or replied to a thread here yet.",
+    "@gruppechatNoOwnThreads": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoThreads": "No threads yet. Select a message and tap \"{action}\" to start one.",
+    "@gruppechatNoThreads": {
+        "type": "String",
+        "placeholders": {
+            "action": {
+                "type": "String"
+            }
         }
     }
 }

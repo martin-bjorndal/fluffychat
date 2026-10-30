@@ -71,7 +71,7 @@ class GroupBackgroundLayer extends StatelessWidget {
 }
 
 /// Group settings shown on the details page of a space or one of its
-/// channels: one-time setup, roles and the shared background.
+/// channels: one-time setup, roles, backgrounds and inviting a role.
 class GruppechatSettingsTiles extends StatelessWidget {
   final Room room;
 
@@ -79,30 +79,30 @@ class GruppechatSettingsTiles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final group = GruppechatGroup.of(room);
     if (group == null) return const SizedBox.shrink();
     final roles = group.state.roles;
     final background = group.state.background;
+    final isChannel = group.space.id != room.id;
+    final channelBackground = room.gruppechatChannelBackground;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (group.needsSetup && group.canSetUp)
           ListTile(
             leading: const Icon(Icons.settings_outlined),
-            title: const Text('Set up group features'),
-            subtitle: const Text(
-              'Lets members set nicknames and the background, and '
-              'moderators manage roles.',
-            ),
+            title: Text(l10n.gruppechatSetUpGroupFeatures),
+            subtitle: Text(l10n.gruppechatSetUpGroupFeaturesDescription),
             onTap: () =>
                 showFutureLoadingDialog(context: context, future: group.setUp),
           ),
         ListTile(
           leading: const Icon(Icons.people_outlined),
-          title: const Text('Roles'),
+          title: Text(l10n.gruppechatRoles),
           subtitle: Text(
             roles.isEmpty
-                ? 'No roles yet'
+                ? l10n.gruppechatNoRolesYet
                 : roles.map((role) => '@${role.id}').join(', '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -112,15 +112,60 @@ class GruppechatSettingsTiles extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.brush_outlined),
-          title: const Text('Group background'),
-          subtitle: Text(background == null ? 'None' : background.kind.name),
+          title: Text(l10n.gruppechatGroupBackground),
+          subtitle: Text(_backgroundLabel(l10n, background)),
           trailing: const Icon(Icons.chevron_right_outlined),
           onTap: () => showGroupBackgroundMenu(context: context, group: group),
         ),
+        if (isChannel)
+          ListTile(
+            leading: const Icon(Icons.format_paint_outlined),
+            title: Text(l10n.gruppechatChannelBackground),
+            subtitle: Text(
+              channelBackground == null
+                  ? l10n.gruppechatSameAsGroup
+                  : _backgroundLabel(l10n, channelBackground),
+            ),
+            trailing: const Icon(Icons.chevron_right_outlined),
+            onTap: () => showGroupBackgroundMenu(
+              context: context,
+              group: group,
+              channel: room,
+            ),
+          ),
+        if (isChannel && room.canInvite && roles.isNotEmpty)
+          ListTile(
+            leading: const Icon(Icons.group_add_outlined),
+            title: Text(l10n.gruppechatInviteRole),
+            subtitle: Text(l10n.gruppechatInviteRoleDescription),
+            onTap: () => showInviteRoleMenu(
+              context: context,
+              group: group,
+              channel: room,
+            ),
+          ),
       ],
     );
   }
 }
+
+String _backgroundLabel(L10n l10n, GroupBackground? background) =>
+    switch (background?.kind) {
+      null || GroupBackgroundKind.none => l10n.gruppechatNoBackground,
+      GroupBackgroundKind.solid => l10n.gruppechatBackgroundSolid,
+      GroupBackgroundKind.gradient => l10n.gruppechatBackgroundGradient,
+      GroupBackgroundKind.image => l10n.gruppechatBackgroundImage,
+    };
+
+String _presetLabel(L10n l10n, String name) => switch (name) {
+  'Midnight' => l10n.gruppechatPresetMidnight,
+  'Forest' => l10n.gruppechatPresetForest,
+  'Sand' => l10n.gruppechatPresetSand,
+  'Sunset' => l10n.gruppechatPresetSunset,
+  'Aurora' => l10n.gruppechatPresetAurora,
+  'Fjord' => l10n.gruppechatPresetFjord,
+  _ => name,
+};
 
 enum _RoleAction { rename, delete }
 
@@ -130,15 +175,16 @@ Future<void> showGroupRolesMenu({
   required BuildContext context,
   required GruppechatGroup group,
 }) async {
+  final l10n = L10n.of(context);
   final state = group.state;
   final roles = state.roles;
   final picked = await showModalActionPopup<String>(
     context: context,
-    title: 'Roles',
+    title: l10n.gruppechatRoles,
     message: roles.isEmpty
-        ? 'Roles let you notify several people at once with @role.'
-        : 'Mention a role with @ and its ID to notify everyone who has it.',
-    cancelLabel: L10n.of(context).cancel,
+        ? l10n.gruppechatRolesIntro
+        : l10n.gruppechatRolesHowToMention,
+    cancelLabel: l10n.cancel,
     actions: [
       for (final role in roles)
         AdaptiveModalAction(
@@ -150,7 +196,7 @@ Future<void> showGroupRolesMenu({
         ),
       if (group.canManageRoles)
         AdaptiveModalAction(
-          label: 'Create role…',
+          label: l10n.gruppechatCreateRole,
           value: _createRoleValue,
           icon: const Icon(Icons.add_outlined),
         ),
@@ -161,10 +207,10 @@ Future<void> showGroupRolesMenu({
   if (picked == _createRoleValue) {
     final name = await showTextInputDialog(
       context: context,
-      title: 'New role',
-      hintText: 'e.g. Gamers',
-      okLabel: 'Create',
-      cancelLabel: L10n.of(context).cancel,
+      title: l10n.gruppechatNewRole,
+      hintText: l10n.gruppechatRoleNameHint,
+      okLabel: l10n.create,
+      cancelLabel: l10n.cancel,
       maxLength: 32,
     );
     if (name == null || name.trim().isEmpty || !context.mounted) return;
@@ -180,15 +226,15 @@ Future<void> showGroupRolesMenu({
   final action = await showModalActionPopup<_RoleAction>(
     context: context,
     title: '@${role.id} · ${role.name}',
-    cancelLabel: L10n.of(context).cancel,
+    cancelLabel: l10n.cancel,
     actions: [
       AdaptiveModalAction(
-        label: 'Rename',
+        label: l10n.gruppechatRename,
         value: _RoleAction.rename,
         icon: const Icon(Icons.edit_outlined),
       ),
       AdaptiveModalAction(
-        label: 'Delete',
+        label: l10n.delete,
         value: _RoleAction.delete,
         icon: const Icon(Icons.delete_outlined),
         isDestructive: true,
@@ -200,10 +246,10 @@ Future<void> showGroupRolesMenu({
     case _RoleAction.rename:
       final name = await showTextInputDialog(
         context: context,
-        title: 'Rename role',
+        title: l10n.gruppechatRenameRole,
         initialText: role.name,
-        okLabel: 'Save',
-        cancelLabel: L10n.of(context).cancel,
+        okLabel: l10n.save,
+        cancelLabel: l10n.cancel,
         maxLength: 32,
       );
       if (name == null || name.trim().isEmpty || !context.mounted) return;
@@ -214,10 +260,10 @@ Future<void> showGroupRolesMenu({
     case _RoleAction.delete:
       final consent = await showOkCancelAlertDialog(
         context: context,
-        title: 'Delete @${role.id}?',
-        message: 'Everyone loses this role. This cannot be undone.',
-        okLabel: 'Delete',
-        cancelLabel: L10n.of(context).cancel,
+        title: l10n.gruppechatDeleteRole(role.id),
+        message: l10n.gruppechatDeleteRoleWarning,
+        okLabel: l10n.delete,
+        cancelLabel: l10n.cancel,
         isDestructive: true,
       );
       if (consent != OkCancelResult.ok || !context.mounted) return;
@@ -228,46 +274,114 @@ Future<void> showGroupRolesMenu({
   }
 }
 
-enum _BackgroundAction { preset, image, clear, toggleVisibility }
+/// Invites everyone with a chosen role to [channel].
+Future<void> showInviteRoleMenu({
+  required BuildContext context,
+  required GruppechatGroup group,
+  required Room channel,
+}) async {
+  final l10n = L10n.of(context);
+  final state = group.state;
+  final roleId = await showModalActionPopup<String>(
+    context: context,
+    title: l10n.gruppechatInviteRole,
+    message: l10n.gruppechatInviteRoleDescription,
+    cancelLabel: l10n.cancel,
+    actions: [
+      for (final role in state.roles)
+        AdaptiveModalAction(
+          label:
+              '@${role.id} · ${role.name} '
+              '(${state.membersWithRole(role.id).length})',
+          value: role.id,
+          icon: const Icon(Icons.people_outlined),
+        ),
+    ],
+  );
+  if (roleId == null || !context.mounted) return;
+  final result = await showFutureLoadingDialog(
+    context: context,
+    future: () => group.inviteRole(channel, roleId),
+  );
+  final invited = result.result;
+  if (invited == null || !context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        invited.isEmpty
+            ? l10n.gruppechatEveryoneWithRoleIsHere(roleId)
+            : l10n.countInvited(invited.length),
+      ),
+    ),
+  );
+}
 
+enum _BackgroundAction { preset, image, clear, none, toggleVisibility }
+
+/// Picks the group's background, or with [channel] that channel's own
+/// background, which overrides the group's there.
 Future<void> showGroupBackgroundMenu({
   required BuildContext context,
   required GruppechatGroup group,
+  Room? channel,
 }) async {
+  final l10n = L10n.of(context);
   final client = group.space.client;
   final showing = client.showGroupBackgrounds;
+  final canSet = channel == null
+      ? group.canSetBackground
+      : channel.canSetGruppechatChannelBackground;
+  final current = channel == null
+      ? group.state.background
+      : channel.gruppechatChannelBackground;
+  Future<void> set(GroupBackground? background) => channel == null
+      ? group.setBackground(background)
+      : channel.setGruppechatChannelBackground(background);
+
   final picked = await showModalActionPopup<(_BackgroundAction, int)>(
     context: context,
-    title: 'Group background',
-    message: group.canSetBackground
-        ? 'Everyone in the group sees this background.'
-        : 'You do not have permission to change the background here.',
-    cancelLabel: L10n.of(context).cancel,
+    title: channel == null
+        ? l10n.gruppechatGroupBackground
+        : l10n.gruppechatChannelBackground,
+    message: !canSet
+        ? l10n.gruppechatNoBackgroundPermission
+        : channel == null
+        ? l10n.gruppechatBackgroundForEveryone
+        : l10n.gruppechatChannelBackgroundForEveryone,
+    cancelLabel: l10n.cancel,
     actions: [
-      if (group.canSetBackground) ...[
+      if (canSet) ...[
         for (var i = 0; i < groupBackgroundPresets.length; i++)
           AdaptiveModalAction(
-            label: groupBackgroundPresets[i].$1,
+            label: _presetLabel(l10n, groupBackgroundPresets[i].$1),
             value: (_BackgroundAction.preset, i),
             icon: const Icon(Icons.brush_outlined),
           ),
         AdaptiveModalAction(
-          label: 'Image from device…',
+          label: l10n.gruppechatImageFromDevice,
           value: (_BackgroundAction.image, 0),
           icon: const Icon(Icons.photo_outlined),
         ),
-        if (group.state.background != null)
+        if (channel != null && current?.kind != GroupBackgroundKind.none)
           AdaptiveModalAction(
-            label: 'Remove group background',
+            label: l10n.gruppechatNoBackgroundHere,
+            value: (_BackgroundAction.none, 0),
+            icon: const Icon(Icons.format_color_reset_outlined),
+          ),
+        if (current != null)
+          AdaptiveModalAction(
+            label: channel == null
+                ? l10n.gruppechatRemoveGroupBackground
+                : l10n.gruppechatUseGroupBackground,
             value: (_BackgroundAction.clear, 0),
             icon: const Icon(Icons.delete_outlined),
-            isDestructive: true,
+            isDestructive: channel == null,
           ),
       ],
       AdaptiveModalAction(
         label: showing
-            ? 'Hide group backgrounds on my devices'
-            : 'Show group backgrounds on my devices',
+            ? l10n.gruppechatHideGroupBackgrounds
+            : l10n.gruppechatShowGroupBackgrounds,
         value: (_BackgroundAction.toggleVisibility, 0),
         icon: Icon(
           showing ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -282,7 +396,7 @@ Future<void> showGroupBackgroundMenu({
       final preset = groupBackgroundPresets[picked.$2].$2;
       await showFutureLoadingDialog(
         context: context,
-        future: () => group.setBackground(preset),
+        future: () => set(preset),
       );
     case _BackgroundAction.image:
       final files = await selectFiles(context, type: FileType.image);
@@ -295,7 +409,7 @@ Future<void> showGroupBackgroundMenu({
             await file.readAsBytes(),
             filename: file.name,
           );
-          await group.setBackground(
+          await set(
             GroupBackground(
               kind: GroupBackgroundKind.image,
               url: url,
@@ -304,11 +418,14 @@ Future<void> showGroupBackgroundMenu({
           );
         },
       );
-    case _BackgroundAction.clear:
+    case _BackgroundAction.none:
       await showFutureLoadingDialog(
         context: context,
-        future: () => group.setBackground(null),
+        future: () =>
+            set(const GroupBackground(kind: GroupBackgroundKind.none)),
       );
+    case _BackgroundAction.clear:
+      await showFutureLoadingDialog(context: context, future: () => set(null));
     case _BackgroundAction.toggleVisibility:
       await showFutureLoadingDialog(
         context: context,
@@ -323,14 +440,14 @@ Future<void> showGroupNicknameDialog({
   required GruppechatGroup group,
   required User user,
 }) async {
+  final l10n = L10n.of(context);
   final state = group.state;
   final isMe = group.space.client.userID == user.id;
   if (!isMe && state.isNicknameLocked(user.id)) {
     await showOkCancelAlertDialog(
       context: context,
-      title: 'Nickname locked',
-      message:
-          '${user.calcDisplayname()} has chosen to set their own nickname.',
+      title: l10n.gruppechatNicknameLocked,
+      message: l10n.gruppechatNicknameLockedDescription(user.calcDisplayname()),
     );
     return;
   }
@@ -338,15 +455,17 @@ Future<void> showGroupNicknameDialog({
   final setBy = current?.setBy;
   final name = await showTextInputDialog(
     context: context,
-    title: 'Nickname for ${user.calcDisplayname()}',
+    title: l10n.gruppechatNicknameFor(user.calcDisplayname()),
     message: setBy == null
-        ? 'Everyone in the group sees this name. Leave it empty to remove it.'
-        : 'Currently set by '
-              '${group.space.unsafeGetUserFromMemoryOrFallback(setBy).calcDisplayname()}. '
-              'Leave it empty to remove it.',
+        ? l10n.gruppechatNicknameDescription
+        : l10n.gruppechatNicknameSetBy(
+            group.space
+                .unsafeGetUserFromMemoryOrFallback(setBy)
+                .calcDisplayname(),
+          ),
     initialText: current?.name,
-    okLabel: 'Save',
-    cancelLabel: L10n.of(context).cancel,
+    okLabel: l10n.save,
+    cancelLabel: l10n.cancel,
     maxLength: 64,
   );
   if (name == null || !context.mounted) return;
@@ -376,22 +495,23 @@ Future<void> showMemberRolesMenu({
   required GruppechatGroup group,
   required String userId,
 }) async {
+  final l10n = L10n.of(context);
   final state = group.state;
   final roles = state.roles;
   if (roles.isEmpty) {
     await showOkCancelAlertDialog(
       context: context,
-      title: 'No roles yet',
-      message: 'Create roles from the details page of the group first.',
+      title: l10n.gruppechatNoRolesYet,
+      message: l10n.gruppechatCreateRolesFirst,
     );
     return;
   }
   final assigned = state.roleIdsOf(userId);
   final roleId = await showModalActionPopup<String>(
     context: context,
-    title: 'Roles',
-    message: 'Tap a role to add or remove it.',
-    cancelLabel: L10n.of(context).cancel,
+    title: l10n.gruppechatRoles,
+    message: l10n.gruppechatTapRoleToToggle,
+    cancelLabel: l10n.cancel,
     actions: [
       for (final role in roles)
         AdaptiveModalAction(

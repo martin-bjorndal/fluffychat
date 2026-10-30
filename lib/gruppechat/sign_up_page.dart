@@ -42,11 +42,14 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
     final username = normalizeUsername(_usernameController.text);
     final password = _passwordController.text;
     final inviteCode = _inviteCodeController.text.trim();
+    final l10n = L10n.of(context);
     setState(() {
-      _usernameError = username.isEmpty ? 'Choose a username' : null;
-      _passwordError = password.length < 8 ? 'Use at least 8 characters' : null;
+      _usernameError = username.isEmpty ? l10n.gruppechatChooseUsername : null;
+      _passwordError = password.length < 8
+          ? l10n.gruppechatPasswordTooShort
+          : null;
       _inviteCodeError = inviteCode.isEmpty
-          ? 'Enter the invite code you were given'
+          ? l10n.gruppechatEnterInviteCode
           : null;
       _error = null;
     });
@@ -72,25 +75,22 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
       setState(() {
         switch (e.problem) {
           case SignUpProblem.missingInviteCode:
-            _inviteCodeError = 'Enter the invite code you were given';
+            _inviteCodeError = l10n.gruppechatEnterInviteCode;
           case SignUpProblem.invalidInviteCode:
-            _inviteCodeError = 'This invite code is wrong, used up or expired';
+            _inviteCodeError = l10n.gruppechatInvalidInviteCode;
           case SignUpProblem.usernameTaken:
-            _usernameError = 'That username is taken';
+            _usernameError = l10n.gruppechatUsernameTaken;
           case SignUpProblem.invalidUsername:
-            _usernameError =
-                'Use only lowercase letters, numbers, dots, dashes and '
-                'underscores';
+            _usernameError = l10n.gruppechatInvalidUsername;
           case SignUpProblem.weakPassword:
-            _passwordError = e.serverMessage ?? 'Choose a stronger password';
+            _passwordError =
+                e.serverMessage ?? l10n.pleaseChooseAStrongPassword;
           case SignUpProblem.signUpDisabled:
-            _error = 'This server does not accept new accounts right now.';
+            _error = l10n.gruppechatSignUpDisabled;
           case SignUpProblem.unsupported:
-            _error =
-                'This server does not support signing up with an invite '
-                'code.';
+            _error = l10n.gruppechatSignUpUnsupported;
           case SignUpProblem.other:
-            _error = e.serverMessage ?? 'Something went wrong. Try again.';
+            _error = e.serverMessage ?? l10n.oopsSomethingWentWrong;
         }
       });
     } catch (e) {
@@ -103,7 +103,8 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final homeserver = widget.client.homeserver?.host;
+    final host = widget.client.homeserver?.host;
+    final homeserver = host == null ? null : displayHost(host);
     final error = _error;
     return LoginScaffold(
       appBar: AppBar(
@@ -134,8 +135,7 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Create an account on $homeserver. You need an invite code '
-                  'from the group admin.',
+                  L10n.of(context).gruppechatSignUpIntro(homeserver),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -155,8 +155,8 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.account_box_outlined),
                   errorText: _usernameError,
-                  hintText: 'e.g. martin',
-                  labelText: 'Username',
+                  hintText: L10n.of(context).gruppechatUsernameHint,
+                  labelText: L10n.of(context).gruppechatUsername,
                 ),
               ),
             ),
@@ -200,7 +200,7 @@ class _GruppechatSignUpPageState extends State<GruppechatSignUpPage> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.vpn_key_outlined),
                   errorText: _inviteCodeError,
-                  labelText: 'Invite code',
+                  labelText: L10n.of(context).gruppechatInviteCode,
                 ),
               ),
             ),

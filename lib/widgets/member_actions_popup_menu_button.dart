@@ -71,11 +71,11 @@ Future<void> showMemberActionsPopupMenu({
       if (group != null && (group.canSetNicknames || isMe))
         PopupMenuItem(
           value: _MemberActions.groupNickname,
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.edit_outlined),
-              SizedBox(width: 18),
-              Text('Nickname in group'),
+              const Icon(Icons.edit_outlined),
+              const SizedBox(width: 18),
+              Text(L10n.of(context).gruppechatNicknameInGroup),
             ],
           ),
         ),
@@ -88,8 +88,8 @@ Future<void> showMemberActionsPopupMenu({
               const SizedBox(width: 18),
               Text(
                 nicknameLocked
-                    ? 'Let others rename me'
-                    : 'Stop others renaming me',
+                    ? L10n.of(context).gruppechatLetOthersRenameMe
+                    : L10n.of(context).gruppechatStopOthersRenamingMe,
               ),
             ],
           ),
@@ -97,11 +97,11 @@ Future<void> showMemberActionsPopupMenu({
       if (group != null && group.canManageRoles)
         PopupMenuItem(
           value: _MemberActions.groupRoles,
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.people_outlined),
-              SizedBox(width: 18),
-              Text('Roles'),
+              const Icon(Icons.people_outlined),
+              const SizedBox(width: 18),
+              Text(L10n.of(context).gruppechatRoles),
             ],
           ),
         ),

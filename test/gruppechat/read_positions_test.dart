@@ -23,15 +23,21 @@ void main() {
       );
 
   test('readers are shown under the message they read up to', () {
-    expect(positions([(bob, r'$m2')]), {r'$m2': [bob]});
+    expect(positions([(bob, r'$m2')]), {
+      r'$m2': [bob],
+    });
   });
 
   test('a receipt on a hidden event moves up to the message above it', () {
-    expect(positions([(bob, r'$reaction')]), {r'$m3': [bob]});
+    expect(positions([(bob, r'$reaction')]), {
+      r'$m3': [bob],
+    });
   });
 
   test('the receipt furthest down the chat counts', () {
-    expect(positions([(bob, r'$m1'), (bob, r'$m3')]), {r'$m3': [bob]});
+    expect(positions([(bob, r'$m1'), (bob, r'$m3')]), {
+      r'$m3': [bob],
+    });
   });
 
   test('nobody is shown under their own message, and I am never shown', () {

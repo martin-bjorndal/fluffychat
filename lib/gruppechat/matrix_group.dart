@@ -177,18 +177,54 @@ class GruppechatGroup {
         '',
         background?.toContent() ?? <String, Object?>{},
       );
+
+  /// Invites everyone with [roleId] who isn't in [channel] yet, and returns
+  /// their user IDs. Banned members are left out.
+  Future<List<String>> inviteRole(Room channel, String roleId) async {
+    final present = {
+      for (final user in await channel.requestParticipants([
+        Membership.join,
+        Membership.invite,
+        Membership.ban,
+      ]))
+        user.id,
+    };
+    final invitees = [
+      for (final userId in state.membersWithRole(roleId))
+        if (!present.contains(userId)) userId,
+    ];
+    for (final userId in invitees) {
+      await channel.invite(userId);
+    }
+    return invitees;
+  }
 }
 
 extension GruppechatRoomExtension on Room {
+  /// The background this channel sets for itself, overriding the group's.
+  GroupBackground? get gruppechatChannelBackground =>
+      GroupBackground.fromContent(
+        getState(GruppechatEventTypes.background)?.content,
+      );
+
+  bool get canSetGruppechatChannelBackground =>
+      canChangeStateEvent(GruppechatEventTypes.background);
+
+  /// Sets this channel's own background. Null removes it, so the channel
+  /// shows the group's background again.
+  Future<void> setGruppechatChannelBackground(GroupBackground? background) =>
+      client.setRoomStateWithKey(
+        id,
+        GruppechatEventTypes.background,
+        '',
+        background?.toContent() ?? <String, Object?>{},
+      );
+
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {
     final group = GruppechatGroup.of(this);
     if (group == null) return null;
-    final channel = group.space.id == id
-        ? null
-        : GroupBackground.fromContent(
-            getState(GruppechatEventTypes.background)?.content,
-          );
+    final channel = group.space.id == id ? null : gruppechatChannelBackground;
     return resolveGroupBackground(
       channel: channel,
       group: group.state.background,

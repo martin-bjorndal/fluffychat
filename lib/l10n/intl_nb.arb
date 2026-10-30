@@ -62,7 +62,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "appLock": "Programlås",
+    "appLock": "Applås",
     "@appLock": {
         "type": "String",
         "placeholders": {}
@@ -101,17 +101,17 @@
             }
         }
     },
-    "banFromChat": "Bannlys fra sludring",
+    "banFromChat": "Utesteng fra chatten",
     "@banFromChat": {
         "type": "String",
         "placeholders": {}
     },
-    "banned": "Bannlyst",
+    "banned": "Utestengt",
     "@banned": {
         "type": "String",
         "placeholders": {}
     },
-    "bannedUser": "{username} bannlyste {targetName}",
+    "bannedUser": "{username} utestengte {targetName}",
     "@bannedUser": {
         "type": "String",
         "placeholders": {
@@ -138,7 +138,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "changedTheChatAvatar": "{username} endret sludreavatar",
+    "changedTheChatAvatar": "{username} endret bildet til chatten",
     "@changedTheChatAvatar": {
         "type": "String",
         "placeholders": {
@@ -147,7 +147,7 @@
             }
         }
     },
-    "changedTheChatPermissions": "{username} endret sludretilgangene",
+    "changedTheChatPermissions": "{username} endret tilgangene i chatten",
     "@changedTheChatPermissions": {
         "type": "String",
         "placeholders": {
@@ -268,7 +268,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "changeTheme": "Endre din stil",
+    "changeTheme": "Endre utseende",
     "@changeTheme": {
         "type": "String",
         "placeholders": {}
@@ -283,17 +283,17 @@
         "type": "String",
         "placeholders": {}
     },
-    "chat": "Sludring",
+    "chat": "Chat",
     "@chat": {
         "type": "String",
         "placeholders": {}
     },
-    "chatBackup": "Sludringssikkerhetskopi",
+    "chatBackup": "Sikkerhetskopi av chatter",
     "@chatBackup": {
         "type": "String",
         "placeholders": {}
     },
-    "chatDetails": "Sludringsdetaljer",
+    "chatDetails": "Chatdetaljer",
     "@chatDetails": {
         "type": "String",
         "placeholders": {}
@@ -308,17 +308,17 @@
         "type": "String",
         "placeholders": {}
     },
-    "compareEmojiMatch": "Sammenlign og forsikre at følgende emojiene samsvarer med de på den andre enheten",
+    "compareEmojiMatch": "Sjekk at disse emojiene er de samme som på den andre enheten",
     "@compareEmojiMatch": {
         "type": "String",
         "placeholders": {}
     },
-    "compareNumbersMatch": "Sammenlign og forsikre at følgende tall samsvarer med de på den andre enheten",
+    "compareNumbersMatch": "Sjekk at disse tallene er de samme som på den andre enheten",
     "@compareNumbersMatch": {
         "type": "String",
         "placeholders": {}
     },
-    "configureChat": "Sett opp sludring",
+    "configureChat": "Sett opp chat",
     "@configureChat": {
         "type": "String",
         "placeholders": {}
@@ -371,7 +371,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "createdTheChat": "{username} opprettet sludringen",
+    "createdTheChat": "{username} opprettet chatten",
     "@createdTheChat": {
         "type": "String",
         "placeholders": {
@@ -432,7 +432,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "directChats": "Direktesludringer",
+    "directChats": "Direktemeldinger",
     "@directChats": {
         "type": "String",
         "placeholders": {}
@@ -482,12 +482,12 @@
         "type": "String",
         "placeholders": {}
     },
-    "emptyChat": "Tom sludring",
+    "emptyChat": "Tom chat",
     "@emptyChat": {
         "type": "String",
         "placeholders": {}
     },
-    "enableEmotesGlobally": "Skru på smilefjespakke for hele programmet",
+    "enableEmotesGlobally": "Bruk smilefjespakken i hele appen",
     "@enableEmotesGlobally": {
         "type": "String",
         "placeholders": {}
@@ -536,12 +536,12 @@
         "type": "String",
         "placeholders": {}
     },
-    "forward": "Videre",
+    "forward": "Videresend",
     "@forward": {
         "type": "String",
         "placeholders": {}
     },
-    "fromJoining": "Fra å ta del",
+    "fromJoining": "Fra de ble med",
     "@fromJoining": {
         "type": "String",
         "placeholders": {}
@@ -580,7 +580,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "guestsCanJoin": "Gjester kan ta del",
+    "guestsCanJoin": "Gjester kan bli med",
     "@guestsCanJoin": {
         "type": "String",
         "placeholders": {}
@@ -680,7 +680,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "joinedTheChat": "{username}ble med i samtalen",
+    "joinedTheChat": "{username} ble med i chatten",
     "@joinedTheChat": {
         "type": "String",
         "placeholders": {
@@ -689,7 +689,7 @@
             }
         }
     },
-    "joinRoom": "Ta del i rom",
+    "joinRoom": "Bli med i rommet",
     "@joinRoom": {
         "type": "String",
         "placeholders": {}
@@ -706,7 +706,7 @@
             }
         }
     },
-    "kickedAndBanned": "{username} kastet ut og bannlyste {targetName}",
+    "kickedAndBanned": "{username} kastet ut og utestengte {targetName}",
     "@kickedAndBanned": {
         "type": "String",
         "placeholders": {
@@ -718,7 +718,7 @@
             }
         }
     },
-    "kickFromChat": "Kast ut av sludringen",
+    "kickFromChat": "Kast ut av chatten",
     "@kickFromChat": {
         "type": "String",
         "placeholders": {}
@@ -737,7 +737,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "leftTheChat": "Forlat sludringen",
+    "leftTheChat": "Forlot chatten",
     "@leftTheChat": {
         "type": "String",
         "placeholders": {}
@@ -747,7 +747,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "loadCountMoreParticipants": "Last inn {count} deltagere til",
+    "loadCountMoreParticipants": "Last inn {count} deltakere til",
     "@loadCountMoreParticipants": {
         "type": "String",
         "placeholders": {
@@ -756,7 +756,7 @@
             }
         }
     },
-    "loadingPleaseWait": "Laster inn… Vent.",
+    "loadingPleaseWait": "Laster inn … Vent litt.",
     "@loadingPleaseWait": {
         "type": "String",
         "placeholders": {}
@@ -800,12 +800,12 @@
         "type": "String",
         "placeholders": {}
     },
-    "muteChat": "Forstum sludring",
+    "muteChat": "Demp chatten",
     "@muteChat": {
         "type": "String",
         "placeholders": {}
     },
-    "newChat": "Ny sludring",
+    "newChat": "Ny chat",
     "@newChat": {
         "type": "String",
         "placeholders": {}
@@ -855,7 +855,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "notifications": "Merknader",
+    "notifications": "Varsler",
     "@notifications": {
         "type": "String",
         "placeholders": {}
@@ -884,7 +884,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "openAppToReadMessages": "Åpne programmet for å lese meldinger",
+    "openAppToReadMessages": "Åpne appen for å lese meldinger",
     "@openAppToReadMessages": {
         "type": "String",
         "placeholders": {}
@@ -894,7 +894,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "participant": "Deltager",
+    "participant": "Deltaker",
     "@participant": {
         "type": "String",
         "placeholders": {}
@@ -964,7 +964,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "redactedAnEvent": "{username} har trukket tilbake en hendelse",
+    "redactedAnEvent": "{username} slettet en hendelse",
     "@redactedAnEvent": {
         "type": "String",
         "placeholders": {
@@ -997,7 +997,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "unbanFromChat": "Opphev bannlysning",
+    "unbanFromChat": "Opphev utestengelse",
     "@unbanFromChat": {
         "type": "String",
         "placeholders": {}
@@ -1126,7 +1126,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "settings": "Innstilinger",
+    "settings": "Innstillinger",
     "@settings": {
         "type": "String",
         "placeholders": {}
@@ -1204,7 +1204,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "unbannedUser": "{username} opphevet bannlysning av {targetName}",
+    "unbannedUser": "{username} opphevet utestengelsen av {targetName}",
     "@unbannedUser": {
         "type": "String",
         "placeholders": {
@@ -1240,7 +1240,7 @@
             }
         }
     },
-    "unmuteChat": "Opphev forstumming av sludring",
+    "unmuteChat": "Slå på varsler",
     "@unmuteChat": {
         "type": "String",
         "placeholders": {}
@@ -1283,7 +1283,7 @@
             }
         }
     },
-    "userLeftTheChat": "{username} har forlatt sludringen",
+    "userLeftTheChat": "{username} har forlatt chatten",
     "@userLeftTheChat": {
         "type": "String",
         "placeholders": {
@@ -1319,12 +1319,12 @@
         "type": "String",
         "placeholders": {}
     },
-    "visibilityOfTheChatHistory": "Sludrehistorikkens synlighet",
+    "visibilityOfTheChatHistory": "Synlighet for chatloggen",
     "@visibilityOfTheChatHistory": {
         "type": "String",
         "placeholders": {}
     },
-    "visibleForAllParticipants": "Synlig for alle deltagere",
+    "visibleForAllParticipants": "Synlig for alle deltakere",
     "@visibleForAllParticipants": {
         "type": "String",
         "placeholders": {}
@@ -1359,7 +1359,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "whoIsAllowedToJoinThisGroup": "Hvem tillates å ta del i denne gruppen",
+    "whoIsAllowedToJoinThisGroup": "Hvem kan bli med i denne gruppen",
     "@whoIsAllowedToJoinThisGroup": {
         "type": "String",
         "placeholders": {}
@@ -1389,12 +1389,12 @@
         "type": "String",
         "placeholders": {}
     },
-    "youAreNoLongerParticipatingInThisChat": "Du deltar ikke lenger i denne sludringen",
+    "youAreNoLongerParticipatingInThisChat": "Du er ikke lenger med i denne chatten",
     "@youAreNoLongerParticipatingInThisChat": {
         "type": "String",
         "placeholders": {}
     },
-    "youHaveBeenBannedFromThisChat": "Du har blitt bannlyst fra denne sludringen",
+    "youHaveBeenBannedFromThisChat": "Du er utestengt fra denne chatten",
     "@youHaveBeenBannedFromThisChat": {
         "type": "String",
         "placeholders": {}
@@ -1415,13 +1415,13 @@
         "placeholders": {}
     },
     "repeatPassword": "Gjenta passord",
-    "addToSpace": "Legg til romgruppe",
-    "autoplayImages": "Automatisk spill av animerte stickers og emojis",
+    "addToSpace": "Legg til i romgruppe",
+    "autoplayImages": "Spill av animerte klistremerker og emojier automatisk",
     "@autoplayImages": {
         "type": "String",
         "placeholder": {}
     },
-    "badServerLoginTypesException": "Denne hjemme serveren støtter følgende innloggings-typer:\n{serverVersions}\nMen denne applikasjonen støtter kun:\n{supportedVersions}",
+    "badServerLoginTypesException": "Denne hjemmeserveren støtter disse innloggingstypene:\n{serverVersions}\nMen appen støtter bare:\n{supportedVersions}",
     "@badServerLoginTypesException": {
         "type": "String",
         "placeholders": {
@@ -1520,10 +1520,10 @@
     "changeTheDescriptionOfTheGroup": "Endre beskrivelsen til chatten",
     "inviteOtherUsers": "Inviter andre brukere til denne chatten",
     "open": "Åpne",
-    "waitingForServer": "Venter på server...",
+    "waitingForServer": "Venter på serveren …",
     "notificationRuleJitsi": "Jitsi",
     "takeAPhoto": "Ta et bilde",
-    "setChatDescription": "Sett chat beskrivelse",
+    "setChatDescription": "Angi chatbeskrivelse",
     "openGallery": "Åpne galleri",
     "pushNotificationsNotAvailable": "Push-varsler er ikke tilgjengelige",
     "gallery": "Galleri",
@@ -1554,25 +1554,25 @@
             }
         }
     },
-    "calculatingFileSize": "Beregner filstørrelse...",
+    "calculatingFileSize": "Beregner filstørrelse …",
     "continueText": "Fortsett",
     "serverInformation": "Serverinformasjon:",
     "previous": "Forrige",
     "name": "Navn",
     "version": "Versjon",
-    "invalidUrl": "Ugyldig url",
+    "invalidUrl": "Ugyldig URL",
     "notificationRuleReaction": "Reaksjon",
     "notificationRuleMessage": "Melding",
-    "notificationRuleEncrypted": "Kkryptert",
+    "notificationRuleEncrypted": "Kryptert",
     "more": "Mer",
     "passwordIsWrong": "Det inntastede passordet ditt er feil",
     "manageAccount": "Administrer konto",
-    "nothingFound": "Ingenting funnet...",
+    "nothingFound": "Fant ingenting …",
     "incomingMessages": "Innkommende meldinger",
     "changelog": "Endringslogg",
     "contactServerAdmin": "Kontakt serveradministrator",
     "setWallpaper": "Sett bakgrunnsbilde",
-    "unsupportedAndroidVersion": "Usupportert Android-versjon",
+    "unsupportedAndroidVersion": "Android-versjonen støttes ikke",
     "youJoinedTheChat": "Du har blitt med i chatten",
     "youRejectedTheInvitation": "Du har avvist invitasjonen",
     "formattedMessages": "Formaterte meldinger",
@@ -1653,7 +1653,7 @@
         "placeholders": {}
     },
     "globalChatId": "Global chat-ID",
-    "chatPermissions": "Chat tillatelser",
+    "chatPermissions": "Tilganger i chatten",
     "commandHint_invite": "Inviter den gitte brukeren til dette rommet",
     "@commandHint_invite": {
         "type": "String",
@@ -1707,7 +1707,7 @@
         }
     },
     "createGroup": "Opprett gruppe",
-    "editRoomAliases": "Rediger rom aliaser",
+    "editRoomAliases": "Rediger romadresser",
     "@editRoomAliases": {
         "type": "String",
         "placeholders": {}
@@ -1731,7 +1731,7 @@
         }
     },
     "youAcceptedTheInvitation": "👍 Du har akseptert invitasjonen",
-    "youBannedUser": "Du stengte ute {user}",
+    "youBannedUser": "Du utestengte {user}",
     "@youBannedUser": {
         "placeholders": {
             "user": {
@@ -1759,7 +1759,7 @@
     "@sendAsText": {
         "type": "String"
     },
-    "sendImages": "Send {count} bilde",
+    "sendImages": "Send {count} bilder",
     "@sendImages": {
         "type": "String",
         "placeholders": {
@@ -1800,7 +1800,7 @@
             }
         }
     },
-    "youKicked": "👞 You sparket ut {user}",
+    "youKicked": "👞 Du kastet ut {user}",
     "@youKicked": {
         "placeholders": {
             "user": {
@@ -1808,7 +1808,7 @@
             }
         }
     },
-    "youKickedAndBanned": "🙅 Du sparket og stengte ute {user}",
+    "youKickedAndBanned": "🙅 Du kastet ut og utestengte {user}",
     "@youKickedAndBanned": {
         "placeholders": {
             "user": {
@@ -1862,7 +1862,7 @@
     "disableEncryptionWarning": "Av sikkerhetshensyn kan du ikke deaktivere kryptering i en chat der det har vært aktivert tidligere.",
     "readUpToHere": "Lest frem til her",
     "jump": "Hopp",
-    "reportErrorDescription": "😭 Å nei. Noe gikk galt. Hvis du ønsker det, kan du rapportere denne feilen til utviklerne.",
+    "reportErrorDescription": "😭 Å nei. Noe gikk galt. Du kan kopiere feilen og sende den til den som drifter appen.",
     "invalidInput": "Ugyldig inndata!",
     "pleaseEnterANumber": "Vennligst skriv inn et tall større enn 0",
     "archiveRoomDescription": "Chatten vil bli flyttet til arkivet. Andre brukere vil kunne se at du har forlatt chatten.",
@@ -1947,7 +1947,7 @@
             }
         }
     },
-    "stickers": "Stickers",
+    "stickers": "Klistremerker",
     "commandHint_ignore": "Ignorer den oppgitte matrix IDen",
     "commandHint_unignore": "Opphev ignorering av den gitte matrix IDen",
     "unreadChatsInApp": "{appname}: {unread} uleste chatter",
@@ -2045,14 +2045,14 @@
             }
         }
     },
-    "chatDescription": "Chat beskrivelse",
-    "hideRedactedMessages": "Skjul redigerte meldinger",
-    "hideRedactedMessagesBody": "Hvis noen redigerer en melding, vil ikke denne meldingen lenger være synlig i chatten.",
+    "chatDescription": "Chatbeskrivelse",
+    "hideRedactedMessages": "Skjul slettede meldinger",
+    "hideRedactedMessagesBody": "Når noen sletter en melding, vises den ikke lenger i chatten.",
     "blockListDescription": "Du kan blokkere brukere som forstyrrer deg. Du vil ikke kunne motta meldinger eller rominvitasjoner fra brukerne på din personlige blokkeringsliste.",
-    "blockUsername": "Ignorer brukernavn",
+    "blockUsername": "Blokker brukernavn",
     "noChatDescriptionYet": "Ingen chatbeskrivelse er opprettet ennå.",
-    "redactMessageDescription": "Meldingen vil bli redigert for alle deltakerne i denne samtalen. Dette kan ikke angres.",
-    "optionalRedactReason": "(Valgfritt) Årsak til redigering av denne meldingen...",
+    "redactMessageDescription": "Meldingen blir slettet for alle i denne samtalen. Dette kan ikke angres.",
+    "optionalRedactReason": "(Valgfritt) Hvorfor meldingen slettes …",
     "locationDisabledNotice": "Lokasjonstjenester er deaktivert. Vennligst aktiver dem for at du skal kunne dele posisjonen din.",
     "@locationDisabledNotice": {
         "type": "String",
@@ -2101,7 +2101,7 @@
             }
         }
     },
-    "pinMessage": "Fest til rommet",
+    "pinMessage": "Fest til chatten",
     "emojis": "Emojier",
     "unsupportedAndroidVersionLong": "Denne funksjonen krever en nyere Android-versjon. Se etter oppdateringer eller støtte for Lineage OS.",
     "notificationRuleRoomnotifDescription": "Varsler brukeren når en melding inneholder ‘@room’.",
@@ -2181,7 +2181,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "emoteKeyboardNoRecents": "Nylig brukte emotes vil vises her ...",
+    "emoteKeyboardNoRecents": "Emojier du har brukt nylig, vises her …",
     "@emoteKeyboardNoRecents": {
         "type": "String",
         "placeholders": {}
@@ -2233,7 +2233,7 @@
         "type": "String",
         "description": "Usage hint for the command /create"
     },
-    "redactedBy": "Redigert av {username}",
+    "redactedBy": "Slettet av {username}",
     "@redactedBy": {
         "type": "String",
         "placeholders": {
@@ -2242,7 +2242,7 @@
             }
         }
     },
-    "redactedByBecause": "Redigert av {username} fordi: «{reason}»",
+    "redactedByBecause": "Slettet av {username} fordi: «{reason}»",
     "@redactedByBecause": {
         "type": "String",
         "placeholders": {
@@ -2254,12 +2254,12 @@
             }
         }
     },
-    "redactMessage": "Rediger melding",
+    "redactMessage": "Slett melding",
     "@redactMessage": {
         "type": "String",
         "placeholders": {}
     },
-    "roomVersion": "Rom versjon",
+    "roomVersion": "Romversjon",
     "@roomVersion": {
         "type": "String",
         "placeholders": {}
@@ -2275,7 +2275,7 @@
         }
     },
     "removeFromSpaceDescription": "Chatten blir fjernet fra romgruppen, men vises fortsatt i chatlisten din.",
-    "countChats": "{chats} chats",
+    "countChats": "{chats} chatter",
     "@countChats": {
         "type": "String",
         "placeholders": {
@@ -2319,9 +2319,9 @@
     "pollHasBeenEnded": "Avstemningen er avsluttet",
     "roomUpgradeDescription": "Chatten vil deretter bli gjenskapt med den nye romversjonen. Alle deltakere vil bli varslet om at de må bytte til den nye chatten. Du kan finne ut mer om romversjoner på https://spec.matrix.org/latest/rooms/",
     "groupCanBeFoundViaSearch": "Gruppen kan finnes via søk",
-    "commandHint_sendraw": "Send raw json",
+    "commandHint_sendraw": "Send rå JSON",
     "replyInThread": "Svar i tråden",
-    "sessionLostBody": "Sesjonen din er tapt. Vennligst rapporter denne feilen til utviklerne på {url}. Feilmeldingen er: {error}",
+    "sessionLostBody": "Økten din er tapt. Rapporter denne feilen til utviklerne på {url}. Feilmeldingen er: {error}",
     "@sessionLostBody": {
         "type": "String",
         "placeholders": {
@@ -2334,15 +2334,15 @@
         }
     },
     "noticeChatBackupDeviceVerification": "Merk: Når du kobler alle enhetene dine til chat-sikkerhetskopien, blir de automatisk bekreftet.",
-    "notificationRuleTombstone": "Gravstein",
+    "notificationRuleTombstone": "Rom erstattet",
     "answersWillBeVisibleWhenPollHasEnded": "Svarene vil være synlige når avstemningen er avsluttet",
     "thread": "Tråd",
     "backToMainChat": "Tilbake til hovedchatten",
     "saveChanges": "Lagre endringer",
     "skipChatBackup": "Hopp over sikkerhetskopiering av chat",
-    "commandHint_googly": "Send noen googly-eyes",
+    "commandHint_googly": "Send googly-øyne",
     "commandHint_cuddle": "Send en kos",
-    "googlyEyesContent": "{senderName} sender deg googly-eyes",
+    "googlyEyesContent": "{senderName} sender deg googly-øyne",
     "@googlyEyesContent": {
         "type": "String",
         "placeholders": {
@@ -2377,8 +2377,8 @@
     "addToBundle": "Legg til i pakke",
     "removeFromBundle": "Fjern fra denne pakken",
     "bundleName": "Navn på pakke",
-    "noBackupWarning": "Advarsel! Hvis du ikke aktiverer sikkerhetskopiering av chatten, vil du miste tilgangen til dine krypterte meldinger. Det anbefales sterkt å aktivere sikkerhetskopiering før du logger ut.",
-    "commandHint_op": "Angi makt-nivå for valgt bruker (standard: 50)",
+    "noBackupWarning": "Advarsel! Hvis du ikke slår på sikkerhetskopi av chattene, mister du tilgangen til de krypterte meldingene dine. Slå det på før du logger ut.",
+    "commandHint_op": "Angi tilgangsnivået til brukeren (standard: 50)",
     "@commandHint_op": {
         "type": "String",
         "description": "Usage hint for the command /op"
@@ -2404,10 +2404,10 @@
     "logs": "Logger",
     "advancedConfigs": "Avanserte innstillinger",
     "advancedConfigurations": "Avanserte innstillinger",
-    "createSticker": "Lag sticker eller emoji",
-    "useAsSticker": "Bruk som sticker",
+    "createSticker": "Lag klistremerke eller emoji",
+    "useAsSticker": "Bruk som klistremerke",
     "pollQuestion": "Spørsmål til avstemning",
-    "hasKnocked": "🚪{user} har banket på",
+    "hasKnocked": "🚪 {user} har banket på",
     "@hasKnocked": {
         "placeholders": {
             "user": {
@@ -2480,7 +2480,7 @@
     "chatPermissionsDescription": "Definer hvilket tilgangsnivå som kreves for bestemte handlinger i denne chatten. Nivåene 0, 50 og 100 representerer vanligvis brukere, moderatorer og administratorer, men alle mellomtrinn er mulige.",
     "knocking": "Banker på",
     "noKeyForThisMessage": "Dette kan skje hvis meldingen ble sendt før du logget inn på kontoen din på denne enheten.\n\nDet er også mulig at senderen har blokkert enheten din, eller at noe gikk galt med internettforbindelsen.\n\nEr du i stand til å lese meldingen i en annen sesjon? Da kan du overføre meldingen fra den! Gå til Innstillinger > Enheter og sørg for at enhetene dine har verifisert hverandre. Neste gang du åpner rommet og begge sesjonene er i forgrunnen, vil nøklene bli overført automatisk.\n\nVil du unngå å miste nøklene når du logger ut eller bytter enhet? Sørg for at du har aktivert sikkerhetskopiering av chat i innstillingene.",
-    "report": "rapportere",
+    "report": "Rapporter",
     "addChatOrSubSpace": "Legg til chat eller under-romgruppe",
     "signIn": "Logg på",
     "createNewAccount": "Opprett ny konto",
@@ -2490,13 +2490,13 @@
     "join": "Bli med",
     "searchOrEnterHomeserverAddress": "Søk eller angi adresse til hjemmeserver",
     "matrixId": "Matrix ID",
-    "setPowerLevel": "Angi styrkenivå",
+    "setPowerLevel": "Angi tilgangsnivå",
     "makeModerator": "Gjør til moderator",
     "makeAdmin": "Gjør til admin",
     "removeModeratorRights": "Fjern moderator-rettigheter",
     "removeAdminRights": "Fjern admin-rettigheter",
-    "powerLevel": "Styrkenivå",
-    "setPowerLevelDescription": "Styrkenivåer definerer hva et medlem har lov til å gjøre i dette rommet, og varierer vanligvis mellom 0 og 100.",
+    "powerLevel": "Tilgangsnivå",
+    "setPowerLevelDescription": "Tilgangsnivået bestemmer hva et medlem kan gjøre i dette rommet, vanligvis fra 0 til 100.",
     "owner": "Eier",
     "mute": "Demp",
     "@mute": {
@@ -2509,10 +2509,10 @@
     "setLowPriority": "Sett lav prioritet",
     "unsetLowPriority": "Fjern lav prioritet",
     "playSoundOnNotification": "Spill av lyd ved varsling",
-    "addTag": "Legg til emneknagg",
-    "removeTag": "Fjern emneknagg",
-    "tagName": "Navn på emneknagg",
-    "createNewTag": "Opprett ny emneknagg",
+    "addTag": "Legg til etikett",
+    "removeTag": "Fjern etikett",
+    "tagName": "Navn på etikett",
+    "createNewTag": "Opprett ny etikett",
     "discardEdits": "Du har endringer som ikke er lagret. Vil du forkaste endringene?",
     "@discardEdits": {
         "type": "String",
@@ -2675,7 +2675,7 @@
         "type": "String",
         "placeholders": {}
     },
-    "passphraseNumberRequirement": "Inneholder ett tall.",
+    "passphraseNumberRequirement": "Inneholder et tall.",
     "@passphraseNumberRequirement": {
         "type": "String",
         "placeholders": {}
@@ -2741,7 +2741,7 @@
     "generatingThumbnail": "Genererer miniatyrbilde",
     "encrypting": "Krypterer",
     "uploading": "Laster opp",
-    "edited": "(redgiert)",
+    "edited": "(redigert)",
     "couldNotBeSent": "Kunne ikke sendes",
     "yesterday": "I går",
     "resetRecoveryKey": "Tilbakestill gjenopprettingsnøkkel",
@@ -2766,8 +2766,8 @@
     "buildDoesNotSupportFirebase": "Denne versjonen støtter ikke Firebase Cloud Messaging.",
     "unableToRegisterDeviceForFirebase": "Kan ikke registrere enheten for Firebase Cloud Messaging.",
     "unifiedPushDistributors": "UnifiedPush-distributører:",
-    "doubleTapToReact": "Dubbelttrykk for å reagere",
-    "doubleTapToReactDescription": "Dobbelt-trykk på en melding for å reagere i stedet for å merke tekst",
+    "doubleTapToReact": "Dobbelttrykk for å reagere",
+    "doubleTapToReactDescription": "Dobbelttrykk på en melding for å reagere i stedet for å markere tekst",
     "doubleTapReaction": "Reaksjon ved dobbelttrykk",
     "videoCallsBetaWarning": "Videosamtaler er en betafunksjon. Det kan forekomme feil eller uventet oppførsel. Vi vil gjerne høre tilbakemeldingene dine.",
     "sendingFilesDoNotExit": "Sender {count} filer... Ikke avslutt!",
@@ -2799,7 +2799,7 @@
     "decline": "Avslå",
     "videoCall": "Videosamtale",
     "voiceCall": "Talesamtale",
-    "missedCall": "Tapte anrop",
+    "missedCall": "Tapt anrop",
     "callBack": "Ring tilbake",
     "hangUp": "Legg på",
     "startCall": "Start samtale",
@@ -2846,6 +2846,354 @@
     "@serverRespondedWithError": {
         "placeholders": {
             "error": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatSetUpGroupFeatures": "Slå på gruppefunksjoner",
+    "@gruppechatSetUpGroupFeatures": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSetUpGroupFeaturesDescription": "Lar medlemmer sette kallenavn og bakgrunn, og moderatorer styre roller.",
+    "@gruppechatSetUpGroupFeaturesDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRoles": "Roller",
+    "@gruppechatRoles": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoRolesYet": "Ingen roller ennå",
+    "@gruppechatNoRolesYet": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRolesIntro": "Med roller kan du varsle flere på en gang med @rolle.",
+    "@gruppechatRolesIntro": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRolesHowToMention": "Nevn en rolle med @ og ID-en dens for å varsle alle som har den.",
+    "@gruppechatRolesHowToMention": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatCreateRole": "Opprett rolle …",
+    "@gruppechatCreateRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNewRole": "Ny rolle",
+    "@gruppechatNewRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRoleNameHint": "f.eks. Gamere",
+    "@gruppechatRoleNameHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRename": "Gi nytt navn",
+    "@gruppechatRename": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRenameRole": "Gi rollen nytt navn",
+    "@gruppechatRenameRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatDeleteRole": "Slette @{role}?",
+    "@gruppechatDeleteRole": {
+        "type": "String",
+        "placeholders": {
+            "role": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDeleteRoleWarning": "Alle mister denne rollen. Dette kan ikke angres.",
+    "@gruppechatDeleteRoleWarning": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatCreateRolesFirst": "Opprett roller fra detaljsiden til gruppen først.",
+    "@gruppechatCreateRolesFirst": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatTapRoleToToggle": "Trykk på en rolle for å legge den til eller fjerne den.",
+    "@gruppechatTapRoleToToggle": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatGroupBackground": "Gruppebakgrunn",
+    "@gruppechatGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChannelBackground": "Kanalbakgrunn",
+    "@gruppechatChannelBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackground": "Ingen",
+    "@gruppechatNoBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSameAsGroup": "Samme som gruppen",
+    "@gruppechatSameAsGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundSolid": "Farge",
+    "@gruppechatBackgroundSolid": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundGradient": "Fargeovergang",
+    "@gruppechatBackgroundGradient": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundImage": "Bilde",
+    "@gruppechatBackgroundImage": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatBackgroundForEveryone": "Alle i gruppen ser denne bakgrunnen.",
+    "@gruppechatBackgroundForEveryone": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChannelBackgroundForEveryone": "Alle ser denne bakgrunnen i denne kanalen i stedet for gruppens.",
+    "@gruppechatChannelBackgroundForEveryone": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackgroundPermission": "Du har ikke tilgang til å endre bakgrunnen her.",
+    "@gruppechatNoBackgroundPermission": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetMidnight": "Midnatt",
+    "@gruppechatPresetMidnight": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetForest": "Skog",
+    "@gruppechatPresetForest": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetSand": "Sand",
+    "@gruppechatPresetSand": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetSunset": "Solnedgang",
+    "@gruppechatPresetSunset": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetAurora": "Nordlys",
+    "@gruppechatPresetAurora": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPresetFjord": "Fjord",
+    "@gruppechatPresetFjord": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatImageFromDevice": "Bilde fra enheten …",
+    "@gruppechatImageFromDevice": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatRemoveGroupBackground": "Fjern gruppebakgrunnen",
+    "@gruppechatRemoveGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUseGroupBackground": "Bruk gruppens bakgrunn",
+    "@gruppechatUseGroupBackground": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoBackgroundHere": "Ingen bakgrunn i denne kanalen",
+    "@gruppechatNoBackgroundHere": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatHideGroupBackgrounds": "Skjul gruppebakgrunner på enhetene mine",
+    "@gruppechatHideGroupBackgrounds": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatShowGroupBackgrounds": "Vis gruppebakgrunner på enhetene mine",
+    "@gruppechatShowGroupBackgrounds": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameInGroup": "Kallenavn i gruppen",
+    "@gruppechatNicknameInGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatLetOthersRenameMe": "La andre gi meg kallenavn",
+    "@gruppechatLetOthersRenameMe": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatStopOthersRenamingMe": "Hindre andre i å gi meg kallenavn",
+    "@gruppechatStopOthersRenamingMe": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameLocked": "Kallenavnet er låst",
+    "@gruppechatNicknameLocked": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameLockedDescription": "{name} har valgt å sette kallenavnet sitt selv.",
+    "@gruppechatNicknameLockedDescription": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatNicknameFor": "Kallenavn for {name}",
+    "@gruppechatNicknameFor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatNicknameDescription": "Alle i gruppen ser dette navnet. La feltet stå tomt for å fjerne det.",
+    "@gruppechatNicknameDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNicknameSetBy": "Satt av {name}. La feltet stå tomt for å fjerne det.",
+    "@gruppechatNicknameSetBy": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatInviteRole": "Inviter en rolle",
+    "@gruppechatInviteRole": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteRoleDescription": "Inviterer alle som har rollen. Sett kanalen til «kun inviterte» i tilgangsinnstillingene for å holde den for dem.",
+    "@gruppechatInviteRoleDescription": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatEveryoneWithRoleIsHere": "Alle med @{role} er allerede i denne kanalen.",
+    "@gruppechatEveryoneWithRoleIsHere": {
+        "type": "String",
+        "placeholders": {
+            "role": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatSignUpIntro": "Opprett en konto på {homeserver}. Du trenger en invitasjonskode fra den som styrer gruppen.",
+    "@gruppechatSignUpIntro": {
+        "type": "String",
+        "placeholders": {
+            "homeserver": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUsername": "Brukernavn",
+    "@gruppechatUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUsernameHint": "f.eks. martin",
+    "@gruppechatUsernameHint": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInviteCode": "Invitasjonskode",
+    "@gruppechatInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatChooseUsername": "Velg et brukernavn",
+    "@gruppechatChooseUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPasswordTooShort": "Bruk minst 8 tegn",
+    "@gruppechatPasswordTooShort": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatEnterInviteCode": "Skriv inn invitasjonskoden du fikk",
+    "@gruppechatEnterInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInvalidInviteCode": "Invitasjonskoden er feil, allerede brukt eller utløpt",
+    "@gruppechatInvalidInviteCode": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUsernameTaken": "Brukernavnet er tatt",
+    "@gruppechatUsernameTaken": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatInvalidUsername": "Bruk bare små bokstaver, tall, punktum, bindestrek og understrek",
+    "@gruppechatInvalidUsername": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSignUpDisabled": "Serveren tar ikke imot nye kontoer akkurat nå.",
+    "@gruppechatSignUpDisabled": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatSignUpUnsupported": "Serveren støtter ikke registrering med invitasjonskode.",
+    "@gruppechatSignUpUnsupported": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatThreads": "Tråder",
+    "@gruppechatThreads": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatMine": "Mine",
+    "@gruppechatMine": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoOwnThreads": "Du har ikke startet eller svart i noen tråd her ennå.",
+    "@gruppechatNoOwnThreads": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNoThreads": "Ingen tråder ennå. Velg en melding og trykk «{action}» for å starte en.",
+    "@gruppechatNoThreads": {
+        "type": "String",
+        "placeholders": {
+            "action": {
                 "type": "String"
             }
         }

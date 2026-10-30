@@ -19,6 +19,19 @@ void main() {
     });
   });
 
+  group('displayHost', () {
+    test('decodes punycode labels', () {
+      expect(displayHost('chat.xn--c-5ga.no'), 'chat.cø.no');
+      expect(displayHost('xn--bcher-kva.example'), 'bücher.example');
+      expect(displayHost('xn--fiq228c.com'), '中文.com');
+    });
+
+    test('leaves plain and broken labels alone', () {
+      expect(displayHost('matrix.org'), 'matrix.org');
+      expect(displayHost('xn--a!b.no'), 'xn--a!b.no');
+    });
+  });
+
   group('nextSignUpStage', () {
     test('starts with the invite code', () {
       expect(

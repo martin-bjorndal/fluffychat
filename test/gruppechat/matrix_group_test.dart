@@ -72,7 +72,9 @@ void main() {
     final dm = Room(id: '!dm:example.invalid', client: client);
     client.accountData['m.direct'] = BasicEvent(
       type: 'm.direct',
-      content: {bob: [dm.id]},
+      content: {
+        bob: [dm.id],
+      },
     );
     expect(GruppechatGroup.of(dm), isNull);
   });

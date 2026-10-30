@@ -271,7 +271,7 @@ class ChatView extends StatelessWidget {
                     if (activeThreadId == null)
                       IconButton(
                         icon: const Icon(Icons.forum_outlined),
-                        tooltip: 'Threads',
+                        tooltip: L10n.of(context).gruppechatThreads,
                         onPressed: () => showGruppechatThreadList(
                           context: context,
                           controller: controller,

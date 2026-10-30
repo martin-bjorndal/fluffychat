@@ -140,7 +140,7 @@ class _GruppechatThreadListState extends State<GruppechatThreadList> {
     return Scaffold(
       appBar: AppBar(
         leading: CloseButton(onPressed: Navigator.of(context).pop),
-        title: const Text('Threads'),
+        title: Text(l10n.gruppechatThreads),
       ),
       body: ListView(
         children: [
@@ -155,7 +155,7 @@ class _GruppechatThreadListState extends State<GruppechatThreadList> {
                   onSelected: (_) => _setOnlyMine(false),
                 ),
                 ChoiceChip(
-                  label: const Text('Mine'),
+                  label: Text(l10n.gruppechatMine),
                   selected: _onlyMine,
                   onSelected: (_) => _setOnlyMine(true),
                 ),
@@ -188,9 +188,8 @@ class _GruppechatThreadListState extends State<GruppechatThreadList> {
               padding: const EdgeInsets.all(24),
               child: Text(
                 _onlyMine
-                    ? 'You have not started or replied to a thread here yet.'
-                    : 'No threads yet. Select a message and tap '
-                          '"${l10n.replyInThread}" to start one.',
+                    ? l10n.gruppechatNoOwnThreads
+                    : l10n.gruppechatNoThreads(l10n.replyInThread),
                 textAlign: TextAlign.center,
               ),
             )
