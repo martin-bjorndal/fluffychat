@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:async/async.dart';
+import 'package:fluffychat/gruppechat/invite_codes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -11,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart' hide Result;
 
-import '../../utils/fluffy_share.dart';
 import 'chat_list.dart';
 
 class ClientChooserButton extends StatelessWidget {
@@ -56,7 +56,8 @@ class ClientChooserButton extends StatelessWidget {
           children: [
             Icon(Icons.adaptive.share_outlined),
             const SizedBox(width: 18),
-            Text(L10n.of(context).inviteContact),
+            // Gruppechat: invite codes instead of a matrix.to link
+            Text(L10n.of(context).gruppechatInviteFriend),
           ],
         ),
       ),
@@ -198,7 +199,7 @@ class ClientChooserButton extends StatelessWidget {
           context.go('/rooms/newgroup');
           break;
         case SettingsAction.invite:
-          FluffyShare.shareInviteLink(context);
+          showGruppechatInviteDialog(context);
           break;
         case SettingsAction.settings:
           context.go('/rooms/settings');
