@@ -54,10 +54,10 @@ class Avatar extends StatelessWidget {
 
     final fallbackLetters = _calcFallbackLetters();
 
-    final noPic =
-        mxContent == null ||
-        mxContent.toString().isEmpty ||
-        mxContent.toString() == 'null';
+    // Gruppechat: only mxc:// pictures can be downloaded. Anything else,
+    // such as the empty URI the mention suggestions pass for people without
+    // a picture, failed with "No host specified in URI".
+    final noPic = mxContent?.scheme != 'mxc';
     final borderRadius = this.borderRadius ?? BorderRadius.circular(size / 2);
     final presenceUserId = this.presenceUserId;
     final container = Stack(
@@ -81,7 +81,7 @@ class Avatar extends StatelessWidget {
               borderRadius: borderRadius,
               key: ValueKey(mxContent.toString()),
               cacheKey: '${mxContent}_$size',
-              uri: mxContent,
+              uri: noPic ? null : mxContent,
               fit: BoxFit.cover,
               width: size,
               height: size,
