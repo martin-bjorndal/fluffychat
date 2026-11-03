@@ -4,10 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/recovery_key.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -288,24 +289,39 @@ class BootstrapViewModel extends ValueNotifier<BootstrapViewModelState> {
     bool? downloaded,
     BuildContext context,
   ) async {
-    final path = await FilePicker.saveFile(
-      fileName:
-          'Hanne-Chat-Recovery-Key-${DateTime.now().toIso8601String()}.txt',
-      bytes: Uint8List.fromList(value.recoveryKey!.codeUnits),
-    );
-    if (path == null) return;
+    if (downloaded == true &&
+        !await saveRecoveryKeyFile(context, value.recoveryKey!)) {
+      return;
+    }
     value.recoveryKeyDownloaded = downloaded == true;
     notifyListeners();
   }
 
-  Future<void> toggleRecoveryKeyStoredInSecureStorage(bool? stored) async {
-    if (stored == true) {
-      await FlutterSecureStorage().write(
-        key: _secureStorageKey,
-        value: value.recoveryKey,
+  Future<void> toggleRecoveryKeyStoredInSecureStorage(
+    bool? stored,
+    BuildContext context,
+  ) async {
+    final l10n = L10n.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (stored == true) {
+        await FlutterSecureStorage().write(
+          key: _secureStorageKey,
+          value: value.recoveryKey,
+        );
+      } else {
+        await FlutterSecureStorage().delete(key: _secureStorageKey);
+      }
+    } catch (e, s) {
+      // Gruppechat: say so instead of failing silently
+      Logs().w('Could not store the recovery key on this device', e, s);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.gruppechatRecoveryKeyNotSaved(e.toString())),
+          showCloseIcon: true,
+        ),
       );
-    } else {
-      await FlutterSecureStorage().delete(key: _secureStorageKey);
+      return;
     }
     value.recoveryKeyStoredInSecureStorage = stored == true;
     notifyListeners();

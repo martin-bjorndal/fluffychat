@@ -6,12 +6,18 @@ package no.marbjo.chatapp.bubbles
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.LocusId
 import android.os.Build
+import android.os.PersistableBundle
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import java.io.IOException
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -19,7 +25,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * Chat bubbles for Hanne Chat (Android 11+). Posts message notifications
+ * Hanne Chat's own Android code. Mostly chat bubbles (Android 11+), plus
+ * saving and copying the recovery key reliably. Posts message notifications
  * with bubble metadata (see [BubbleNotifications]) and tells Dart which
  * window shows the app's Flutter engine: the main window or a bubble.
  *
@@ -121,6 +128,13 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
                     setLocus(call.argument("roomId"))
                     result.success(null)
                 }
+                "saveToDownloads" -> result.success(
+                    saveToDownloads(call.string("fileName"), call.string("text")),
+                )
+                "copySensitive" -> {
+                    copySensitive(call.string("text"))
+                    result.success(null)
+                }
                 "placeholderAvatar" -> result.success(
                     placeholderAvatar(call.string("letters"), call.int("background"), call.int("foreground")),
                 )
@@ -173,6 +187,50 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
     private fun setLocus(roomId: String?) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         mainWindow?.setLocusContext(roomId?.let { LocusId(it) }, null)
+    }
+
+    /**
+     * Saves [text] as a file in Downloads and checks that it was written,
+     * returning the file's name; null before Android 10, which has no API
+     * for it. Unlike a save dialog, nothing is lost if Android closes the
+     * app's window meanwhile, which left recovery key files empty.
+     */
+    private fun saveToDownloads(fileName: String, text: String): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        val bytes = text.toByteArray()
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+            put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: throw IOException("Could not create $fileName in Downloads")
+        try {
+            val output = resolver.openOutputStream(uri, "w")
+                ?: throw IOException("Could not open $fileName")
+            output.use { it.write(bytes) }
+            val written = resolver.openInputStream(uri)?.use { it.readBytes() }
+            if (written == null || !written.contentEquals(bytes)) {
+                throw IOException("$fileName was not written completely")
+            }
+            resolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            throw e
+        }
+        // Android renames the file if the name is taken
+        return resolver.query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)
+            ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: fileName
+    }
+
+    /** Copies [text], marked as sensitive so Android doesn't show it in its copy preview. */
+    private fun copySensitive(text: String) {
+        val clip = ClipData.newPlainText("", text)
+        clip.description.extras = PersistableBundle().apply {
+            putBoolean("android.content.extra.IS_SENSITIVE", true)
+        }
+        context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
     }
 
     private fun MethodCall.string(key: String): String =

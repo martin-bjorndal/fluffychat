@@ -3358,5 +3358,20 @@
     "@gruppechatOpenSettings": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatRecoveryKeySaved": "Lagret i Nedlastinger som {fileName}.",
+    "@gruppechatRecoveryKeySaved": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatRecoveryKeyNotSaved": "Gjenopprettingsnøkkelen ble ikke lagret: {error}",
+    "@gruppechatRecoveryKeyNotSaved": {
+        "type": "String",
+        "placeholders": {"error": {"type": "String"}}
+    },
+    "gruppechatRecoveryKeyCopied": "Gjenopprettingsnøkkelen er kopiert. Lim den inn i passordbehandleren din.",
+    "@gruppechatRecoveryKeyCopied": {
+        "type": "String",
+        "placeholders": {}
     }
 }

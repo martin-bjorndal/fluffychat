@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/recovery_key.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/bootstrap/view_model/bootstrap_view_model.dart';
-import 'package:fluffychat/utils/fluffy_share.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -29,8 +29,9 @@ class StoreRecoveryKeyView extends StatelessWidget {
           decoration: InputDecoration(
             suffixIcon: IconButton(
               icon: Icon(Icons.copy_outlined),
+              tooltip: L10n.of(context).copyToClipboard,
               onPressed: () =>
-                  FluffyShare.share(viewModel.value.recoveryKey!, context),
+                  copyRecoveryKey(context, viewModel.value.recoveryKey!),
             ),
           ),
         ),
@@ -44,7 +45,8 @@ class StoreRecoveryKeyView extends StatelessWidget {
         if (viewModel.supportsSecureStorage)
           CheckboxListTile.adaptive(
             value: viewModel.value.recoveryKeyStoredInSecureStorage,
-            onChanged: viewModel.toggleRecoveryKeyStoredInSecureStorage,
+            onChanged: (stored) => viewModel
+                .toggleRecoveryKeyStoredInSecureStorage(stored, context),
             title: Text(_getSecureStorageLocalizedName(context)),
           ),
       ],

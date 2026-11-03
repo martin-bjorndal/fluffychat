@@ -3330,5 +3330,20 @@
     "@gruppechatOpenSettings": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatRecoveryKeySaved": "Saved in Downloads as {fileName}.",
+    "@gruppechatRecoveryKeySaved": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatRecoveryKeyNotSaved": "The recovery key wasn't saved: {error}",
+    "@gruppechatRecoveryKeyNotSaved": {
+        "type": "String",
+        "placeholders": {"error": {"type": "String"}}
+    },
+    "gruppechatRecoveryKeyCopied": "Recovery key copied. Paste it into your password manager.",
+    "@gruppechatRecoveryKeyCopied": {
+        "type": "String",
+        "placeholders": {}
     }
 }
