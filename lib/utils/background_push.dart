@@ -114,7 +114,7 @@ class BackgroundPush {
       firebase.setListeners(
         onMessage: (message) => pushHelper(
           PushNotification.fromJson(
-             message.tryGetMap<String, Object>('data') ?? message,
+            message.tryGetMap<String, Object>('data') ?? message,
           ),
           clients: clients,
           l10n: l10n,

@@ -4,10 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:file_picker/file_picker.dart';
-import 'package:file_selector/file_selector.dart';
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/app_lock.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image_picker/image_picker.dart';
 
 Future<List<XFile>> selectFiles(
   BuildContext context, {
@@ -19,6 +20,24 @@ Future<List<XFile>> selectFiles(
     showFutureLoadingDialog(
       context: context,
       future: () async {
+        // Gruppechat: on phones, pictures and videos come from the gallery
+        // (Android's photo picker) instead of the file browser
+        if (PlatformInfos.isMobile) {
+          final picker = ImagePicker();
+          switch (type) {
+            case FileType.media:
+              return allowMultiple
+                  ? await picker.pickMultipleMedia()
+                  : [?await picker.pickMedia()];
+            case FileType.image:
+              return allowMultiple
+                  ? await picker.pickMultiImage()
+                  : [?await picker.pickImage(source: ImageSource.gallery)];
+            case FileType.video:
+              return [?await picker.pickVideo(source: ImageSource.gallery)];
+            default:
+          }
+        }
         if (allowMultiple) {
           final result = await FilePicker.pickFiles(
             type: type,

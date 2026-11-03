@@ -41,15 +41,21 @@ class ChatEventList extends StatelessWidget {
 
     final horizontalPadding = FluffyThemes.isColumnMode(context) ? 8.0 : 0.0;
 
-    final events = timeline.events.filterByVisibleInGui(
+    var events = timeline.events.filterByVisibleInGui(
       threadId: controller.activeThreadId,
     );
+    // Gruppechat: no new messages at the bottom while reading further up
+    final endIndex = events.indexWhere(
+      (event) => event.eventId == controller.listEndsAtEventId,
+    );
+    if (endIndex > 0) events = events.sublist(endIndex);
 
     // create a map of eventId --> index to greatly improve performance of
     // ListView's findChildIndexCallback
     final thisEventsKeyMap = <String, int>{};
     for (var i = 0; i < events.length; i++) {
-      thisEventsKeyMap[events[i].eventId] = i;
+      // Keyed as the list items are, so own messages keep their place too
+      thisEventsKeyMap[events[i].transactionId ?? events[i].eventId] = i;
     }
 
     final hasWallpaper =

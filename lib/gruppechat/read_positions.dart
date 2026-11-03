@@ -13,21 +13,18 @@ import 'package:matrix/matrix.dart';
 /// receipts as (user ID, event ID) pairs; when a user has several, the one
 /// furthest down the chat counts.
 ///
-/// [senders] maps loaded events to who sent them. Sending something counts
-/// as having read up to it, since apps don't send a receipt for their own
-/// messages; otherwise someone who just wrote would stay above their own
-/// message.
+/// Only receipts count, so someone who turned off read receipts isn't shown
+/// at all, and someone who writes stays where they had read up to: apps
+/// don't send a receipt for their own messages.
 ///
 /// A receipt can point at something the list doesn't show, such as a
 /// reaction or a thread reply, so the reader moves up to the closest shown
-/// message above it. Readers aren't shown under their own messages, the same
-/// as FluffyChat's "seen by" row, and [ownUserId] is never shown. Receipts
-/// for events that aren't loaded are left out.
+/// message above it. [ownUserId] is never shown. Receipts for events that
+/// aren't loaded are left out.
 Map<String, List<String>> readPositions({
   required List<String> timeline,
   required Map<String, String> shown,
   required Iterable<(String, String)> receipts,
-  Map<String, String> senders = const {},
   String? ownUserId,
 }) {
   final indexOf = <String, int>{};
@@ -43,20 +40,13 @@ Map<String, List<String>> readPositions({
     final known = readUpTo[userId];
     if (known == null || index < known) readUpTo[userId] = index;
   }
-  for (var i = 0; i < timeline.length; i++) {
-    final sender = senders[timeline[i]];
-    if (sender == null || sender == ownUserId) continue;
-    final known = readUpTo[sender];
-    if (known == null || i < known) readUpTo[sender] = i;
-  }
 
   final positions = <String, List<String>>{};
   for (final MapEntry(key: userId, value: start) in readUpTo.entries) {
     for (var i = start; i < timeline.length; i++) {
       final eventId = timeline[i];
-      final sender = shown[eventId];
-      if (sender == null) continue;
-      if (sender != userId) (positions[eventId] ??= []).add(userId);
+      if (!shown.containsKey(eventId)) continue;
+      (positions[eventId] ??= []).add(userId);
       break;
     }
   }
@@ -110,10 +100,6 @@ Map<String, List<String>> gruppechatReadPositions({
             in source.otherUsers.entries)
           if (present(userId)) (userId, receipt.eventId),
     ],
-    senders: {
-      for (final event in events)
-        if (present(event.senderId)) event.eventId: event.senderId,
-    },
     ownUserId: room.client.userID,
   );
 }

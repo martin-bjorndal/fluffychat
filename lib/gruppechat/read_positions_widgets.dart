@@ -121,14 +121,13 @@ class GruppechatReadByRow extends StatelessWidget {
     final readers = readerIds
         .take(_maxAvatars)
         .map(room.unsafeGetUserFromMemoryOrFallback);
-    final ownMessage = event.senderId == room.client.userID;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           maxWidth: FluffyThemes.maxTimelineWidth,
         ),
         child: Align(
-          alignment: ownMessage ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: Alignment.centerRight,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 1, 8, 4),
             child: Wrap(

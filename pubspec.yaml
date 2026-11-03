@@ -9,7 +9,7 @@ publish_to: none
 # On version bump please also increase:
 # 1. The build number (for F-Droid)
 # 2. The version in /snap/snapcraft.yaml
-version: 1.1.7+3574
+version: 1.1.8+3575
 
 environment:
   sdk: ">=3.11.1 <4.0.0"
@@ -149,3 +149,6 @@ flutter_launcher_icons:
 # 2. Always link an (upstream?) issue
 # 3. Explain how and when this can be removed (overrides must be temporarily)
 dependency_overrides:
+  # Hanne Chat: a fixed copy, see packages/swipe_to_action/pubspec.yaml
+  swipe_to_action:
+    path: packages/swipe_to_action

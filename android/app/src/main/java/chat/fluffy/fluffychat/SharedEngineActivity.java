@@ -12,6 +12,8 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode;
 import io.flutter.embedding.android.FlutterFragment;
 import io.flutter.embedding.android.FlutterFragmentActivity;
@@ -35,12 +37,15 @@ public abstract class SharedEngineActivity extends FlutterFragmentActivity imple
   /** Whether a bubble was the last window to get the engine. */
   static boolean bubbleHadEngine = false;
 
-  private static final long TAKE_BACK_DELAY_MS = 750;
+  /** Windows that are on screen, oldest first. */
+  private static final Set<SharedEngineActivity> shownWindows = new LinkedHashSet<>();
 
-  private final Handler handler = new Handler(Looper.getMainLooper());
+  /** How long a window that leaves the screen waits for another to take the engine. */
+  private static final long HAND_OVER_DELAY_MS = 300;
+
+  private static final Handler handler = new Handler(Looper.getMainLooper());
   private boolean engineTaken = false;
   private boolean takingBack = false;
-  private boolean topResumed = false;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,7 +56,7 @@ public abstract class SharedEngineActivity extends FlutterFragmentActivity imple
   @Override
   protected void onDestroy() {
     openWindows--;
-    handler.removeCallbacksAndMessages(null);
+    shownWindows.remove(this);
     super.onDestroy();
   }
 
@@ -96,15 +101,6 @@ public abstract class SharedEngineActivity extends FlutterFragmentActivity imple
   /** Called by {@link SharedEngineFragment} when another window takes the engine. */
   void onEngineTaken() {
     engineTaken = true;
-    // The engine belongs in the window the person looks at. Should a window
-    // that isn't shown take it while this one stays in front, take it back.
-    if (topResumed) {
-      handler.postDelayed(
-          () -> {
-            if (topResumed && hasWindowFocus()) takeEngineBack();
-          },
-          TAKE_BACK_DELAY_MS);
-    }
   }
 
   /** Whether this window shows the engine, rather than having lost it to another window. */
@@ -115,14 +111,33 @@ public abstract class SharedEngineActivity extends FlutterFragmentActivity imple
   @Override
   protected void onStart() {
     super.onStart();
+    shownWindows.add(this);
     takeEngineBack();
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    shownWindows.remove(this);
+    // A bubble that closes over the main window doesn't always give the main
+    // window focus back, so hand the engine to a window still on screen,
+    // unless another window takes it first.
+    if (hasEngine()) handler.postDelayed(SharedEngineActivity::handOver, HAND_OVER_DELAY_MS);
+  }
+
+  private static void handOver() {
+    SharedEngineActivity waiting = null;
+    for (SharedEngineActivity window : shownWindows) {
+      if (window.hasEngine()) return;
+      waiting = window;
+    }
+    if (waiting != null) waiting.takeEngineBack();
   }
 
   @RequiresApi(Build.VERSION_CODES.Q)
   @Override
   public void onTopResumedActivityChanged(boolean isTopResumedActivity) {
     super.onTopResumedActivityChanged(isTopResumedActivity);
-    topResumed = isTopResumedActivity;
     if (isTopResumedActivity) takeEngineBack();
   }
 

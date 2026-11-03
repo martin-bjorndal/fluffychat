@@ -175,9 +175,9 @@ abstract final class GruppechatBubbles {
 
   /// Opens a bubble for a chat from inside the app: shows the chat's current
   /// notification as a bubble, or posts a quiet one from [details] if it has
-  /// none. The notification stays out of the shade, the bubble opens right
-  /// away, and the app moves to the background so the bubble floats over
-  /// whatever was open before.
+  /// none. The notification stays out of the shade, and the bubble opens
+  /// right away over the app, which goes back to the chat list: the chat now
+  /// lives in the bubble.
   static Future<void> openBubble({
     required int id,
     required String roomId,
@@ -190,10 +190,9 @@ abstract final class GruppechatBubbles {
       'icon': icon,
       'autoExpand': true,
       'suppressNotification': true,
-      'minimize': true,
     };
-    // Android hides a chat's bubble while a window shows that chat, which
-    // the main window does right now
+    // Android hides a chat's bubble while a window shows that chat
+    FluffyChatApp.router.go('/rooms');
     _locus = null;
     await _channel.invokeMethod('setLocus', {'roomId': null});
     final shown = await _channel.invokeMethod<bool>('bubbleExisting', {

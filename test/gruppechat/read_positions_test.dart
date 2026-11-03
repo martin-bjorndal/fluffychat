@@ -40,38 +40,21 @@ void main() {
     });
   });
 
-  test('nobody is shown under their own message, and I am never shown', () {
-    expect(positions([(alice, r'$m3'), (me, r'$m2')]), isEmpty);
+  test('readers show under their own messages too, and I am never shown', () {
+    expect(positions([(alice, r'$m3'), (me, r'$m2')]), {
+      r'$m3': [alice],
+    });
   });
 
   test('receipts for messages that are not loaded are left out', () {
     expect(positions([(bob, r'$older')]), isEmpty);
   });
 
-  group('sending counts as reading', () {
-    // Who sent what: bob reacted last, to alice's message.
-    const senders = {r'$reaction': bob, r'$m3': alice, r'$m2': me, r'$m1': bob};
-
-    Map<String, List<String>> positions(List<(String, String)> receipts) =>
-        readPositions(
-          timeline: timeline,
-          shown: shown,
-          receipts: receipts,
-          senders: senders,
-          ownUserId: me,
-        );
-
-    test('a reaction moves the reader down to the message above it', () {
-      expect(positions([(bob, r'$m1')]), {
-        r'$m3': [bob],
-      });
-    });
-
-    test('after writing, the reader no longer shows above their message', () {
-      // alice's receipt is still on my message, but she wrote $m3 after it
-      expect(positions([(alice, r'$m2')]), {
-        r'$m3': [bob],
-      });
+  test('writing does not move a reader, only their receipts do', () {
+    // alice wrote $m3 after reading up to my message, and stays there; bob,
+    // who sends no receipts, isn't shown although he wrote $m1
+    expect(positions([(alice, r'$m2')]), {
+      r'$m2': [alice],
     });
   });
 

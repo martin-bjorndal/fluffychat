@@ -95,14 +95,11 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
                     val arguments = call.argument<Map<String, Any>>("notification")
                         ?: throw IllegalArgumentException("notification is missing")
                     notifications.post(arguments, call.bubble())
-                    if (call.argument<Boolean>("minimize") == true) minimize()
                     result.success(null)
                 }
-                "bubbleExisting" -> {
-                    val shown = notifications.bubbleExisting(call.int("id"), call.bubble())
-                    if (shown && call.argument<Boolean>("minimize") == true) minimize()
-                    result.success(shown)
-                }
+                "bubbleExisting" -> result.success(
+                    notifications.bubbleExisting(call.int("id"), call.bubble()),
+                )
                 "dismiss" -> {
                     notifications.dismiss(call.int("id"))
                     result.success(null)
@@ -144,14 +141,6 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
             Log.w(TAG, "${call.method} failed", e)
             result.error(e.javaClass.simpleName, e.message, null)
         }
-    }
-
-    /**
-     * Moves the app behind whatever was open before, so a bubble the person
-     * just opened from a chat floats over that instead of over the app.
-     */
-    private fun minimize() {
-        mainWindow?.moveTaskToBack(true)
     }
 
     /** Android's bubble settings for the app, or its notification settings. */

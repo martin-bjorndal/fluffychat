@@ -185,6 +185,13 @@ class ChatController extends State<ChatPageWithRoom>
 
   bool _scrolledUp = false;
 
+  /// Gruppechat: while the person reads further up, the list stops at this
+  /// event, the newest one when they scrolled up. A message added at the
+  /// bottom would otherwise shift what they are reading, since Flutter keeps
+  /// the list's positions by index. New messages show once they are back at
+  /// the bottom.
+  String? listEndsAtEventId;
+
   bool get showScrollDownButton =>
       _scrolledUp || timeline?.allowNewEvent == false;
 
@@ -278,10 +285,24 @@ class ChatController extends State<ChatPageWithRoom>
         scrollController.position.pixels > 0 && _scrolledUp == false) {
       setState(() => _scrolledUp = true);
     } else if (scrollController.position.pixels <= 0 && _scrolledUp == true) {
-      setState(() => _scrolledUp = false);
+      setState(() {
+        _scrolledUp = false;
+        listEndsAtEventId = null;
+      });
       setReadMarker();
     }
+    // A little way up still counts as the bottom, so a small bounce doesn't
+    // hold back new messages
+    if (listEndsAtEventId == null &&
+        scrollController.position.pixels > _holdNewMessagesAfter) {
+      listEndsAtEventId = timeline?.events
+          .filterByVisibleInGui(threadId: activeThreadId)
+          .firstOrNull
+          ?.eventId;
+    }
   }
+
+  static const double _holdNewMessagesAfter = 48;
 
   void _loadDraft() {
     final prefs = Matrix.of(context).store;
@@ -709,6 +730,8 @@ class ChatController extends State<ChatPageWithRoom>
     final proceed = await showTrustUserInRoomDialog(context, room);
     if (!mounted || !proceed) return;
     if (sendController.text.trim().isEmpty) return;
+    // Gruppechat: show what was sent, and what came in meanwhile
+    if (listEndsAtEventId != null) scrollDown();
     _storeInputTimeoutTimer?.cancel();
     final prefs = Matrix.of(context).store;
     prefs.remove('draft_$roomId');
@@ -1210,6 +1233,11 @@ class ChatController extends State<ChatPageWithRoom>
       (event) => event.eventId == eventId,
     );
 
+    // The indices below are for the whole list
+    if (listEndsAtEventId != null) {
+      setState(() => listEndsAtEventId = null);
+      await WidgetsBinding.instance.endOfFrame;
+    }
     final eventIndex = foundEvent == null
         ? -1
         : timeline!.events
@@ -1250,6 +1278,7 @@ class ChatController extends State<ChatPageWithRoom>
   }
 
   Future<void> scrollDown() async {
+    setState(() => listEndsAtEventId = null);
     if (!timeline!.allowNewEvent) {
       setState(() {
         timeline = null;
