@@ -3360,5 +3360,9 @@
     "@gruppechatPicturesAndFiles": {
         "type": "String",
         "placeholders": {}
-    }
+    },
+    "gruppechatAdjustPicture": "Adjust picture",
+    "@gruppechatAdjustPicture": {},
+    "gruppechatAdjustPictureHint": "Drag to move it, or drag the corners to change the size.",
+    "@gruppechatAdjustPictureHint": {}
 }

@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/picture_crop.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/file_selector.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -141,7 +142,6 @@ class SettingsController extends State<Settings> {
         source: action == AvatarAction.camera
             ? ImageSource.camera
             : ImageSource.gallery,
-        imageQuality: 50,
       );
       if (result == null) return;
       file = MatrixFile(bytes: await result.readAsBytes(), name: result.path);
@@ -156,9 +156,12 @@ class SettingsController extends State<Settings> {
       );
     }
     if (!mounted) return;
+    // Gruppechat: shows how the picture will be cropped, to adjust it
+    final cropped = await cropAvatar(context, file.bytes);
+    if (cropped == null || !mounted) return;
     final success = await showFutureLoadingDialog(
       context: context,
-      future: () => matrix.client.setAvatar(file),
+      future: () => matrix.client.setAvatar(cropped),
     );
     if (success.error == null) {
       updateProfile();

@@ -13,6 +13,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
@@ -830,6 +831,29 @@ class ChatController extends State<ChatPageWithRoom>
         threadRootEventId: activeThreadId,
         threadLastEventId: threadLastEventId,
       ),
+    );
+  }
+
+  /// Gruppechat: sends a picture or GIF the keyboard inserted, such as one
+  /// from Gboard's GIF search, as a reply or in the thread like a typed
+  /// message. GIFs are sent as they are, so they keep moving.
+  Future<void> sendKeyboardContent(KeyboardInsertedContent content) async {
+    final data = content.data;
+    if (data == null) return;
+    final proceed = await showTrustUserInRoomDialog(context, room);
+    if (!mounted || !proceed) return;
+    final name = content.uri.split('/').last;
+    final file = isGif(content.mimeType, data)
+        ? GifFile(bytes: data, name: name)
+        : MatrixFile(bytes: data, name: name, mimeType: content.mimeType);
+    final inReplyTo = replyEvent;
+    setState(() => replyEvent = null);
+    await room.sendFileEvent(
+      file,
+      inReplyTo: inReplyTo,
+      threadRootEventId: activeThreadId,
+      threadLastEventId: threadLastEventId,
+      shrinkImageMaxDimension: 1600,
     );
   }
 

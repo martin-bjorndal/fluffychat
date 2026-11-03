@@ -5,6 +5,7 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/picture_crop.dart';
 import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/file_selector.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -34,14 +35,22 @@ class SettingsStyleController extends State<SettingsStyle> {
     final picked = await selectFiles(context, type: FileType.image);
     final pickedFile = picked.firstOrNull;
     if (pickedFile == null) return;
+    final pickedBytes = await pickedFile.readAsBytes();
     if (!mounted) return;
+    // Gruppechat: shows how the picture will be cropped, to adjust it
+    final bytes = await showPictureCrop(
+      context,
+      bytes: pickedBytes,
+      crop: PictureCrop.background,
+    );
+    if (bytes == null || !mounted) return;
 
     await showFutureLoadingDialog(
       context: context,
       future: () async {
         final url = await client.uploadContent(
-          await pickedFile.readAsBytes(),
-          filename: pickedFile.name,
+          bytes,
+          filename: croppedPictureName('wallpaper', bytes),
         );
         await client.updateApplicationAccountConfig(
           ApplicationAccountConfig(wallpaperUrl: url),

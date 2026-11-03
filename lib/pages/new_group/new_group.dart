@@ -6,6 +6,7 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/picture_crop.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/new_group/new_group_view.dart';
 import 'package:fluffychat/utils/file_selector.dart';
@@ -62,7 +63,15 @@ class NewGroupController extends State<NewGroup> {
       type: FileType.image,
       allowMultiple: false,
     );
-    final bytes = await photo.singleOrNull?.readAsBytes();
+    final picked = await photo.singleOrNull?.readAsBytes();
+    if (picked == null || !mounted) return;
+    // Gruppechat: shows how the picture will be cropped, to adjust it
+    final bytes = await showPictureCrop(
+      context,
+      bytes: picked,
+      crop: PictureCrop.avatar,
+    );
+    if (bytes == null || !mounted) return;
 
     setState(() {
       avatarUrl = null;

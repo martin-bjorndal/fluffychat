@@ -3388,5 +3388,9 @@
     "@gruppechatPicturesAndFiles": {
         "type": "String",
         "placeholders": {}
-    }
+    },
+    "gruppechatAdjustPicture": "Juster bildet",
+    "@gruppechatAdjustPicture": {},
+    "gruppechatAdjustPictureHint": "Dra for å flytte, eller dra i hjørnene for å endre størrelsen.",
+    "@gruppechatAdjustPictureHint": {}
 }

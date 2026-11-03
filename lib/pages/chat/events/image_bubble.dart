@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
@@ -95,7 +96,8 @@ class ImageBubble extends StatelessWidget {
                           height: height,
                           fit: fit,
                           animated: animated,
-                          isThumbnail: thumbnailOnly,
+                          // Gruppechat: GIFs play, their thumbnail is still
+                          isThumbnail: thumbnailOnly && !event.isGif,
                           placeholder: event.messageType == MessageTypes.Sticker
                               ? null
                               : (_) => _ImageBubblePlaceholder(

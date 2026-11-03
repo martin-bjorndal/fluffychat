@@ -11,6 +11,7 @@ import 'package:crop_image/crop_image.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
@@ -140,12 +141,16 @@ class SendFileDialogState extends State<SendFileDialog> {
             );
           }
         } else {
-          // Else we just create a MatrixFile
-          file = MatrixFile(
-            bytes: await _files[i].readAsBytes(),
-            name: xfile.name,
-            mimeType: mimeType,
-          ).detectFileType;
+          final bytes = await _files[i].readAsBytes();
+          // Gruppechat: GIFs are sent as they are, so they keep moving
+          file = isGif(mimeType, bytes)
+              ? GifFile(bytes: bytes, name: xfile.name)
+              // Else we just create a MatrixFile
+              : MatrixFile(
+                  bytes: bytes,
+                  name: xfile.name,
+                  mimeType: mimeType,
+                ).detectFileType;
         }
 
         if (file.bytes.length > maxUploadSize) {
@@ -179,6 +184,8 @@ class SendFileDialogState extends State<SendFileDialog> {
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
             extraContent: label.isEmpty ? null : {'body': label},
+            threadRootEventId: widget.threadRootEventId,
+            threadLastEventId: widget.threadLastEventId,
           );
         }
       }

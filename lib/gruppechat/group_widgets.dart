@@ -19,6 +19,7 @@ import 'package:matrix/matrix.dart';
 
 import 'group_state.dart';
 import 'matrix_group.dart';
+import 'picture_crop.dart';
 
 /// Draws a shared group background behind the chat.
 class GroupBackgroundLayer extends StatelessWidget {
@@ -452,14 +453,21 @@ Future<void> showGroupBackgroundMenu({
       );
     case _BackgroundAction.image:
       final files = await selectFiles(context, type: FileType.image);
-      if (files.isEmpty || !context.mounted) return;
-      final file = files.first;
+      if (files.isEmpty) return;
+      final picked = await files.first.readAsBytes();
+      if (!context.mounted) return;
+      final bytes = await showPictureCrop(
+        context,
+        bytes: picked,
+        crop: PictureCrop.background,
+      );
+      if (bytes == null || !context.mounted) return;
       await showFutureLoadingDialog(
         context: context,
         future: () async {
           final url = await client.uploadContent(
-            await file.readAsBytes(),
-            filename: file.name,
+            bytes,
+            filename: croppedPictureName('background', bytes),
           );
           await set(
             GroupBackground(

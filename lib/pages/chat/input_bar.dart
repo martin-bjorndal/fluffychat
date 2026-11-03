@@ -8,7 +8,6 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
-import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/markdown_context_builder.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +27,10 @@ class InputBar extends StatelessWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final ValueChanged<Uint8List?>? onSubmitImage;
+
+  /// Gruppechat: a picture or GIF the keyboard inserted, such as one from
+  /// Gboard's GIF search.
+  final ValueChanged<KeyboardInsertedContent>? onContentInserted;
   final FocusNode? focusNode;
   final TextEditingController? controller;
   final InputDecoration decoration;
@@ -43,6 +46,7 @@ class InputBar extends StatelessWidget {
     this.keyboardType,
     this.onSubmitted,
     this.onSubmitImage,
+    this.onContentInserted,
     this.focusNode,
     this.controller,
     required this.decoration,
@@ -429,21 +433,11 @@ class InputBar extends StatelessWidget {
             editableTextState: e,
             controller: controller,
           ),
-          contentInsertionConfiguration: ContentInsertionConfiguration(
-            onContentInserted: (KeyboardInsertedContent content) async {
-              final proceed = await showTrustUserInRoomDialog(context, room);
-              if (!proceed) return;
-              final data = content.data;
-              if (data == null) return;
-
-              final file = MatrixFile(
-                mimeType: content.mimeType,
-                bytes: data,
-                name: content.uri.split('/').last,
-              );
-              room.sendFileEvent(file, shrinkImageMaxDimension: 1600);
-            },
-          ),
+          contentInsertionConfiguration: onContentInserted == null
+              ? null
+              : ContentInsertionConfiguration(
+                  onContentInserted: onContentInserted!,
+                ),
           minLines: minLines,
           maxLines: maxLines,
           keyboardType: keyboardType,
