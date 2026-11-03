@@ -13,7 +13,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/giphy.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
@@ -860,6 +862,32 @@ class ChatController extends State<ChatPageWithRoom>
     );
   }
 
+  /// Gruppechat: picks a GIF from Giphy and sends it like one from the
+  /// gallery, fetched through our server, so the others never contact Giphy.
+  Future<void> sendGifAction() async {
+    final gif = await showGifPicker(context, room.client);
+    if (gif == null || !mounted) return;
+    final proceed = await showTrustUserInRoomDialog(context, room);
+    if (!mounted || !proceed) return;
+    final download = await showFutureLoadingDialog(
+      context: context,
+      future: () => Giphy(room.client).download(gif.full),
+    );
+    final bytes = download.result;
+    if (bytes == null || !mounted) return;
+    final inReplyTo = replyEvent;
+    setState(() => replyEvent = null);
+    await room.sendFileEvent(
+      GifFile(
+        bytes: bytes,
+        name: '${gif.title.isEmpty ? 'GIF' : gif.title}.gif',
+      ),
+      inReplyTo: inReplyTo,
+      threadRootEventId: activeThreadId,
+      threadLastEventId: threadLastEventId,
+    );
+  }
+
   Future<void> openCameraAction() async {
     inputFocus.unfocus();
     final file = await ImagePicker().pickImage(source: ImageSource.camera);
@@ -1517,6 +1545,9 @@ class ChatController extends State<ChatPageWithRoom>
       case AddPopupMenuActions.media:
         sendFileAction(type: FileType.media);
         return;
+      case AddPopupMenuActions.gif:
+        sendGifAction();
+        return;
       case AddPopupMenuActions.file:
         sendFileAction();
         return;
@@ -1743,6 +1774,7 @@ class ChatController extends State<ChatPageWithRoom>
 
 enum AddPopupMenuActions {
   media,
+  gif,
   file,
   poll,
   photoCamera,

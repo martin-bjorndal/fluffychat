@@ -222,6 +222,21 @@ class ChatInputRow extends StatelessWidget {
                             contentPadding: const EdgeInsets.all(0),
                           ),
                         ),
+                        // Gruppechat: GIF search through Giphy
+                        PopupMenuItem(
+                          value: AddPopupMenuActions.gif,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  theme.colorScheme.onPrimaryContainer,
+                              foregroundColor:
+                                  theme.colorScheme.primaryContainer,
+                              child: const Icon(Icons.gif_box_outlined),
+                            ),
+                            title: Text(L10n.of(context).gruppechatGif),
+                            contentPadding: const EdgeInsets.all(0),
+                          ),
+                        ),
                         PopupMenuItem(
                           value: AddPopupMenuActions.file,
                           child: ListTile(

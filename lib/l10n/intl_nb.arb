@@ -3412,5 +3412,13 @@
     "gruppechatPermissionNicknameLock": "Låse sitt eget kallenavn",
     "@gruppechatPermissionNicknameLock": {},
     "gruppechatPermissionBackground": "Endre bakgrunnen",
-    "@gruppechatPermissionBackground": {}
+    "@gruppechatPermissionBackground": {},
+    "gruppechatGif": "GIF",
+    "@gruppechatGif": {},
+    "gruppechatSearchGifs": "Søk etter GIF-er",
+    "@gruppechatSearchGifs": {},
+    "gruppechatGifsUnavailable": "GIF-er er ikke tilgjengelige akkurat nå.",
+    "@gruppechatGifsUnavailable": {},
+    "gruppechatNoGifsFound": "Fant ingen GIF-er.",
+    "@gruppechatNoGifsFound": {}
 }

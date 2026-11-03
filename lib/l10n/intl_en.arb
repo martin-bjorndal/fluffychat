@@ -3384,5 +3384,13 @@
     "gruppechatPermissionNicknameLock": "Lock their own nickname",
     "@gruppechatPermissionNicknameLock": {},
     "gruppechatPermissionBackground": "Change the background",
-    "@gruppechatPermissionBackground": {}
+    "@gruppechatPermissionBackground": {},
+    "gruppechatGif": "GIF",
+    "@gruppechatGif": {},
+    "gruppechatSearchGifs": "Search GIFs",
+    "@gruppechatSearchGifs": {},
+    "gruppechatGifsUnavailable": "GIFs aren't available right now.",
+    "@gruppechatGifsUnavailable": {},
+    "gruppechatNoGifsFound": "No GIFs found.",
+    "@gruppechatNoGifsFound": {}
 }
