@@ -9,6 +9,7 @@ import 'package:collection/collection.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -158,12 +159,15 @@ class Message extends StatelessWidget {
     const avatarSize = Avatar.defaultSize;
     final noBubble =
         ({
-          MessageTypes.Video,
-          MessageTypes.Image,
-          MessageTypes.Sticker,
-        }.contains(event.messageType) &&
-        event.fileDescription == null &&
-        !event.redacted);
+              MessageTypes.Video,
+              MessageTypes.Image,
+              MessageTypes.Sticker,
+            }.contains(event.messageType) &&
+            event.fileDescription == null &&
+            !event.redacted) ||
+        // Gruppechat: one emoji shows big without a bubble, as in Messenger
+        (displayEvent.isSingleEmojiMessage &&
+            event.inReplyToEventId(includingFallback: false) == null);
 
     if (ownMessage) {
       color = displayEvent.status.isError

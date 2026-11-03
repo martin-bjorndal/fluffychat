@@ -6,6 +6,7 @@
 import 'dart:math';
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/events/poll.dart';
@@ -177,7 +178,10 @@ class MessageContent extends StatelessWidget {
             }
 
             final bigEmotes =
-                !event.isRichMessage && bigEmojis.contains(event.body);
+                !event.isRichMessage &&
+                (bigEmojis.contains(event.body) ||
+                    // Gruppechat: any single emoji
+                    isSingleEmoji(event.body));
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
