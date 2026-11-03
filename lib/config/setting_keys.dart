@@ -65,7 +65,12 @@ enum AppSettings<T> {
   // colorSchemeSeed stored as ARGB int
   colorSchemeSeedInt<int>('chat.fluffy.color_scheme_seed', 0xFF5625BA),
   emojiSuggestionLocale<String>('emoji_suggestion_locale', ''),
-  enableSoftLogout<bool>('chat.fluffy.enable_soft_logout', true),
+  // Gruppechat: log in without refresh tokens. With them, Synapse's access
+  // tokens last 5 minutes, and a push that came later failed with
+  // M_UNKNOWN_TOKEN, since the push helper doesn't refresh an expired token.
+  // Sessions that already have a refresh token keep using it; the server
+  // gives them 30-day tokens (configure-synapse.py in deploy/).
+  enableSoftLogout<bool>('chat.fluffy.enable_soft_logout', false),
   enableMatrixNativeOIDC<bool>('chat.fluffy.enable_matrix_native_oidc', true),
   presetHomeserver<String>(
     'chat.fluffy.preset_homeserver',
