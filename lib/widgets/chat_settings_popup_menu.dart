@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:fluffychat/gruppechat/bubble_widgets.dart';
+import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -119,6 +120,14 @@ class ChatSettingsPopupMenuState extends State<ChatSettingsPopupMenu> {
                   Text(L10n.of(context).encryption),
                 ],
               ),
+            ),
+            ...gruppechatMediaMenuItems<ChatPopupMenuActions>(
+              context,
+              widget.room,
+            ),
+            ...gruppechatBackgroundMenuItems<ChatPopupMenuActions>(
+              context,
+              widget.room,
             ),
             ...gruppechatBubbleMenuItems<ChatPopupMenuActions>(
               context,

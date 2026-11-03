@@ -93,7 +93,8 @@ class GruppechatGroup {
   bool get canSetBackground =>
       space.canChangeStateEvent(GruppechatEventTypes.background);
 
-  /// Adds the custom event types to the space's power levels.
+  /// Adds the custom event types to the space's power levels, and lets
+  /// everyone set a background in the channels this user may change.
   Future<void> setUp() async {
     final powerLevels = _powerLevels;
     if (powerLevels == null) {
@@ -105,6 +106,14 @@ class GruppechatGroup {
       '',
       withGroupPowerLevels(powerLevels),
     );
+    for (final child in space.spaceChildren) {
+      final channel = _client.getRoomById(child.roomId ?? '');
+      if (channel == null || channel.membership != Membership.join) continue;
+      if (channel.canChangePowerLevel &&
+          !channel.canSetGruppechatChannelBackground) {
+        await channel.allowGruppechatChannelBackgrounds();
+      }
+    }
   }
 
   /// Sets [userId]'s group-wide nickname. An empty [name] removes it.
@@ -211,14 +220,38 @@ extension GruppechatRoomExtension on Room {
       canChangeStateEvent(GruppechatEventTypes.background);
 
   /// Sets this channel's own background. Null removes it, so the channel
-  /// shows the group's background again.
-  Future<void> setGruppechatChannelBackground(GroupBackground? background) =>
-      client.setRoomStateWithKey(
-        id,
-        GruppechatEventTypes.background,
-        '',
-        background?.toContent() ?? <String, Object?>{},
-      );
+  /// shows the group's background again. A moderator setting it also lets
+  /// everyone else set it from then on.
+  Future<void> setGruppechatChannelBackground(
+    GroupBackground? background,
+  ) async {
+    if (!canSetGruppechatChannelBackground && canChangePowerLevel) {
+      await allowGruppechatChannelBackgrounds();
+    }
+    await client.setRoomStateWithKey(
+      id,
+      GruppechatEventTypes.background,
+      '',
+      background?.toContent() ?? <String, Object?>{},
+    );
+  }
+
+  /// Lets everyone set this channel's background, as everyone can set the
+  /// group's: channels made before group features were set up only let
+  /// moderators send the event.
+  Future<void> allowGruppechatChannelBackgrounds() async {
+    final powerLevels = getState(EventTypes.RoomPowerLevels)?.content;
+    if (powerLevels == null) return;
+    final events = powerLevels['events'];
+    await client.setRoomStateWithKey(id, EventTypes.RoomPowerLevels, '', {
+      ...powerLevels,
+      'events': <String, Object?>{
+        GruppechatEventTypes.background:
+            groupEventPowerLevels[GruppechatEventTypes.background],
+        if (events is Map) ...events.cast<String, Object?>(),
+      },
+    });
+  }
 
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {

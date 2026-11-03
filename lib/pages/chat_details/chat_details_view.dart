@@ -241,6 +241,20 @@ class ChatDetailsView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // Gruppechat: the chat's pictures and files
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.surfaceContainer,
+                            foregroundColor: iconColor,
+                            child: const Icon(Icons.photo_library_outlined),
+                          ),
+                          title: Text(
+                            L10n.of(context).gruppechatPicturesAndFiles,
+                          ),
+                          trailing: const Icon(Icons.chevron_right_outlined),
+                          onTap: () =>
+                              context.push(gruppechatMediaLocation(room)),
+                        ),
                         if (room.canChangeStateEvent(EventTypes.RoomTopic) ||
                             room.topic.isNotEmpty) ...[
                           ListTile(

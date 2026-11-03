@@ -3373,5 +3373,20 @@
     "@gruppechatRecoveryKeyCopied": {
         "type": "String",
         "placeholders": {}
+    },
+    "gruppechatNewMessages": "Nye meldinger",
+    "@gruppechatNewMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatNewMessageCount": "{count} nye meldinger",
+    "@gruppechatNewMessageCount": {
+        "type": "String",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "gruppechatPicturesAndFiles": "Bilder og filer",
+    "@gruppechatPicturesAndFiles": {
+        "type": "String",
+        "placeholders": {}
     }
 }

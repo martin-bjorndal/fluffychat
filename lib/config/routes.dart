@@ -425,7 +425,14 @@ abstract class AppRoutes {
                   pageBuilder: (context, state) => defaultPageBuilder(
                     context,
                     state,
-                    ChatSearchPage(roomId: state.pathParameters['roomid']!),
+                    ChatSearchPage(
+                      roomId: state.pathParameters['roomid']!,
+                      initialTab: switch (state.uri.queryParameters['tab']) {
+                        'gallery' => 1,
+                        'files' => 2,
+                        _ => 0,
+                      },
+                    ),
                   ),
                   redirect: loggedOutRedirect,
                 ),

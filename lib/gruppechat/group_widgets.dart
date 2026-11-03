@@ -13,6 +13,7 @@ import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -318,6 +319,59 @@ Future<void> showInviteRoleMenu({
 
 enum _BackgroundAction { preset, image, clear, none, toggleVisibility }
 
+/// "Pictures and files" in a chat's menu: the gallery and file list of the
+/// chat's search, as Messenger's media overview.
+List<PopupMenuEntry<T>> gruppechatMediaMenuItems<T>(
+  BuildContext context,
+  Room room,
+) => [
+  PopupMenuItem<T>(
+    onTap: () => context.go(gruppechatMediaLocation(room)),
+    child: Row(
+      children: [
+        const Icon(Icons.photo_library_outlined),
+        const SizedBox(width: 12),
+        Text(L10n.of(context).gruppechatPicturesAndFiles),
+      ],
+    ),
+  ),
+];
+
+/// Where the chat's pictures and files show.
+String gruppechatMediaLocation(Room room) =>
+    '/rooms/${room.id}/search?tab=gallery';
+
+/// "Channel background" (or "Group background") in a chat's menu.
+List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
+  BuildContext context,
+  Room room,
+) {
+  final group = GruppechatGroup.of(room);
+  if (group == null) return const [];
+  final isChannel = group.space.id != room.id;
+  final l10n = L10n.of(context);
+  return [
+    PopupMenuItem<T>(
+      onTap: () => showGroupBackgroundMenu(
+        context: context,
+        group: group,
+        channel: isChannel ? room : null,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.format_paint_outlined),
+          const SizedBox(width: 12),
+          Text(
+            isChannel
+                ? l10n.gruppechatChannelBackground
+                : l10n.gruppechatGroupBackground,
+          ),
+        ],
+      ),
+    ),
+  ];
+}
+
 /// Picks the group's background, or with [channel] that channel's own
 /// background, which overrides the group's there.
 Future<void> showGroupBackgroundMenu({
@@ -330,7 +384,8 @@ Future<void> showGroupBackgroundMenu({
   final showing = client.showGroupBackgrounds;
   final canSet = channel == null
       ? group.canSetBackground
-      : channel.canSetGruppechatChannelBackground;
+      : channel.canSetGruppechatChannelBackground ||
+            channel.canChangePowerLevel;
   final current = channel == null
       ? group.state.background
       : channel.gruppechatChannelBackground;

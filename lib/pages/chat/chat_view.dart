@@ -327,7 +327,11 @@ class ChatView extends StatelessWidget {
                               controller.setReadMarker();
                             },
                           ),
-                          title: L10n.of(context).jumpToLastReadMessage,
+                          title: controller.newMessageCount > 0
+                              ? L10n.of(context).gruppechatNewMessageCount(
+                                  controller.newMessageCount,
+                                )
+                              : L10n.of(context).jumpToLastReadMessage,
                           trailing: TextButton(
                             onPressed: () {
                               controller.scrollToEventId(scrollUpBannerEventId);
@@ -353,7 +357,12 @@ class ChatView extends StatelessWidget {
                         mini: true,
                         backgroundColor: theme.colorScheme.surface,
                         foregroundColor: theme.colorScheme.onSurface,
-                        child: const Icon(Icons.arrow_downward_outlined),
+                        // Gruppechat: counts the messages waiting below
+                        child: Badge.count(
+                          count: controller.heldBackMessageCount,
+                          isLabelVisible: controller.heldBackMessageCount > 0,
+                          child: const Icon(Icons.arrow_downward_outlined),
+                        ),
                       ),
                     )
                   : null,

@@ -276,7 +276,9 @@ class Message extends StatelessWidget {
                     ),
                   ),
                   Row(
-                    crossAxisAlignment: .start,
+                    // Gruppechat: the avatar sits at the bottom of the
+                    // newest message in a run, as in Messenger
+                    crossAxisAlignment: .end,
                     mainAxisAlignment: rowMainAxisAlignment,
                     children: [
                       if (longPressSelect && !event.redacted)
@@ -294,7 +296,7 @@ class Message extends StatelessWidget {
                             onPressed: () => onSelect(event),
                           ),
                         )
-                      else if (nextEventSameSender || ownMessage)
+                      else if (previousEventSameSender || ownMessage)
                         SizedBox(width: avatarSize)
                       else
                         FutureBuilder<User?>(
@@ -902,14 +904,11 @@ class Message extends StatelessWidget {
                           ),
                         ),
                 ),
+              // Gruppechat: a clear line where the new messages start
               if (displayReadMarker)
                 Row(
                   children: [
-                    Expanded(
-                      child: Divider(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                    ),
+                    Expanded(child: Divider(color: theme.colorScheme.primary)),
                     Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 4,
@@ -923,18 +922,18 @@ class Message extends StatelessWidget {
                         borderRadius: BorderRadius.circular(
                           AppConfig.borderRadius / 3,
                         ),
-                        color: theme.colorScheme.surface.withAlpha(128),
+                        color: theme.colorScheme.primaryContainer,
                       ),
                       child: Text(
-                        L10n.of(context).readUpToHere,
-                        style: TextStyle(fontSize: 11),
+                        L10n.of(context).gruppechatNewMessages,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                    ),
+                    Expanded(child: Divider(color: theme.colorScheme.primary)),
                   ],
                 ),
             ],

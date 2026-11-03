@@ -215,11 +215,13 @@ class ChatController extends State<ChatPageWithRoom>
   void enterThread(String eventId) => setState(() {
     activeThreadId = eventId;
     selectedEvents.clear();
+    listEndsAtEventId = null;
   });
 
   void closeThread() => setState(() {
     activeThreadId = null;
     selectedEvents.clear();
+    listEndsAtEventId = null;
   });
 
   Future<void> recreateChat() async {
@@ -521,10 +523,12 @@ class ChatController extends State<ChatPageWithRoom>
             .indexWhere((e) => e.eventId == readMarkerEventId);
       }
 
-      if (readMarkerEventIndex > 1) {
-        Logs().v('Scroll up to visible event', readMarkerEventId);
-        scrollToEventId(readMarkerEventId, highlightEvent: false);
-        return;
+      // Gruppechat: the chat opens at the newest message, as in Messenger.
+      // With more new messages than fit on the screen, the banner at the top
+      // jumps up to the first of them.
+      if (readMarkerEventIndex > _newMessagesForBanner) {
+        newMessageCount = readMarkerEventIndex;
+        _showScrollUpMaterialBanner(readMarkerEventId);
       } else if (readMarkerEventId.isNotEmpty && readMarkerEventIndex == -1) {
         _showScrollUpMaterialBanner(readMarkerEventId);
       }
@@ -543,7 +547,26 @@ class ChatController extends State<ChatPageWithRoom>
 
   void discardScrollUpBannerEventId() => setState(() {
     scrollUpBannerEventId = null;
+    newMessageCount = 0;
   });
+
+  /// Gruppechat: how many new messages the banner at the top counts, or 0
+  /// when it only knows where the person stopped reading.
+  int newMessageCount = 0;
+
+  static const _newMessagesForBanner = 5;
+
+  /// Gruppechat: messages that came in while the person read further up,
+  /// held back below the list (see [listEndsAtEventId]).
+  int get heldBackMessageCount {
+    final endsAt = listEndsAtEventId;
+    final timeline = this.timeline;
+    if (endsAt == null || timeline == null) return 0;
+    final index = timeline.events
+        .filterByVisibleInGui(threadId: activeThreadId)
+        .indexWhere((event) => event.eventId == endsAt);
+    return index > 0 ? index : 0;
+  }
 
   void _showScrollUpMaterialBanner(String eventId) => setState(() {
     scrollUpBannerEventId = eventId;

@@ -10,7 +10,11 @@ import 'package:matrix/matrix.dart';
 
 class ChatSearchPage extends StatefulWidget {
   final String roomId;
-  const ChatSearchPage({required this.roomId, super.key});
+
+  /// Gruppechat: the tab to open on (0 messages, 1 gallery, 2 files).
+  final int initialTab;
+
+  const ChatSearchPage({required this.roomId, this.initialTab = 0, super.key});
 
   @override
   ChatSearchController createState() => ChatSearchController();
@@ -126,8 +130,15 @@ class ChatSearchController extends State<ChatSearchPage>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(initialIndex: 0, length: 3, vsync: this);
+    tabController = TabController(
+      initialIndex: widget.initialTab,
+      length: 3,
+      vsync: this,
+    );
     tabController.addListener(_onTabChanged);
+    if (widget.initialTab != 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => startSearch());
+    }
   }
 
   @override

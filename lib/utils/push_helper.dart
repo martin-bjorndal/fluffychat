@@ -129,6 +129,15 @@ Future<void> _tryPushHelper(
 
   l10n ??= await L10n.delegate.load(PlatformDispatcher.instance.locale);
 
+  // Gruppechat: refresh an access token that has expired, or is about to,
+  // before fetching. The SDK only tries after a fetch has failed, and then
+  // gives up if it doesn't know when the token expires.
+  try {
+    await client.ensureNotSoftLoggedOut(const Duration(minutes: 5));
+  } catch (e, s) {
+    Logs().w('Could not refresh the access token for a push', e, s);
+  }
+
   Logs().v('Load event...');
   final event = await client.getEventByPushNotification(
     notification,
