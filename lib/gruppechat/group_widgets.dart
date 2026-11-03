@@ -382,16 +382,13 @@ Future<void> showGroupBackgroundMenu({
   final l10n = L10n.of(context);
   final client = group.space.client;
   final showing = client.showGroupBackgrounds;
-  final canSet = channel == null
-      ? group.canSetBackground
-      : channel.canSetGruppechatChannelBackground ||
-            channel.canChangePowerLevel;
+  final canSet = group.canSetBackground;
   final current = channel == null
       ? group.state.background
       : channel.gruppechatChannelBackground;
   Future<void> set(GroupBackground? background) => channel == null
       ? group.setBackground(background)
-      : channel.setGruppechatChannelBackground(background);
+      : group.setChannelBackground(channel, background);
 
   final picked = await showModalActionPopup<(_BackgroundAction, int)>(
     context: context,

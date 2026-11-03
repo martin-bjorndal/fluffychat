@@ -13,9 +13,10 @@ import 'package:matrix/matrix.dart';
 /// receipts as (user ID, event ID) pairs; when a user has several, the one
 /// furthest down the chat counts.
 ///
-/// Only receipts count, so someone who turned off read receipts isn't shown
-/// at all, and someone who writes stays where they had read up to: apps
-/// don't send a receipt for their own messages.
+/// Writing something counts as having read up to it, since apps don't send
+/// a receipt for their own messages; otherwise someone who just wrote would
+/// stay above their own message. That only moves people who send receipts,
+/// so someone who turned off read receipts isn't shown at all.
 ///
 /// A receipt can point at something the list doesn't show, such as a
 /// reaction or a thread reply, so the reader moves up to the closest shown
@@ -32,13 +33,22 @@ Map<String, List<String>> readPositions({
     indexOf.putIfAbsent(timeline[i], () => i);
   }
 
+  final readers = <String>{};
   final readUpTo = <String, int>{};
-  for (final (userId, eventId) in receipts) {
-    if (userId == ownUserId) continue;
-    final index = indexOf[eventId];
-    if (index == null) continue;
+  void readTo(String userId, int index) {
     final known = readUpTo[userId];
     if (known == null || index < known) readUpTo[userId] = index;
+  }
+
+  for (final (userId, eventId) in receipts) {
+    if (userId == ownUserId) continue;
+    readers.add(userId);
+    final index = indexOf[eventId];
+    if (index != null) readTo(userId, index);
+  }
+  for (var i = 0; i < timeline.length; i++) {
+    final sender = shown[timeline[i]];
+    if (sender != null && readers.contains(sender)) readTo(sender, i);
   }
 
   final positions = <String, List<String>>{};

@@ -9,6 +9,8 @@ void main() {
   const me = '@martin:example.invalid';
   const alice = '@alice:example.invalid';
   const bob = '@bob:example.invalid';
+  // carol hasn't written anything that is loaded
+  const carol = '@carol:example.invalid';
 
   // Newest first: a reaction the list doesn't show, then three messages.
   const timeline = [r'$reaction', r'$m3', r'$m2', r'$m1'];
@@ -47,20 +49,35 @@ void main() {
   });
 
   test('receipts for messages that are not loaded are left out', () {
-    expect(positions([(bob, r'$older')]), isEmpty);
+    expect(positions([(carol, r'$older')]), isEmpty);
   });
 
-  test('writing does not move a reader, only their receipts do', () {
-    // alice wrote $m3 after reading up to my message, and stays there; bob,
-    // who sends no receipts, isn't shown although he wrote $m1
+  test('writing moves a reader down to what they wrote', () {
+    // alice read up to my message, then wrote $m3
     expect(positions([(alice, r'$m2')]), {
-      r'$m2': [alice],
+      r'$m3': [alice],
     });
   });
 
+  test('writing moves a reader whose receipt is not loaded', () {
+    expect(positions([(alice, r'$older')]), {
+      r'$m3': [alice],
+    });
+  });
+
+  test('a newer receipt wins over what a reader wrote', () {
+    expect(positions([(bob, r'$m3')]), {
+      r'$m3': [bob],
+    });
+  });
+
+  test('people who send no receipts are not shown, even when they write', () {
+    expect(positions([]), isEmpty);
+  });
+
   test('several readers on one message are sorted', () {
-    expect(positions([(bob, r'$m2'), (alice, r'$m2')]), {
-      r'$m2': [alice, bob],
+    expect(positions([(carol, r'$m2'), (bob, r'$m2')]), {
+      r'$m2': [bob, carol],
     });
   });
 }

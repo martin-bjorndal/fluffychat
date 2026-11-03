@@ -59,6 +59,8 @@ class ChatView extends StatelessWidget {
     final groupBackground = controller.room.gruppechatBackground(
       enabled: Matrix.of(context).client.showGroupBackgrounds,
     );
+    // The group's space holds its background and nicknames
+    final groupSpaceId = GruppechatGroup.of(controller.room)?.space.id;
 
     return PopScope(
       // In a bubble, back at the chat collapses the bubble
@@ -81,7 +83,11 @@ class ChatView extends StatelessWidget {
       },
       child: StreamBuilder(
         stream: controller.room.client.onRoomState.stream
-            .where((update) => update.roomId == controller.room.id)
+            .where(
+              (update) =>
+                  update.roomId == controller.room.id ||
+                  update.roomId == groupSpaceId,
+            )
             .rateLimit(const Duration(seconds: 1)),
         builder: (context, snapshot) => FutureBuilder(
           future: controller.loadTimelineFuture,
