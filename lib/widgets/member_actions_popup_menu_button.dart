@@ -68,7 +68,9 @@ Future<void> showMemberActionsPopupMenu({
           ],
         ),
       ),
-      if (group != null && (group.canSetNicknames || isMe))
+      // Gruppechat: setting even one's own nickname needs the permission,
+      // which the server checks
+      if (group != null && group.canSetNicknames)
         PopupMenuItem(
           value: _MemberActions.groupNickname,
           child: Row(

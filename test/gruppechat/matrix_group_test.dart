@@ -135,6 +135,48 @@ void main() {
     expect(space.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
   });
 
+  test('a channel background kept in the space wins over the old one', () {
+    setState(space, GruppechatEventTypes.background, '', {
+      'kind': 'solid',
+      'colors': ['#1B1F3B'],
+    });
+    // Older versions kept it in the channel
+    setState(channel, GruppechatEventTypes.background, '', {
+      'kind': 'solid',
+      'colors': ['#FF0000'],
+    });
+    expect(channel.gruppechatBackground(enabled: true)?.colors, [0xFFFF0000]);
+
+    setState(space, GruppechatEventTypes.background, channel.id, {
+      'kind': 'solid',
+      'colors': ['#00FF00'],
+    });
+    expect(channel.gruppechatBackground(enabled: true)?.colors, [0xFF00FF00]);
+
+    // Cleared in the space: the channel shows the group's background
+    setState(space, GruppechatEventTypes.background, channel.id, {});
+    expect(channel.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
+    expect(space.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
+  });
+
+  test('a direct chat keeps its own background', () {
+    final dm = Room(id: '!dm:example.invalid', client: client);
+    client.accountData['m.direct'] = BasicEvent(
+      type: 'm.direct',
+      content: {
+        bob: [dm.id],
+      },
+    );
+    expect(dm.gruppechatBackground(enabled: true), isNull);
+    setState(dm, GruppechatEventTypes.background, '', {
+      'kind': 'solid',
+      'colors': ['#1B1F3B'],
+    });
+    expect(dm.gruppechatBackgroundGroup?.space.id, dm.id);
+    expect(dm.gruppechatBackground(enabled: true)?.colors, [0xFF1B1F3B]);
+    expect(dm.gruppechatBackground(enabled: false), isNull);
+  });
+
   test('role suggestions match the ID and the name', () {
     setState(space, GruppechatEventTypes.role, 'game-night', {
       'name': 'Game night',

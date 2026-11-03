@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/group_permission_tiles.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_permissions_settings/chat_permissions_settings.dart';
 import 'package:fluffychat/pages/chat_permissions_settings/permission_list_tile.dart';
@@ -138,6 +139,19 @@ class ChatPermissionsSettingsView extends StatelessWidget {
                           newLevel: level,
                           category: 'events',
                         ),
+                      ),
+                    if (controller.groupSpace case final space?)
+                      GroupPermissionTiles(
+                        space: space,
+                        onChanged: (key, current, level) =>
+                            controller.editPowerLevel(
+                              context,
+                              key,
+                              current,
+                              newLevel: level,
+                              category: 'events',
+                              inRoom: space,
+                            ),
                       ),
                   ],
                 ),

@@ -59,8 +59,9 @@ class ChatView extends StatelessWidget {
     final groupBackground = controller.room.gruppechatBackground(
       enabled: Matrix.of(context).client.showGroupBackgrounds,
     );
-    // The group's space holds its background and nicknames
-    final groupSpaceId = GruppechatGroup.of(controller.room)?.space.id;
+    // The room holding the background: the group's space, which also holds
+    // the nicknames, or a direct chat itself
+    final groupSpaceId = controller.room.gruppechatBackgroundGroup?.space.id;
 
     return PopScope(
       // In a bubble, back at the chat collapses the bubble

@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:material_ui/material_ui.dart';
@@ -70,6 +71,17 @@ class PermissionsListTile extends StatelessWidget {
           return L10n.of(context).editBlockedServers;
         case MatrixRtcCallMember.eventType:
           return 'Create or join a group call';
+        // Gruppechat: the group's own permissions
+        case GruppechatEventTypes.role:
+          return L10n.of(context).gruppechatPermissionRoles;
+        case GruppechatEventTypes.memberRoles:
+          return L10n.of(context).gruppechatPermissionMemberRoles;
+        case GruppechatEventTypes.nickname:
+          return L10n.of(context).gruppechatPermissionNicknames;
+        case GruppechatEventTypes.nicknameLock:
+          return L10n.of(context).gruppechatPermissionNicknameLock;
+        case GruppechatEventTypes.background:
+          return L10n.of(context).gruppechatPermissionBackground;
       }
     }
     return permissionKey;

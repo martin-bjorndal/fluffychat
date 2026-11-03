@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_permissions_settings/chat_permissions_settings_view.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -22,14 +23,27 @@ class ChatPermissionsSettings extends StatefulWidget {
 
 class ChatPermissionsSettingsController extends State<ChatPermissionsSettings> {
   String? get roomId => GoRouterState.of(context).pathParameters['roomid'];
+
+  /// Gruppechat: the space of the group this channel is in, whose
+  /// permissions apply in all its channels.
+  Room? get groupSpace {
+    final room = Matrix.of(context).client.getRoomById(roomId ?? '');
+    if (room == null) return null;
+    final space = GruppechatGroup.of(room)?.space;
+    return space == null || space.id == room.id ? null : space;
+  }
+
+  /// Changes a permission of this chat or, with [inRoom], of another room,
+  /// such as the group's space.
   Future<void> editPowerLevel(
     BuildContext context,
     String key,
     int currentLevel, {
     int? newLevel,
     String? category,
+    Room? inRoom,
   }) async {
-    final room = Matrix.of(context).client.getRoomById(roomId!)!;
+    final room = inRoom ?? Matrix.of(context).client.getRoomById(roomId!)!;
     if (!room.canSendEvent(EventTypes.RoomPowerLevels)) {
       ScaffoldMessenger.of(
         context,
@@ -64,14 +78,19 @@ class ChatPermissionsSettingsController extends State<ChatPermissionsSettings> {
     );
   }
 
-  Stream get onChanged => Matrix.of(context).client.onSync.stream.where(
-    (e) =>
-        (e.rooms?.join?.containsKey(roomId) ?? false) &&
-        (e.rooms!.join![roomId!]?.timeline?.events?.any(
-              (s) => s.type == EventTypes.RoomPowerLevels,
-            ) ??
-            false),
-  );
+  Stream get onChanged {
+    final roomIds = {roomId, groupSpace?.id};
+    return Matrix.of(context).client.onSync.stream.where(
+      (e) => roomIds.any(
+        (roomId) =>
+            (e.rooms?.join?.containsKey(roomId) ?? false) &&
+            (e.rooms!.join![roomId]?.timeline?.events?.any(
+                  (s) => s.type == EventTypes.RoomPowerLevels,
+                ) ??
+                false),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => ChatPermissionsSettingsView(this);

@@ -107,6 +107,22 @@ class GruppechatGroup {
     );
   }
 
+  static final Set<String> _setUpTried = {};
+
+  /// Sets up group features the first time someone who may do it opens one
+  /// of the group's chats, so the defaults apply: everyone can set
+  /// nicknames and backgrounds, moderators manage roles. Groups made before
+  /// group features existed only let moderators do any of it. Tried once
+  /// per group while the app runs.
+  Future<void> setUpIfNeeded() async {
+    if (!needsSetup || !canSetUp || !_setUpTried.add(space.id)) return;
+    try {
+      await setUp();
+    } catch (e, s) {
+      Logs().w('Could not set up group features in ${space.id}', e, s);
+    }
+  }
+
   /// Sets [userId]'s group-wide nickname. An empty [name] removes it.
   Future<void> setNickname(String userId, String name) =>
       _client.setRoomStateWithKey(
@@ -215,6 +231,11 @@ class GruppechatGroup {
 }
 
 extension GruppechatRoomExtension on Room {
+  /// Where the background shown in this room is set: its group, or for a
+  /// direct chat, which has no group, the chat itself.
+  GruppechatGroup? get gruppechatBackgroundGroup =>
+      GruppechatGroup.of(this) ?? (isDirectChat ? GruppechatGroup(this) : null);
+
   /// The background this channel sets for itself, overriding the group's;
   /// see [GruppechatGroup.setChannelBackground]. Older versions kept it in
   /// the channel itself, which counts until the group says otherwise.
@@ -229,7 +250,7 @@ extension GruppechatRoomExtension on Room {
 
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {
-    final group = GruppechatGroup.of(this);
+    final group = gruppechatBackgroundGroup;
     if (group == null) return null;
     return resolveGroupBackground(
       channel: gruppechatChannelBackground,

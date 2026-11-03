@@ -14,6 +14,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
@@ -426,6 +427,8 @@ class ChatController extends State<ChatPageWithRoom>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _shareItems();
       _checkMatrixRtcCallSupport();
+      // Gruppechat: the group's permissions get their defaults
+      GruppechatGroup.of(room)?.setUpIfNeeded();
       if (widget.action == 'call') {
         Matrix.of(context).activeCallRoomId.value = room.id;
       }

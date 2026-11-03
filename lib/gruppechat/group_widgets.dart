@@ -342,12 +342,13 @@ List<PopupMenuEntry<T>> gruppechatMediaMenuItems<T>(
 String gruppechatMediaLocation(Room room) =>
     '/rooms/${room.id}/search?tab=gallery';
 
-/// "Channel background" (or "Group background") in a chat's menu.
+/// "Channel background", "Group background" or, in a direct chat, "Chat
+/// background" in a chat's menu.
 List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
   BuildContext context,
   Room room,
 ) {
-  final group = GruppechatGroup.of(room);
+  final group = room.gruppechatBackgroundGroup;
   if (group == null) return const [];
   final isChannel = group.space.id != room.id;
   final l10n = L10n.of(context);
@@ -365,6 +366,8 @@ List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
           Text(
             isChannel
                 ? l10n.gruppechatChannelBackground
+                : room.isDirectChat
+                ? l10n.gruppechatChatBackground
                 : l10n.gruppechatGroupBackground,
           ),
         ],
@@ -384,6 +387,8 @@ Future<void> showGroupBackgroundMenu({
   final client = group.space.client;
   final showing = client.showGroupBackgrounds;
   final canSet = group.canSetBackground;
+  // A direct chat keeps its own background, as a group does
+  final isDirect = group.space.isDirectChat;
   final current = channel == null
       ? group.state.background
       : channel.gruppechatChannelBackground;
@@ -393,14 +398,18 @@ Future<void> showGroupBackgroundMenu({
 
   final picked = await showModalActionPopup<(_BackgroundAction, int)>(
     context: context,
-    title: channel == null
-        ? l10n.gruppechatGroupBackground
-        : l10n.gruppechatChannelBackground,
+    title: channel != null
+        ? l10n.gruppechatChannelBackground
+        : isDirect
+        ? l10n.gruppechatChatBackground
+        : l10n.gruppechatGroupBackground,
     message: !canSet
         ? l10n.gruppechatNoBackgroundPermission
-        : channel == null
-        ? l10n.gruppechatBackgroundForEveryone
-        : l10n.gruppechatChannelBackgroundForEveryone,
+        : channel != null
+        ? l10n.gruppechatChannelBackgroundForEveryone
+        : isDirect
+        ? l10n.gruppechatBackgroundForBoth
+        : l10n.gruppechatBackgroundForEveryone,
     cancelLabel: l10n.cancel,
     actions: [
       if (canSet) ...[
@@ -423,9 +432,11 @@ Future<void> showGroupBackgroundMenu({
           ),
         if (current != null)
           AdaptiveModalAction(
-            label: channel == null
-                ? l10n.gruppechatRemoveGroupBackground
-                : l10n.gruppechatUseGroupBackground,
+            label: channel != null
+                ? l10n.gruppechatUseGroupBackground
+                : isDirect
+                ? l10n.gruppechatRemoveBackground
+                : l10n.gruppechatRemoveGroupBackground,
             value: (_BackgroundAction.clear, 0),
             icon: const Icon(Icons.delete_outlined),
             isDestructive: channel == null,
