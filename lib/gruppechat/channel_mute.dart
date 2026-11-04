@@ -64,6 +64,15 @@ extension GruppechatChannelMuteEventExtension on Event {
       room.pushRuleState == PushRuleState.mentionsOnly;
 }
 
+/// Whether the push helper shows a notification for a pushed [event]. The
+/// account's push rules decide, except that a mention of one of the user's
+/// roles always notifies, and a muted channel's wake-up the app couldn't
+/// decrypt never does: there is no telling whether it mentions them.
+bool gruppechatShouldNotify(Event event) =>
+    !event.isUndecryptedWakeUp &&
+    (event.room.client.pushruleEvaluator.match(event).notify ||
+        event.mentionsOwnGroupRole);
+
 /// Keeps the account's wake rules in line with which channels are muted.
 class GruppechatWakeRules {
   final Client client;

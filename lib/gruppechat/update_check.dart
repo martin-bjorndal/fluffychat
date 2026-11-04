@@ -40,6 +40,19 @@ bool isNewerRelease(PublishedRelease? published, String? runningBuild) {
   return published != null && running != null && published.build > running;
 }
 
+/// The newest release, from version.json on [client]'s server, or null when
+/// the server doesn't publish one.
+Future<PublishedRelease?> fetchPublishedRelease(Client client) async {
+  final homeserver = client.homeserver;
+  if (homeserver == null) return null;
+  final response = await client.httpClient.get(
+    homeserver.resolve('version.json'),
+    headers: {'cache-control': 'no-cache'},
+  );
+  if (response.statusCode != 200) return null;
+  return PublishedRelease.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+}
+
 /// Tells people when a newer version is out: on Android with a link to
 /// Google Play, in the web app with a button that reloads the page.
 abstract final class GruppechatUpdateCheck {
@@ -62,17 +75,8 @@ abstract final class GruppechatUpdateCheck {
       return;
     }
     _lastCheck = now;
-    final homeserver = client.homeserver;
-    if (homeserver == null) return;
     try {
-      final response = await client.httpClient.get(
-        homeserver.resolve('version.json'),
-        headers: {'cache-control': 'no-cache'},
-      );
-      if (response.statusCode != 200) return;
-      final published = PublishedRelease.fromJson(
-        jsonDecode(utf8.decode(response.bodyBytes)),
-      );
+      final published = await fetchPublishedRelease(client);
       if (published == null) return;
       final bool newer;
       if (kIsWeb) {

@@ -191,9 +191,7 @@ Future<void> _tryPushHelper(
 
   Logs().v('Push helper got notification event of type ${event.type}.');
 
-  if (event.isUndecryptedWakeUp ||
-      (!client.pushruleEvaluator.match(event).notify &&
-          !event.mentionsOwnGroupRole)) {
+  if (!gruppechatShouldNotify(event)) {
     Logs().i('Push helper: filtered by client-side push rules.');
     return;
   }
