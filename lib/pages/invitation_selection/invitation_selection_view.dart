@@ -49,6 +49,7 @@ class InvitationSelectionView extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 textInputAction: TextInputAction.search,
+                autofillHints: null,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: theme.colorScheme.secondaryContainer,

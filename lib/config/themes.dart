@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:flutter/services.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 abstract class FluffyThemes {
@@ -60,6 +61,18 @@ abstract class FluffyThemes {
       brightness: brightness,
       colorScheme: colorScheme,
       dividerColor: dividerColor,
+      // Gruppechat: Android's default pages take a back swipe themselves when
+      // they are on top of their own navigator, so the chat, in the
+      // ShellRoute's navigator, closed beneath a picture that stayed open.
+      // This is the same transition without that, and the router pops
+      // whatever is on top.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
           iconColor: colorScheme.onSurface,

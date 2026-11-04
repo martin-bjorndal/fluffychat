@@ -57,6 +57,7 @@ class ChatListHeader extends StatelessWidget implements PreferredSizeWidget {
             controller: controller.searchController,
             focusNode: controller.searchFocusNode,
             textInputAction: TextInputAction.search,
+            autofillHints: null,
             onChanged: (text) =>
                 controller.onSearchEnter(text, globalSearch: globalSearch),
             decoration: InputDecoration(

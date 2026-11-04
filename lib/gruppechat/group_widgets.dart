@@ -210,6 +210,7 @@ Future<void> showGroupRolesMenu({
     final name = await showTextInputDialog(
       context: context,
       title: l10n.gruppechatNewRole,
+      textCapitalization: TextCapitalization.sentences,
       hintText: l10n.gruppechatRoleNameHint,
       okLabel: l10n.create,
       cancelLabel: l10n.cancel,
@@ -249,6 +250,7 @@ Future<void> showGroupRolesMenu({
       final name = await showTextInputDialog(
         context: context,
         title: l10n.gruppechatRenameRole,
+        textCapitalization: TextCapitalization.sentences,
         initialText: role.name,
         okLabel: l10n.save,
         cancelLabel: l10n.cancel,
@@ -527,6 +529,7 @@ Future<void> showGroupNicknameDialog({
   final name = await showTextInputDialog(
     context: context,
     title: l10n.gruppechatNicknameFor(user.calcDisplayname()),
+    textCapitalization: TextCapitalization.sentences,
     message: setBy == null
         ? l10n.gruppechatNicknameDescription
         : l10n.gruppechatNicknameSetBy(

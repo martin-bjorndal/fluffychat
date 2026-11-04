@@ -49,6 +49,7 @@ class ChatDetailsController extends State<ChatDetails> {
     final input = await showTextInputDialog(
       context: context,
       title: l10n.changeTheNameOfTheGroup,
+      textCapitalization: TextCapitalization.sentences,
       okLabel: l10n.ok,
       cancelLabel: l10n.cancel,
       initialText: room.getLocalizedDisplayname(MatrixLocals(l10n)),
@@ -74,6 +75,7 @@ class ChatDetailsController extends State<ChatDetails> {
     final input = await showTextInputDialog(
       context: context,
       title: l10n.setChatDescription,
+      textCapitalization: TextCapitalization.sentences,
       okLabel: l10n.ok,
       cancelLabel: l10n.cancel,
       hintText: l10n.noChatDescriptionYet,

@@ -152,6 +152,19 @@ class _MxcImageState extends State<MxcImage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryLoad());
   }
 
+  // Gruppechat: an edited picture, such as one with a new caption, is shown
+  // as the edit, with a cache key of its own, so it loads again
+  @override
+  void didUpdateWidget(MxcImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.cacheKey != oldWidget.cacheKey ||
+        widget.uri != oldWidget.uri ||
+        widget.event?.eventId != oldWidget.event?.eventId) {
+      _imageDataNoCache = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _tryLoad());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = _imageData;

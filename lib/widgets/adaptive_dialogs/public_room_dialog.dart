@@ -254,6 +254,7 @@ class PublicRoomDialog extends StatelessWidget {
                           final reason = await showTextInputDialog(
                             context: context,
                             title: L10n.of(context).whyDoYouWantToReportThis,
+                            textCapitalization: TextCapitalization.sentences,
                             okLabel: L10n.of(context).report,
                             cancelLabel: L10n.of(context).cancel,
                             hintText: L10n.of(context).reason,

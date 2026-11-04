@@ -110,6 +110,7 @@ class _ShareScaffoldDialogState extends State<ShareScaffoldDialog> {
               controller: _filterController,
               onChanged: (_) => setState(() {}),
               textInputAction: TextInputAction.search,
+              autofillHints: null,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: theme.colorScheme.secondaryContainer,

@@ -64,6 +64,13 @@ void main() {
         'bob\'s answer',
         (e) => e.eventId == earlierMessages.last && textOf(e) == 'Svar fra Bob',
       );
+      // The phone uploads the keys of both messages, dave's own and the one
+      // bob shared, a little after they are used
+      final backup = (await dave.getRoomKeysVersionCurrent()).version;
+      await fetchedValue('both keys are in the backup', () async {
+        final keys = await dave.getRoomKeysByRoomId(daveChat.id, backup);
+        return keys.sessions.length >= 2 ? keys : null;
+      });
     });
 
     test('a new phone asks for the recovery key', () async {

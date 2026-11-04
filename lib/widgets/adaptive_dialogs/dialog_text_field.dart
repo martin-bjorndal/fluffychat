@@ -24,6 +24,7 @@ class DialogTextField extends StatelessWidget {
   final int? maxLength;
   final bool autocorrect = true;
   final bool readOnly;
+  final TextCapitalization textCapitalization;
   final TextStyle? textStyle;
 
   const DialogTextField({
@@ -42,6 +43,7 @@ class DialogTextField extends StatelessWidget {
     this.errorText,
     this.obscureText = false,
     this.readOnly = false,
+    this.textCapitalization = TextCapitalization.none,
     this.textStyle,
   });
 
@@ -65,6 +67,7 @@ class DialogTextField extends StatelessWidget {
           maxLength: maxLength,
           keyboardType: keyboardType,
           autocorrect: autocorrect,
+          textCapitalization: textCapitalization,
           style: textStyle,
           decoration: InputDecoration(
             border: OutlineInputBorder(
@@ -101,6 +104,7 @@ class DialogTextField extends StatelessWidget {
                 maxLength: maxLength,
                 keyboardType: keyboardType,
                 autocorrect: autocorrect,
+                textCapitalization: textCapitalization,
                 style: textStyle,
                 prefix: prefixText != null ? Text(prefixText) : null,
                 suffix: suffixText != null ? Text(suffixText) : null,

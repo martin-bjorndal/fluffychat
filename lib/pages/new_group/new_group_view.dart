@@ -82,6 +82,7 @@ class NewGroupView extends StatelessWidget {
                 autofocus: true,
                 controller: controller.nameController,
                 autocorrect: false,
+                textCapitalization: TextCapitalization.sentences,
                 readOnly: controller.loading,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.people_outlined),

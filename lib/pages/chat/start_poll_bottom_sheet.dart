@@ -100,6 +100,7 @@ class _StartPollBottomSheetState extends State<StartPollBottomSheet> {
             maxLines: 4,
             maxLength: 1024,
             onChanged: _updateCanCreate,
+            textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               hintText: L10n.of(context).pollQuestion,
               counter: const SizedBox.shrink(),
@@ -113,6 +114,7 @@ class _StartPollBottomSheetState extends State<StartPollBottomSheet> {
                 controller: answerController,
                 onChanged: _updateCanCreate,
                 maxLength: 64,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   counter: const SizedBox.shrink(),
                   hintText: L10n.of(context).answerOption,

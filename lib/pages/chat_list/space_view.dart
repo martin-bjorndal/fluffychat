@@ -395,6 +395,7 @@ class _SpaceViewState extends State<SpaceView> {
                         controller: _filterController,
                         onChanged: (_) => setState(() {}),
                         textInputAction: TextInputAction.search,
+                        autofillHints: null,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: theme.colorScheme.secondaryContainer,

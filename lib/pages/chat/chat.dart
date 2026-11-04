@@ -13,6 +13,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
@@ -758,12 +759,29 @@ class ChatController extends State<ChatPageWithRoom>
   Future<void> send() async {
     final proceed = await showTrustUserInRoomDialog(context, room);
     if (!mounted || !proceed) return;
-    if (sendController.text.trim().isEmpty) return;
-    // Gruppechat: show what was sent, and what came in meanwhile
-    if (listEndsAtEventId != null) scrollDown();
     _storeInputTimeoutTimer?.cancel();
     final prefs = Matrix.of(context).store;
     prefs.remove('draft_$roomId');
+    // Gruppechat: a caption is changed with the picture or file kept, and
+    // can be emptied
+    final captioned = editEvent;
+    final timeline = this.timeline;
+    if (captioned != null &&
+        captioned.hasCaptionInsteadOfText &&
+        timeline != null) {
+      // ignore: unawaited_futures
+      captioned.editCaption(sendController.text, timeline);
+      setState(() {
+        sendController.text = pendingText;
+        _inputTextIsEmpty = pendingText.isEmpty;
+        editEvent = null;
+        pendingText = '';
+      });
+      return;
+    }
+    if (sendController.text.trim().isEmpty) return;
+    // Gruppechat: show what was sent, and what came in meanwhile
+    if (listEndsAtEventId != null) scrollDown();
     var parseCommands = true;
 
     final commandMatch = RegExp(r'^\/(\w+)').firstMatch(sendController.text);
@@ -1123,6 +1141,7 @@ class ChatController extends State<ChatPageWithRoom>
     final reason = await showTextInputDialog(
       context: context,
       title: l10n.whyDoYouWantToReportThis,
+      textCapitalization: TextCapitalization.sentences,
       okLabel: l10n.ok,
       cancelLabel: l10n.cancel,
       hintText: l10n.reason,
@@ -1171,6 +1190,7 @@ class ChatController extends State<ChatPageWithRoom>
         ? await showTextInputDialog(
             context: context,
             title: L10n.of(context).redactMessage,
+            textCapitalization: TextCapitalization.sentences,
             message: L10n.of(context).redactMessageDescription,
             isDestructive: true,
             hintText: L10n.of(context).optionalRedactReason,
@@ -1428,13 +1448,10 @@ class ChatController extends State<ChatPageWithRoom>
     setState(() {
       pendingText = sendController.text;
       editEvent = event;
+      // Gruppechat: a picture or file starts from its caption
       sendController.text = event
           .getDisplayEvent(timeline)
-          .calcLocalizedBodyFallback(
-            MatrixLocals(L10n.of(context)),
-            withSenderNamePrefix: false,
-            hideReply: true,
-          );
+          .textToEdit(MatrixLocals(L10n.of(context)));
       if (clearSelection) selectedEvents.clear();
     });
     inputFocus.requestFocus();
@@ -1698,11 +1715,7 @@ class ChatController extends State<ChatPageWithRoom>
   Future<void> _cancelEditWithConfirmation() async {
     final originalText = editEvent!
         .getDisplayEvent(timeline!)
-        .calcLocalizedBodyFallback(
-          MatrixLocals(L10n.of(context)),
-          withSenderNamePrefix: false,
-          hideReply: true,
-        );
+        .textToEdit(MatrixLocals(L10n.of(context)));
 
     if (sendController.text != originalText) {
       final result = await showOkCancelAlertDialog(

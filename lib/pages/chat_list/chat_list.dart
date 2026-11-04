@@ -886,6 +886,7 @@ class ChatListController extends State<ChatList>
       useRootNavigator: false,
       context: context,
       title: l10n.setStatus,
+      textCapitalization: TextCapitalization.sentences,
       message: l10n.leaveEmptyToClearStatus,
       okLabel: l10n.ok,
       cancelLabel: l10n.cancel,

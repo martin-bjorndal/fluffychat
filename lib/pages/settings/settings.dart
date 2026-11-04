@@ -49,6 +49,7 @@ class SettingsController extends State<Settings> {
       useRootNavigator: false,
       context: context,
       title: l10n.editDisplayname,
+      textCapitalization: TextCapitalization.sentences,
       okLabel: l10n.ok,
       cancelLabel: l10n.cancel,
       initialText: profile?.displayName ?? matrix.client.userID!.localpart,

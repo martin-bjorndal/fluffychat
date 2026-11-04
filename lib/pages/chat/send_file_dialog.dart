@@ -408,6 +408,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                         maxLines: 1,
                         maxLength: 255,
                         counterText: '',
+                        textCapitalization: TextCapitalization.sentences,
                       ),
                     ),
                   // Workaround for SwitchListTile.adaptive crashes in CupertinoDialog

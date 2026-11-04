@@ -13,7 +13,9 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -211,6 +213,69 @@ void main() {
       final received = await event.downloadAndDecryptAttachment();
       expect(received.bytes, bytes);
       expect(received.name, 'handleliste.pdf');
+    });
+
+    test("a photo's caption can be changed, and the photo stays", () async {
+      final eventId = await aliceChat.sendFileEvent(
+        MatrixFile(
+          bytes: photo(40, 30),
+          name: 'ferie.png',
+          mimeType: 'image/png',
+        ).detectFileType,
+        // As the send dialog adds a caption
+        extraContent: {'body': 'Fra stranda'},
+      );
+      final aliceTimeline = await aliceChat.getTimeline();
+      Event mine() =>
+          aliceTimeline.events.firstWhere((e) => e.eventId == eventId);
+      await arrives(aliceTimeline, 'the photo', (e) => e.eventId == eventId);
+      const i18n = MatrixDefaultLocalizations();
+      Future<Event> bobSees(String what, bool Function(Event shown) test) =>
+          valueOf(what, () {
+            final shown = bobTimeline.events
+                .where((e) => e.eventId == eventId)
+                .singleOrNull
+                ?.getDisplayEvent(bobTimeline);
+            return shown != null && test(shown) ? shown : null;
+          });
+
+      // Editing starts from the caption, not "alice sent a picture"
+      expect(
+        mine().getDisplayEvent(aliceTimeline).textToEdit(i18n),
+        'Fra stranda',
+      );
+      await mine().editCaption('Fra stranda i Lofoten', aliceTimeline);
+      final edited = await bobSees(
+        'the new caption',
+        (shown) => shown.fileDescription == 'Fra stranda i Lofoten',
+      );
+      expect(edited.messageType, MessageTypes.Image);
+      final received = await edited.downloadAndDecryptAttachment();
+      expect(img.decodeImage(received.bytes), isNotNull);
+
+      // The next edit starts from the new caption, and an empty one removes it
+      await valueOf(
+        'alice sees her edit',
+        () =>
+            mine().getDisplayEvent(aliceTimeline).textToEdit(i18n) ==
+                'Fra stranda i Lofoten'
+            ? true
+            : null,
+      );
+      await mine().editCaption('', aliceTimeline);
+      final plain = await bobSees(
+        'the photo without a caption',
+        (shown) =>
+            shown.eventId != edited.eventId && shown.fileDescription == null,
+      );
+      expect(plain.messageType, MessageTypes.Image);
+      expect(plain.body, 'ferie.png');
+      await valueOf(
+        'alice sees the photo without a caption',
+        () => mine().getDisplayEvent(aliceTimeline).textToEdit(i18n) == ''
+            ? true
+            : null,
+      );
     });
 
     test('a deleted photo shows as deleted', () async {

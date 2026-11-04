@@ -87,6 +87,8 @@ class _GifPickerState extends State<GifPicker> {
             controller: _search,
             onChanged: _onChanged,
             textInputAction: TextInputAction.search,
+            // Android's autofill would offer saved usernames here
+            autofillHints: null,
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search_outlined),
               hintText: l10n.gruppechatSearchGifs,

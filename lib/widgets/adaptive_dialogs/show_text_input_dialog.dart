@@ -30,6 +30,7 @@ Future<String?> showTextInputDialog({
   TextInputType? keyboardType,
   int? maxLength,
   bool autocorrect = true,
+  TextCapitalization textCapitalization = TextCapitalization.none,
 }) {
   // TODO: Dispose this somewhere
   final controller = TextEditingController(text: initialText);
@@ -79,6 +80,7 @@ Future<String?> showTextInputDialog({
                     maxLength: maxLength,
                     keyboardType: keyboardType,
                     obscureText: obscureText,
+                    textCapitalization: textCapitalization,
                   );
                 },
               ),
