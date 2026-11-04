@@ -144,28 +144,32 @@ void main() {
       );
     });
 
-    test('a single emoji is shown big, without a bubble', () async {
-      await aliceChat.sendTextEvent('🎉');
-      await aliceChat.sendTextEvent('🎉🎉');
-      await aliceChat.sendTextEvent('Gratulerer 🎉');
+    test('a few emojis alone are shown big, without a bubble', () async {
+      // As people type them: with a space after, between them, or none
+      const big = {
+        '🎉': 1,
+        '🎉 ': 1,
+        '🎉🎉': 2,
+        '🎉 🎉 🎉 ': 3,
+        '😂😂😂😂😂😂': 6,
+      };
+      const small = ['🎉🎉🎉🎉🎉🎉🎉', 'Gratulerer 🎉'];
+      for (final text in [...big.keys, ...small]) {
+        await aliceChat.sendTextEvent(text);
+      }
+      for (final MapEntry(key: text, value: count) in big.entries) {
+        final event = await arrives(bobTimeline, text, (e) => e.body == text);
+        expect(event.bigEmojiCount, count, reason: text);
+      }
+      for (final text in small) {
+        final event = await arrives(bobTimeline, text, (e) => e.body == text);
+        expect(event.bigEmojiCount, isNull, reason: text);
+      }
       final single = await arrives(
         bobTimeline,
         'the emoji',
         (e) => e.body == '🎉',
       );
-      final double = await arrives(
-        bobTimeline,
-        'two emojis',
-        (e) => e.body == '🎉🎉',
-      );
-      final mixed = await arrives(
-        bobTimeline,
-        'the text',
-        (e) => e.body == 'Gratulerer 🎉',
-      );
-      expect(single.isSingleEmojiMessage, isTrue);
-      expect(double.isSingleEmojiMessage, isFalse);
-      expect(mixed.isSingleEmojiMessage, isFalse);
 
       // A reply keeps its bubble, which holds the quote
       await bobChat.sendTextEvent('👍', inReplyTo: single);
@@ -175,7 +179,7 @@ void main() {
         (e) => e.body.endsWith('👍') && e.inReplyToEventId() != null,
       );
       expect(
-        reply.isSingleEmojiMessage &&
+        reply.bigEmojiCount != null &&
             reply.inReplyToEventId(includingFallback: false) == null,
         isFalse,
       );

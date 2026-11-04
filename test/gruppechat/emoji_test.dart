@@ -6,15 +6,31 @@ import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('one emoji counts, with skin tones, flags and joined emojis', () {
-    for (final emoji in ['😂', '❤️', '👍🏽', '🇳🇴', '👨‍👩‍👧', ' 🎉 ']) {
-      expect(isSingleEmoji(emoji), isTrue, reason: emoji);
+  test('emojis count as people see them, with spaces anywhere', () {
+    const counts = {
+      '😂': 1,
+      '❤️': 1,
+      '👍🏽': 1,
+      '🇳🇴': 1,
+      '👨‍👩‍👧': 1,
+      ' 🎉 ': 1,
+      '😂😂': 2,
+      '🇳🇴👍🏽 ❤️ ': 3,
+    };
+    for (final MapEntry(key: text, value: count) in counts.entries) {
+      expect(emojiCount(text), count, reason: text);
     }
   });
 
-  test('text, several emojis and nothing do not', () {
-    for (final text in ['hei', 'ok 👍', '😂😂', '1', '', ' ']) {
-      expect(isSingleEmoji(text), isFalse, reason: text);
+  test('text, or nothing, is not emojis', () {
+    for (final text in ['hei', 'ok 👍', '1', '', ' ']) {
+      expect(emojiCount(text), isNull, reason: text);
     }
+  });
+
+  test('the more emojis, the smaller, down to six', () {
+    expect(bigEmojiScale(1), greaterThan(bigEmojiScale(2)));
+    expect(bigEmojiScale(3), greaterThan(bigEmojiScale(6)));
+    expect(bigEmojiScale(6), greaterThan(1));
   });
 }

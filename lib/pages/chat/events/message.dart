@@ -165,8 +165,8 @@ class Message extends StatelessWidget {
             }.contains(event.messageType) &&
             event.fileDescription == null &&
             !event.redacted) ||
-        // Gruppechat: one emoji shows big without a bubble, as in Messenger
-        (displayEvent.isSingleEmojiMessage &&
+        // Gruppechat: a few emojis show big without a bubble, as in Messenger
+        (displayEvent.bigEmojiCount != null &&
             event.inReplyToEventId(includingFallback: false) == null);
 
     if (ownMessage) {

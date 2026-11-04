@@ -177,11 +177,13 @@ class MessageContent extends StatelessWidget {
               html = '* $html';
             }
 
-            final bigEmotes =
-                !event.isRichMessage &&
-                (bigEmojis.contains(event.body) ||
-                    // Gruppechat: any single emoji
-                    isSingleEmoji(event.body));
+            // Gruppechat: a few emojis alone, smaller the more there are
+            final emojiCount = event.bigEmojiCount;
+            final emojiScale = emojiCount != null
+                ? bigEmojiScale(emojiCount)
+                : !event.isRichMessage && bigEmojis.contains(event.body)
+                ? 5.0
+                : 1.0;
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -189,7 +191,7 @@ class MessageContent extends StatelessWidget {
                 html: html,
                 textColor: textColor,
                 room: event.room,
-                fontSize: AppConfig.messageFontSize * (bigEmotes ? 5 : 1),
+                fontSize: AppConfig.messageFontSize * emojiScale,
                 linkStyle: TextStyle(
                   color: linkColor,
                   fontSize: AppConfig.messageFontSize,
