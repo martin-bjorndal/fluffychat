@@ -9,6 +9,7 @@ import 'package:collection/collection.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/camera.dart';
 import 'package:fluffychat/gruppechat/update_check.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
@@ -417,6 +418,13 @@ class ChatListController extends State<ChatList>
 
     scrollController.addListener(_onScroll);
     _waitForFirstSync();
+    // Gruppechat: a photo taken while Android ended the app opens its chat
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final leftover = await GruppechatCamera.recover(Matrix.of(context).store);
+      if (leftover == null || !mounted) return;
+      GruppechatCamera.waiting = leftover;
+      context.go('/rooms/${leftover.roomId}');
+    });
     if (PlatformInfos.isMobile) {
       _callEventSubscription = FlutterCallkitIncoming.onEvent.listen(
         _onCallEvent,

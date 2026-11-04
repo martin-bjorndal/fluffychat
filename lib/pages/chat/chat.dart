@@ -13,6 +13,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/camera.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
@@ -435,6 +436,7 @@ class ChatController extends State<ChatPageWithRoom>
       if (widget.action == 'call') {
         Matrix.of(context).activeCallRoomId.value = room.id;
       }
+      _sendCameraLeftover();
     });
     web.window.addEventListener('paste', _handleClipboardFilePasteWeb);
 
@@ -906,9 +908,35 @@ class ChatController extends State<ChatPageWithRoom>
     );
   }
 
+  // Gruppechat: the camera goes through GruppechatCamera, which brings the
+  // photo back here if Android ended the app while the camera was open
+  Future<XFile?> _takeWithCamera({bool video = false}) => GruppechatCamera.take(
+    Matrix.of(context).store,
+    room.id,
+    threadRootEventId: activeThreadId,
+    video: video,
+  );
+
+  Future<void> _sendCameraLeftover() async {
+    final leftover = GruppechatCamera.takeWaiting(room.id);
+    if (leftover == null) return;
+    final thread = leftover.threadRootEventId;
+    if (thread != null) enterThread(thread);
+    await showAdaptiveDialog(
+      context: context,
+      builder: (c) => SendFileDialog(
+        files: leftover.files,
+        room: room,
+        outerContext: context,
+        threadRootEventId: activeThreadId,
+        threadLastEventId: threadLastEventId,
+      ),
+    );
+  }
+
   Future<void> openCameraAction() async {
     inputFocus.unfocus();
-    final file = await ImagePicker().pickImage(source: ImageSource.camera);
+    final file = await _takeWithCamera();
     if (file == null) return;
     if (!mounted) return;
 
@@ -1010,10 +1038,7 @@ class ChatController extends State<ChatPageWithRoom>
 
   Future<void> openVideoCameraAction() async {
     inputFocus.unfocus();
-    final file = await ImagePicker().pickVideo(
-      source: ImageSource.camera,
-      maxDuration: const Duration(minutes: 1),
-    );
+    final file = await _takeWithCamera(video: true);
     if (file == null) return;
     if (!mounted) return;
 
