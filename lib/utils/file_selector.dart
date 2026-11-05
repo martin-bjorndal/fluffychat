@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/web_files.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/app_lock.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -42,12 +43,15 @@ Future<List<XFile>> selectFiles(
           final result = await FilePicker.pickFiles(
             type: type,
             dialogTitle: title,
+            // Gruppechat: waits for videos from an iPhone's photo library
+            webOptions: gruppechatWebPickerOptions,
           );
           return result.map((file) => file.xFile).toList();
         }
         final result = await FilePicker.pickFile(
           type: type,
           dialogTitle: title,
+          webOptions: gruppechatWebPickerOptions,
         );
         return [?result?.xFile];
       },

@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:fluffychat/gruppechat/call_devices.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/call_kit_params.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
@@ -172,6 +173,8 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
     );
 
     await WakelockPlus.enable();
+    // Gruppechat: before the call lists its speakers
+    await askForCallBluetooth();
     await lk.LiveKitClient.initialize();
 
     // kHKDF matches the key derivation used by element-web's LiveKit JS SDK

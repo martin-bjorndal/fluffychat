@@ -15,6 +15,7 @@ import 'dart:async';
 
 import 'package:matrix/matrix.dart';
 
+import 'calls.dart';
 import 'matrix_group.dart';
 
 const String _wakeRulePrefix = 'im.gruppechat.wake.';
@@ -66,12 +67,14 @@ extension GruppechatChannelMuteEventExtension on Event {
 
 /// Whether the push helper shows a notification for a pushed [event]. The
 /// account's push rules decide, except that a mention of one of the user's
-/// roles always notifies, and a muted channel's wake-up the app couldn't
-/// decrypt never does: there is no telling whether it mentions them.
+/// roles always notifies, as does a call starting in a chat that isn't
+/// muted, and a muted channel's wake-up the app couldn't decrypt never does:
+/// there is no telling whether it mentions them.
 bool gruppechatShouldNotify(Event event) =>
     !event.isUndecryptedWakeUp &&
     (event.room.client.pushruleEvaluator.match(event).notify ||
-        event.mentionsOwnGroupRole);
+        event.mentionsOwnGroupRole ||
+        event.announcesCallToAll);
 
 /// Keeps the account's wake rules in line with which channels are muted.
 class GruppechatWakeRules {

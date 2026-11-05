@@ -12,6 +12,7 @@ import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -196,9 +197,7 @@ Future<void> _tryPushHelper(
     return;
   }
 
-  if (event.type == RtcNotificationContent.eventType &&
-      event.tryParseRtcNotificationContent()?.notificationType == .ring &&
-      PlatformInfos.isMobile) {
+  if (event.ringsAsCall && PlatformInfos.isMobile) {
     _showIncomingCall(event, l10n);
     return;
   }

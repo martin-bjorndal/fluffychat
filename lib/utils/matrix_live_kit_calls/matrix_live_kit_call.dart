@@ -8,6 +8,7 @@ import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/call_keys_event_content.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:matrix/matrix.dart';
@@ -276,14 +277,7 @@ extension MatrixRtcRoomExtension on Room {
       intent: intent,
     );
 
-    if (!hasActiveMatrixRtcCall) {
-      final dmUserId = directChatMatrixID;
-      if (dmUserId != null) {
-        await sendRtcNotification(type: .ring, userIds: [dmUserId]);
-      } else {
-        await sendRtcNotification(type: .notification, mentionRoom: true);
-      }
-    }
+    if (!hasActiveMatrixRtcCall) await announceCall();
 
     Logs().v('[Join MatrixRtc Call] (3/5) Request OpenId Token...');
     final openIdCredentials = await client.requestOpenIdToken(

@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/call_devices.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/call/call_tile.dart';
 import 'package:fluffychat/pages/call/call_view_model.dart';
@@ -89,43 +90,12 @@ class CallPage extends StatelessWidget {
                           : .top;
                     },
                   ),
+                  // Gruppechat: the choices get the button's context
                   if (localVideoTrack == null)
-                    PopupMenuButton(
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          onTap: () => viewModel.selectCamera(context),
-                          child: Row(
-                            mainAxisSize: .min,
-                            spacing: 12,
-                            children: [
-                              const Icon(Icons.camera_outlined),
-                              Text(L10n.of(context).selectCamera),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          onTap: () => viewModel.selectMicrophone(context),
-                          child: Row(
-                            mainAxisSize: .min,
-                            spacing: 12,
-                            children: [
-                              const Icon(Icons.mic_outlined),
-                              Text(L10n.of(context).selectMicrophone),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          onTap: () => viewModel.selectSpeaker(context),
-                          child: Row(
-                            mainAxisSize: .min,
-                            spacing: 12,
-                            children: [
-                              const Icon(Icons.speaker_phone_outlined),
-                              Text(L10n.of(context).selectSpeaker),
-                            ],
-                          ),
-                        ),
-                      ],
+                    GruppechatCallDeviceMenu(
+                      selectCamera: viewModel.selectCamera,
+                      selectMicrophone: viewModel.selectMicrophone,
+                      selectSpeaker: viewModel.selectSpeaker,
                     ),
                 ],
                 titleSpacing: mini ? 0 : null,

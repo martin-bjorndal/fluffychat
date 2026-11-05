@@ -15,6 +15,7 @@ library;
 
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,27 +26,31 @@ import 'utils/test_server.dart';
 void main() {
   group('Push notifications', skip: skipWithoutTestServer, () {
     late Client alice;
+    late Client bob;
     late Client carol;
     late TestGroup group;
     late String pushkey;
     Room channel(Client client, String name) =>
         client.getRoomById(group.channels[name]!)!;
 
+    /// The pushed message, as carol's phone fetches it.
+    Future<Event?> fetch(Map<String, Object?> push) =>
+        carol.getEventByPushNotification(
+          PushNotification.fromJson(
+            push['notification'] as Map<String, Object?>,
+          ),
+          storeInDatabase: false,
+        );
+
     /// What carol's phone does with a push: fetch the message and decide.
     Future<bool> notifies(Map<String, Object?> push) async {
-      final notification = PushNotification.fromJson(
-        push['notification'] as Map<String, Object?>,
-      );
-      final event = await carol.getEventByPushNotification(
-        notification,
-        storeInDatabase: false,
-      );
+      final event = await fetch(push);
       return event != null && gruppechatShouldNotify(event);
     }
 
     setUpAll(() async {
       alice = await logIn('alice');
-      final bob = await logIn('bob');
+      bob = await logIn('bob');
       carol = await logIn('carol');
       group = await newGroup(
         alice,
@@ -132,6 +137,12 @@ void main() {
       expect(await notifies(push), isFalse);
     });
 
+    test('and for calls starting in it', () async {
+      final eventId = await channel(bob, 'spill').announceCall();
+      final push = await _waitForPush(pushkey, eventId!);
+      expect(await notifies(push), isFalse);
+    });
+
     test('but an @role mention in it notifies', () async {
       final eventId = await channel(
         alice,
@@ -153,6 +164,23 @@ void main() {
         rules.override?.map((rule) => rule.ruleId),
         isNot(contains(wakeRuleId(group.channels['spill']!))),
       );
+    });
+
+    test('a call in a direct chat rings', () async {
+      final (dm, _) = await directChat(alice, carol);
+      final eventId = await dm.announceCall();
+      final push = await _waitForPush(pushkey, eventId!);
+      final event = await fetch(push);
+      expect(event?.ringsAsCall, isTrue);
+      expect(await notifies(push), isTrue);
+    });
+
+    test('a call in a channel notifies, whoever starts it', () async {
+      for (final caller in [alice, bob]) {
+        final eventId = await channel(caller, 'general').announceCall();
+        final push = await _waitForPush(pushkey, eventId!);
+        expect(await notifies(push), isTrue, reason: caller.userID);
+      }
     });
 
     test('a silenced channel gets no wake rule and no pushes', () async {
