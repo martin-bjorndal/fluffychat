@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/invite_codes.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/sign_up.dart';
@@ -456,6 +457,56 @@ Future<T> fetchedValue<T extends Object>(
       throw TestFailure('Timed out after ${timeout.inSeconds}s: $what');
     }
     await Future<void>.delayed(const Duration(milliseconds: 500));
+  }
+}
+
+/// Registers [client]'s phone for pushes as BackgroundPush.setupPusher does,
+/// with a made-up Firebase token, which it returns.
+Future<String> addPusher(Client client) async {
+  final pushkey = 'e2e-firebase-token-${client.deviceID}';
+  await client.postPusher(
+    Pusher(
+      pushkey: pushkey,
+      appId: '${AppConfig.pushNotificationsAppId}.${client.deviceID}',
+      appDisplayName: 'Hanne Chat',
+      deviceDisplayName: 'Hanne Chat',
+      lang: 'en',
+      data: PusherData(
+        url: testServer.pushGateway,
+        format: 'event_id_only',
+        additionalProperties: {
+          'client_name': client.clientName,
+          'data_message': true,
+        },
+      ),
+      kind: 'http',
+    ),
+    append: true,
+  );
+  return pushkey;
+}
+
+/// The event a recorded push is about.
+String? eventIdOfPush(Map<String, Object?> push) =>
+    (push['notification'] as Map<String, Object?>?)?['event_id'] as String?;
+
+/// The push for [eventId] to the device with [pushkey], once Synapse has
+/// sent it to the stand-in push gateway.
+Future<Map<String, Object?>> waitForPush(String pushkey, String eventId) async {
+  final end = DateTime.now().add(const Duration(seconds: 30));
+  while (true) {
+    final pushes = await testServer.recorded('pushes');
+    final push = pushes.firstWhereOrNull((push) {
+      final devices = (push['notification'] as Map?)?['devices'] as List?;
+      return eventIdOfPush(push) == eventId &&
+          (devices?.any((device) => (device as Map)['pushkey'] == pushkey) ??
+              false);
+    });
+    if (push != null) return push;
+    if (DateTime.now().isAfter(end)) {
+      throw TestFailure('No push for $eventId reached the push gateway');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
   }
 }
 

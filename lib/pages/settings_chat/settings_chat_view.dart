@@ -6,6 +6,7 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -100,6 +101,7 @@ class SettingsChatView extends StatelessWidget {
                                 Navigator.of(context).pop(emoji.emoji),
                             config: Config(
                               locale: Localizations.localeOf(context),
+                              emojiSet: gruppechatEmojiSet,
                               emojiViewConfig: const EmojiViewConfig(
                                 backgroundColor: Colors.transparent,
                               ),

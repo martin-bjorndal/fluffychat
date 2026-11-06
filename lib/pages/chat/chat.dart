@@ -15,6 +15,8 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/camera.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
+import 'package:fluffychat/gruppechat/chat_notifications.dart';
+import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
@@ -454,13 +456,7 @@ class ChatController extends State<ChatPageWithRoom>
     );
 
     sendingClient = Matrix.of(context).client;
-    final lastEventThreadId =
-        room.lastEvent?.relationshipType == RelationshipTypes.thread
-        ? room.lastEvent?.relationshipEventId
-        : null;
-    readMarkerEventId = room.hasNewMessages
-        ? lastEventThreadId ?? room.fullyRead
-        : '';
+    readMarkerEventId = newMessagesLineEventId(room);
     WidgetsBinding.instance.addObserver(this);
     GruppechatBubbles.room.addListener(_onBubbleChanged);
     _tryLoadTimeline();
@@ -505,41 +501,25 @@ class ChatController extends State<ChatPageWithRoom>
     loadTimelineFuture = _getTimeline();
     try {
       await loadTimelineFuture;
+      if (mounted) _clearNotification();
       // We launched the chat with a given initial event ID:
       if (initialEventId != null) {
         scrollToEventId(initialEventId);
         return;
       }
 
-      var readMarkerEventIndex = readMarkerEventId.isEmpty
-          ? -1
-          : timeline!.events
-                .filterByVisibleInGui(
-                  exceptionEventId: readMarkerEventId,
-                  threadId: activeThreadId,
-                )
-                .indexWhere((e) => e.eventId == readMarkerEventId);
-
-      // Read marker is existing but not found in first events. Try a single
-      // requestHistory call before opening timeline on event context:
-      if (readMarkerEventId.isNotEmpty && readMarkerEventIndex == -1) {
-        await timeline?.requestHistory(historyCount: _loadHistoryCount);
-        readMarkerEventIndex = timeline!.events
-            .filterByVisibleInGui(
-              exceptionEventId: readMarkerEventId,
-              threadId: activeThreadId,
-            )
-            .indexWhere((e) => e.eventId == readMarkerEventId);
-      }
-
       // Gruppechat: the chat opens at the newest message, as in Messenger.
       // With more new messages than fit on the screen, the banner at the top
-      // jumps up to the first of them.
-      if (readMarkerEventIndex > _newMessagesForBanner) {
-        newMessageCount = readMarkerEventIndex;
-        _showScrollUpMaterialBanner(readMarkerEventId);
-      } else if (readMarkerEventId.isNotEmpty && readMarkerEventIndex == -1) {
-        _showScrollUpMaterialBanner(readMarkerEventId);
+      // jumps up to the first of them (lib/gruppechat/chat_reading.dart).
+      final banner = await newMessagesBanner(
+        timeline!,
+        readMarkerEventId,
+        threadId: activeThreadId,
+        historyCount: _loadHistoryCount,
+      );
+      if (banner != null) {
+        newMessageCount = banner.count;
+        _showScrollUpMaterialBanner(banner.eventId);
       }
 
       // Mark room as read on first visit if requirements are fulfilled
@@ -562,8 +542,6 @@ class ChatController extends State<ChatPageWithRoom>
   /// Gruppechat: how many new messages the banner at the top counts, or 0
   /// when it only knows where the person stopped reading.
   int newMessageCount = 0;
-
-  static const _newMessagesForBanner = 5;
 
   /// Gruppechat: messages that came in while the person read further up,
   /// held back below the list (see [listEndsAtEventId]).
@@ -640,6 +618,16 @@ class ChatController extends State<ChatPageWithRoom>
     if (state != AppLifecycleState.resumed) return;
     if (!mounted) return;
     setReadMarker();
+    _clearNotification();
+  }
+
+  /// Gruppechat: the chat's notification goes once the chat is on screen
+  /// (lib/gruppechat/chat_notifications.dart).
+  void _clearNotification() {
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    clearChatNotification(room, l10n: L10n.of(context));
   }
 
   Future<void>? _setReadMarkerFuture;
@@ -653,51 +641,17 @@ class ChatController extends State<ChatPageWithRoom>
     // We are already setting a read marker
     if (_setReadMarkerFuture != null) return;
 
-    // We only set read marker if we are at the bottom
-    if (_scrolledUp) return;
-
-    // We do not set read marker if we offer user the scroll up banner
-    if (scrollUpBannerEventId != null) return;
-
-    // We do not set read marker if timeline is empty
     final timeline = this.timeline;
-    if (timeline == null || timeline.events.isEmpty) return;
+    if (timeline == null) return;
 
-    // Do not set read marker on rtc notification while call is active. This
-    // mutes callkit.
-    if (room.hasActiveMatrixRtcCall &&
-        timeline.events.first.type == RtcNotificationContent.eventType) {
-      return;
-    }
-
-    final setOnLatestEvent = eventId == null;
-    eventId ??= timeline.events
-        .firstWhereOrNull(
-          (event) => room.client.pushruleEvaluator.match(event).notify,
-        )
-        ?.eventId;
-
-    if (setOnLatestEvent && (room.hasNewMessages || room.isUnread)) {
-      eventId ??=
-          room.lastEvent?.eventId ?? timeline.events.firstOrNull?.eventId;
-    }
-
-    // There is no event we could place a read marker
+    // Gruppechat: lib/gruppechat/chat_reading.dart
+    eventId = readMarkerTarget(
+      room,
+      timeline,
+      eventId: eventId,
+      scrolledUp: _scrolledUp,
+    );
     if (eventId == null) return;
-
-    // This is a sending event, we do not set a readmarker yet
-    if (eventId.isValidMatrixIdStrict() == false) return;
-
-    // Already set a read marker on this event
-    if (room.fullyRead == eventId && !setOnLatestEvent) return;
-
-    // Set a readmarker on a specific event, not latest, but room is not unread
-    // at all.
-    if (setOnLatestEvent &&
-        !room.hasNewMessages &&
-        room.notificationCount == 0) {
-      return;
-    }
 
     Logs().d('Set read marker...', eventId);
     // ignore: unawaited_futures

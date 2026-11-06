@@ -5,6 +5,7 @@
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/sticker_picker_dialog.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
@@ -47,6 +48,7 @@ class ChatEmojiPicker extends StatelessWidget {
                           onBackspacePressed: controller.emojiPickerBackspace,
                           config: Config(
                             locale: Localizations.localeOf(context),
+                            emojiSet: gruppechatEmojiSet,
                             emojiViewConfig: EmojiViewConfig(
                               noRecents: const NoRecent(),
                               backgroundColor:

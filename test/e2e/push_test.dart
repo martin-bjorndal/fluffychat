@@ -13,8 +13,6 @@
 @Timeout(Duration(minutes: 3))
 library;
 
-import 'package:collection/collection.dart';
-import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
@@ -70,33 +68,13 @@ void main() {
         ).state.roleIdsOf(carol.userID!).isNotEmpty,
       );
 
-      // As BackgroundPush.setupPusher, with a made-up Firebase token
-      pushkey = 'e2e-firebase-token-${carol.deviceID}';
-      await carol.postPusher(
-        Pusher(
-          pushkey: pushkey,
-          appId: '${AppConfig.pushNotificationsAppId}.${carol.deviceID}',
-          appDisplayName: 'Hanne Chat',
-          deviceDisplayName: 'Hanne Chat',
-          lang: 'en',
-          data: PusherData(
-            url: testServer.pushGateway,
-            format: 'event_id_only',
-            additionalProperties: {
-              'client_name': carol.clientName,
-              'data_message': true,
-            },
-          ),
-          kind: 'http',
-        ),
-        append: true,
-      );
+      pushkey = await addPusher(carol);
     });
     tearDownAll(logOutEveryone);
 
     test('a message in a channel is pushed and notifies', () async {
       final eventId = await channel(alice, 'general').sendTextEvent('Hei alle');
-      final push = await _waitForPush(pushkey, eventId!);
+      final push = await waitForPush(pushkey, eventId!);
       final notification = push['notification'] as Map<String, Object?>;
       expect(notification['room_id'], group.channels['general']);
       // event_id_only: the message itself never goes through Firebase
@@ -133,13 +111,13 @@ void main() {
     test('a muted channel stays quiet for ordinary messages', () async {
       final eventId = await channel(alice, 'spill').sendTextEvent('Bare prat');
       // The wake rule still pushes it, so the app can look for mentions
-      final push = await _waitForPush(pushkey, eventId!);
+      final push = await waitForPush(pushkey, eventId!);
       expect(await notifies(push), isFalse);
     });
 
     test('and for calls starting in it', () async {
       final eventId = await channel(bob, 'spill').announceCall();
-      final push = await _waitForPush(pushkey, eventId!);
+      final push = await waitForPush(pushkey, eventId!);
       expect(await notifies(push), isFalse);
     });
 
@@ -148,7 +126,7 @@ void main() {
         alice,
         'spill',
       ).sendTextEvent('@spillkveld i kveld?');
-      final push = await _waitForPush(pushkey, eventId!);
+      final push = await waitForPush(pushkey, eventId!);
       expect(await notifies(push), isTrue);
     });
 
@@ -169,7 +147,7 @@ void main() {
     test('a call in a direct chat rings', () async {
       final (dm, _) = await directChat(alice, carol);
       final eventId = await dm.announceCall();
-      final push = await _waitForPush(pushkey, eventId!);
+      final push = await waitForPush(pushkey, eventId!);
       final event = await fetch(push);
       expect(event?.ringsAsCall, isTrue);
       expect(await notifies(push), isTrue);
@@ -178,7 +156,7 @@ void main() {
     test('a call in a channel notifies, whoever starts it', () async {
       for (final caller in [alice, bob]) {
         final eventId = await channel(caller, 'general').announceCall();
-        final push = await _waitForPush(pushkey, eventId!);
+        final push = await waitForPush(pushkey, eventId!);
         expect(await notifies(push), isTrue, reason: caller.userID);
       }
     });
@@ -193,35 +171,9 @@ void main() {
       final quietId = await channel(alice, 'spill').sendTextEvent('Stille');
       // A message elsewhere shows that pushes still flow
       final loudId = await channel(alice, 'general').sendTextEvent('Hallo');
-      await _waitForPush(pushkey, loudId!);
+      await waitForPush(pushkey, loudId!);
       final pushes = await testServer.recorded('pushes');
-      expect(pushes.where((push) => _eventIdOf(push) == quietId), isEmpty);
+      expect(pushes.where((push) => eventIdOfPush(push) == quietId), isEmpty);
     });
   });
-}
-
-String? _eventIdOf(Map<String, Object?> push) =>
-    (push['notification'] as Map<String, Object?>?)?['event_id'] as String?;
-
-/// The push for [eventId] to the device with [pushkey], once Synapse has
-/// sent it.
-Future<Map<String, Object?>> _waitForPush(
-  String pushkey,
-  String eventId,
-) async {
-  final end = DateTime.now().add(const Duration(seconds: 30));
-  while (true) {
-    final pushes = await testServer.recorded('pushes');
-    final push = pushes.firstWhereOrNull((push) {
-      final devices = (push['notification'] as Map?)?['devices'] as List?;
-      return _eventIdOf(push) == eventId &&
-          (devices?.any((device) => (device as Map)['pushkey'] == pushkey) ??
-              false);
-    });
-    if (push != null) return push;
-    if (DateTime.now().isAfter(end)) {
-      throw TestFailure('No push for $eventId reached the push gateway');
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-  }
 }
