@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/avatar_letters.dart';
 import 'package:fluffychat/utils/notification_background_handler.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/string_color.dart';
@@ -413,13 +414,4 @@ String? roomIdOfChatLocation(String location) {
   if (segments.length != 2 || segments.first != 'rooms') return null;
   final roomId = segments.last;
   return roomId.startsWith('!') ? roomId : null;
-}
-
-/// The letters of a placeholder avatar, picked as the app's Avatar does.
-String avatarFallbackLetters(String? name) {
-  final trimmed = name?.trim();
-  if (trimmed == null || trimmed.isEmpty) return '@';
-  final words = trimmed.split(' ');
-  if (words.length <= 1) return trimmed.characters.first;
-  return '${words.first.characters.first}${words.last.characters.first}';
 }

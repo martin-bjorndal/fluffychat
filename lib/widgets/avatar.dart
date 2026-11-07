@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/avatar_letters.dart';
 import 'package:fluffychat/utils/string_color.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
@@ -40,13 +41,9 @@ class Avatar extends StatelessWidget {
     super.key,
   });
 
-  String _calcFallbackLetters() {
-    final name = this.name?.trim();
-    if (name == null || name.isEmpty) return '@';
-    final words = name.split(' ');
-    if (words.length <= 1) return name.substring(0, 1);
-    return '${words.first.substring(0, 1)}${words.last.substring(0, 1)}';
-  }
+  // Gruppechat: whole characters, so emojis aren't cut in half
+  // (lib/gruppechat/avatar_letters.dart)
+  String _calcFallbackLetters() => avatarFallbackLetters(name);
 
   @override
   Widget build(BuildContext context) {

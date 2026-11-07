@@ -170,4 +170,167 @@ void main() {
       expect(shade.notifications.keys, contains(id));
     });
   });
+
+  // Reported in 1.1.17: notifications stayed after the chat was read, and
+  // old ones came back 20 to 30 minutes after the messages were read and
+  // answered. Pushes can come late, so a push is only shown while its
+  // message is unread, and the app clears read chats when it comes back.
+  group('A late push', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client carol;
+    late TestGroup group;
+    late String pushkey;
+    late L10n l10n;
+    late NotificationShade shade;
+    Room channel(Client client, String name) =>
+        client.getRoomById(group.channels[name]!)!;
+
+    /// What carol's phone does with [push], as the push helper does.
+    Future<void> arrives(Map<String, Object?> push) => pushHelper(
+      PushNotification.fromJson(push['notification'] as Map<String, Object?>),
+      clients: [carol],
+      l10n: l10n,
+      flutterLocalNotificationsPlugin: FlutterLocalNotificationsPlugin(),
+    );
+
+    setUpAll(() async {
+      SharedPreferences.setMockInitialValues({});
+      l10n = await lookupL10n(const Locale('nb'));
+      shade = NotificationShade.install();
+      alice = await logIn('alice');
+      carol = await logIn('carol');
+      group = await newGroup(
+        alice,
+        [carol],
+        channels: ['general', 'spill', 'musikk'],
+      );
+      pushkey = await addPusher(carol);
+    });
+    setUp(() => shade.notifications.clear());
+    tearDownAll(logOutEveryone);
+
+    test('for a message carol has read shows nothing', () async {
+      final room = channel(carol, 'general');
+      final eventId = await channel(
+        alice,
+        'general',
+      ).sendTextEvent('Kommer du i kveld?');
+      final push = await waitForPush(pushkey, eventId!);
+      await eventually(
+        'carol gets the message',
+        () => room.lastEvent?.eventId == eventId,
+      );
+      // She reads it in the app before the push gets to her phone
+      await openChat(room, l10n);
+      await eventually(
+        "carol's app knows she has read it",
+        () => !room.hasNewMessages,
+      );
+
+      await arrives(push);
+      expect(
+        shade.notifications.keys,
+        isNot(contains(chatNotificationId(carol, room.id))),
+      );
+    });
+
+    test('nor for one she has answered', () async {
+      final room = channel(carol, 'spill');
+      final eventId = await channel(alice, 'spill').sendTextEvent('Pizza?');
+      final push = await waitForPush(pushkey, eventId!);
+      final answer = await room.sendTextEvent('Ja, gjerne!');
+      await eventually(
+        "carol's app has her answer",
+        () => room.lastEvent?.eventId == answer,
+      );
+
+      await arrives(push);
+      expect(
+        shade.notifications.keys,
+        isNot(contains(chatNotificationId(carol, room.id))),
+      );
+    });
+
+    test(
+      'for a message read elsewhere while the app was away shows nothing',
+      () async {
+        final room = channel(carol, 'spill');
+        // Carol's phone is in her pocket: the app is off the screen, and
+        // stops syncing as it does there
+        setClientSyncing(carol, false);
+        try {
+          final eventId = await channel(
+            alice,
+            'spill',
+          ).sendTextEvent('Hvem tar med kortstokken?');
+          final push = await waitForPush(pushkey, eventId!);
+          await eventually(
+            'the phone has stopped syncing',
+            () => !carol.syncPending,
+          );
+
+          // She reads it in the web app before the push gets to her phone
+          final web = await logIn('carol');
+          await eventually(
+            'the web app has the message',
+            () => web.getRoomById(room.id)?.lastEvent?.eventId == eventId,
+          );
+          await openChat(web.getRoomById(room.id)!, l10n);
+          await eventually(
+            'the web app knows she has read it',
+            () => !web.getRoomById(room.id)!.hasNewMessages,
+          );
+
+          await arrives(push);
+          expect(
+            shade.notifications.keys,
+            isNot(contains(chatNotificationId(carol, room.id))),
+          );
+        } finally {
+          setClientSyncing(carol, true);
+        }
+      },
+    );
+
+    test('for an unread message still notifies', () async {
+      final room = channel(carol, 'musikk');
+      final eventId = await channel(
+        alice,
+        'musikk',
+      ).sendTextEvent('Ny låt ute!');
+      final push = await waitForPush(pushkey, eventId!);
+      await arrives(push);
+      final id = chatNotificationId(carol, room.id);
+      expect(shade.notifications[id]?.body, 'Ny låt ute!');
+    });
+
+    test(
+      'is cleared when the app comes back after reading elsewhere',
+      () async {
+        final room = channel(carol, 'musikk');
+        final eventId = await channel(
+          alice,
+          'musikk',
+        ).sendTextEvent('Hørt den?');
+        final push = await waitForPush(pushkey, eventId!);
+        await arrives(push);
+        final id = chatNotificationId(carol, room.id);
+        expect(shade.notifications.keys, contains(id));
+
+        // Carol reads the channel in the web app, then picks up her phone
+        final web = await logIn('carol');
+        await eventually(
+          'the web app has the message',
+          () => web.getRoomById(room.id)?.lastEvent?.eventId == eventId,
+        );
+        await openChat(web.getRoomById(room.id)!, l10n);
+        await eventually(
+          'her phone knows the channel is read',
+          () => !room.isUnreadOrInvited,
+        );
+        await clearReadChatNotificationsOnResume(carol);
+        expect(shade.notifications.keys, isNot(contains(id)));
+      },
+    );
+  });
 }

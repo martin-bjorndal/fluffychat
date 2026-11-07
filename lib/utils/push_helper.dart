@@ -14,6 +14,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/call_kit_params.dart';
@@ -158,34 +159,12 @@ Future<void> _tryPushHelper(
           .oneShotSync()
           .timeout(const Duration(seconds: 8))
           .catchError((_) => null);
-
-      final activeNotifications = await flutterLocalNotificationsPlugin
-          .getActiveNotifications();
-      activeNotifications.removeWhere(
-        (notification) => notification.groupKey != client.clientName,
+      // Gruppechat: lib/gruppechat/chat_notifications.dart
+      await clearReadChatNotifications(
+        client,
+        l10n: l10n,
+        plugin: flutterLocalNotificationsPlugin,
       );
-      var needsUpdateForSummaryNotification = false;
-      for (final activeNotification in activeNotifications) {
-        final room = client.rooms.singleWhereOrNull(
-          (room) =>
-              '${client.clientName}_${room.id}'.hashCode ==
-              activeNotification.id,
-        );
-        if (room != null && !room.isUnreadOrInvited) {
-          await GruppechatBubbles.dismiss(
-            flutterLocalNotificationsPlugin,
-            activeNotification.id!,
-          );
-          if (PlatformInfos.isAndroid) needsUpdateForSummaryNotification = true;
-        }
-      }
-      if (needsUpdateForSummaryNotification) {
-        await updateSummaryNotification(
-          clientName: client.clientName,
-          l10n: l10n,
-          flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin,
-        );
-      }
     }
     return;
   }
@@ -194,6 +173,18 @@ Future<void> _tryPushHelper(
 
   if (!gruppechatShouldNotify(event)) {
     Logs().i('Push helper: filtered by client-side push rules.');
+    return;
+  }
+
+  // Gruppechat: a late push for a message the person has read by now
+  // (lib/gruppechat/chat_notifications.dart)
+  if (await pushIsAlreadyRead(
+    event,
+    sync: isBackgroundMessage || !clientIsSyncing(client),
+    l10n: l10n,
+    plugin: flutterLocalNotificationsPlugin,
+  )) {
+    Logs().i('Push helper: the message has been read already.');
     return;
   }
 

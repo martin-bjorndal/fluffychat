@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
@@ -379,9 +380,15 @@ class MatrixState extends State<Matrix> {
           ? null
           : PresenceType.unavailable;
       if (PlatformInfos.isMobile) {
-        client.backgroundSync = foreground;
+        // Gruppechat: lib/gruppechat/chat_notifications.dart
+        setClientSyncing(client, foreground);
         client.requestHistoryOnLimitedTimeline = !foreground;
         Logs().v('Set background sync to', foreground);
+      }
+      // Gruppechat: notifications of chats read meanwhile go
+      // (lib/gruppechat/chat_notifications.dart)
+      if (state == AppLifecycleState.resumed && PlatformInfos.isMobile) {
+        clearReadChatNotificationsOnResume(client);
       }
     }
   }
