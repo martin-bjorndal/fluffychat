@@ -11,6 +11,7 @@ library;
 
 import 'dart:typed_data';
 
+import 'package:fluffychat/gruppechat/avatar_letters.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -429,4 +430,54 @@ void main() {
       );
     });
   });
+
+  // Reported in 1.1.17: a chat named "💔" crashed the screen with "string is
+  // not well-formed UTF-16", since its avatar took half of the emoji
+  group('A chat named with emojis', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late TestGroup group;
+
+    setUpAll(() async {
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      group = await newGroup(alice, [bob], channels: ['general', 'spill']);
+    });
+    tearDownAll(logOutEveryone);
+
+    for (final (channel, name, letters) in [
+      ('general', '💔', '💔'),
+      ('spill', '💔 Hjertesorg', '💔H'),
+    ]) {
+      test('"$name" gets an avatar of whole characters', () async {
+        // Renamed as the chat details page does
+        await alice.getRoomById(group.channels[channel]!)!.setName(name);
+        final room = bob.getRoomById(group.channels[channel]!)!;
+        await eventually('bob sees the new name', () => room.name == name);
+        final shown = room.getLocalizedDisplayname();
+        expect(shown, name);
+        // What bob's chat list shows (lib/widgets/avatar.dart)
+        final avatar = avatarFallbackLetters(shown);
+        expect(avatar, letters);
+        expect(_wellFormedUtf16(avatar), isTrue);
+      });
+    }
+  });
+}
+
+/// Whether [text] has no lone halves of surrogate pairs, which Flutter
+/// refuses to lay out.
+bool _wellFormedUtf16(String text) {
+  final units = text.codeUnits;
+  for (var i = 0; i < units.length; i++) {
+    final unit = units[i];
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      if (i + 1 >= units.length) return false;
+      final next = units[++i];
+      if (next < 0xDC00 || next > 0xDFFF) return false;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      return false;
+    }
+  }
+  return true;
 }

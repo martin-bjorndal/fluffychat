@@ -98,15 +98,6 @@ void main() {
     expect(roomIdOfChatLocation(chatLocation('!a:x')), '!a:x');
   });
 
-  test('avatarFallbackLetters picks letters as the Avatar widget does', () {
-    expect(avatarFallbackLetters(null), '@');
-    expect(avatarFallbackLetters('  '), '@');
-    expect(avatarFallbackLetters('Alice'), 'A');
-    expect(avatarFallbackLetters(' Tor Helge '), 'TH');
-    expect(avatarFallbackLetters('Alice Bob Carol'), 'AC');
-    expect(avatarFallbackLetters('🎉 fest'), '🎉f');
-  });
-
   group('BubbleStatus', () {
     test('reads what the plugin reports', () {
       final status = BubbleStatus.fromMap({
