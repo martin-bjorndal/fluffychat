@@ -10,7 +10,9 @@
 library;
 
 import 'dart:typed_data';
+import 'dart:ui' show Locale;
 
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as picker;
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
@@ -183,6 +185,20 @@ void main() {
             reply.inReplyToEventId(includingFallback: false) == null,
         isFalse,
       );
+    });
+
+    test('🥲 is on the emoji keyboard, and shows big', () async {
+      // The smileys of the chat's emoji keyboard, in Norwegian
+      final smileys = gruppechatEmojiSet(const Locale('nb'))
+          .firstWhere(
+            (category) => category.category == picker.Category.SMILEYS,
+          )
+          .emoji
+          .map((emoji) => emoji.emoji);
+      expect(smileys, contains('🥲'));
+      await aliceChat.sendTextEvent('🥲');
+      final event = await arrives(bobTimeline, '🥲', (e) => e.body == '🥲');
+      expect(event.bigEmojiCount, 1);
     });
 
     test('double tapping edits only your own sent text', () async {

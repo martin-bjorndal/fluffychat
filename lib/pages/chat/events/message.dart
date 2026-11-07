@@ -780,6 +780,8 @@ class Message extends StatelessWidget {
                                                                           locale: Localizations.localeOf(
                                                                             context,
                                                                           ),
+                                                                          emojiSet:
+                                                                              gruppechatEmojiSet,
                                                                           emojiViewConfig: const EmojiViewConfig(
                                                                             backgroundColor:
                                                                                 Colors.transparent,
