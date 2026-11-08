@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:chewie/chewie.dart';
+import 'package:fluffychat/gruppechat/video_opening.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
@@ -34,6 +35,9 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
   double? _downloadProgress;
 
+  // Gruppechat: closing while the video loads must not crash or play it.
+  final _opening = VideoOpening();
+
   // The video_player package only doesn't support Windows and Linux.
   final _supportsVideoPlayer =
       !PlatformInfos.isWindows && !PlatformInfos.isLinux;
@@ -45,21 +49,11 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
     }
 
     try {
-      final fileSize = widget.event.content
-          .tryGetMap<String, Object?>('info')
-          ?.tryGet<int>('size');
-      final videoFile = await widget.event.downloadAndDecryptAttachment(
-        onDownloadProgress: fileSize == null
-            ? null
-            : (progress) {
-                final progressPercentage = progress / fileSize;
-                setState(() {
-                  _downloadProgress = progressPercentage < 1
-                      ? progressPercentage
-                      : null;
-                });
-              },
+      final videoFile = await _opening.download(
+        widget.event,
+        onProgress: (progress) => setState(() => _downloadProgress = progress),
       );
+      if (videoFile == null) return;
 
       // Dispose the controllers if we already have them.
       _disposeControllers();
@@ -82,14 +76,24 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
         }
         videoPlayerController = VideoPlayerController.file(file);
       }
-      _videoPlayerController = videoPlayerController;
 
-      await videoPlayerController.initialize();
+      try {
+        await videoPlayerController.initialize();
+      } catch (_) {
+        await videoPlayerController.dispose();
+        rethrow;
+      }
+      final keptController = await _opening.keep(
+        videoPlayerController,
+        (controller) => controller.dispose(),
+      );
+      if (keptController == null) return;
+      _videoPlayerController = keptController;
 
       // Create a ChewieController on top.
       setState(() {
         _chewieController = ChewieController(
-          videoPlayerController: videoPlayerController,
+          videoPlayerController: keptController,
           showControlsOnInitialize: false,
           autoPlay: true,
           autoInitialize: true,
@@ -117,6 +121,7 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
   @override
   void dispose() {
+    _opening.close();
     _disposeControllers();
     super.dispose();
   }
