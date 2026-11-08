@@ -232,9 +232,9 @@ class Message extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12.0),
           child: Center(child: Icon(Icons.check_outlined)),
         ),
-        direction: AppSettings.swipeRightToLeftToReply.value
-            ? SwipeDirection.endToStart
-            : SwipeDirection.startToEnd,
+        direction: event.replySwipeDirection(
+          rightToLeftSetting: AppSettings.swipeRightToLeftToReply.value,
+        ),
         onSwipe: (_) => onSwipe(),
         child: Container(
           constraints: const BoxConstraints(
