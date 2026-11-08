@@ -15,6 +15,7 @@ import 'dart:typed_data';
 
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/video_opening.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -275,6 +276,61 @@ void main() {
         () => mine().getDisplayEvent(aliceTimeline).textToEdit(i18n) == ''
             ? true
             : null,
+      );
+    });
+
+    test('a video closed while it loads stays closed and silent', () async {
+      // Big enough to arrive in many pieces, like on a slow connection
+      final bytes = Uint8List.fromList(
+        List.generate(3 * 1024 * 1024, (i) => (i * 31) % 251),
+      );
+      await aliceChat.sendFileEvent(
+        MatrixVideoFile(
+          bytes: bytes,
+          name: 'tur.mp4',
+          mimeType: 'video/mp4',
+          width: 640,
+          height: 360,
+        ),
+      );
+      final event = await arrives(
+        bobTimeline,
+        'the video',
+        (e) => e.body == 'tur.mp4',
+      );
+      expect(event.messageType, MessageTypes.Video);
+
+      // bob opens the video and closes it as soon as it starts loading
+      final opening = VideoOpening();
+      var progressAfterClosing = 0;
+      final file = await opening.download(
+        event,
+        onProgress: (_) {
+          if (opening.isClosed) {
+            progressAfterClosing++;
+          } else {
+            opening.close();
+          }
+        },
+      );
+      expect(opening.isClosed, isTrue);
+      // The closed viewer hears nothing more, and nothing gets played
+      expect(progressAfterClosing, 0);
+      expect(file, isNull);
+      var disposed = false;
+      final player = await opening.keep('player', (_) async => disposed = true);
+      expect(player, isNull);
+      expect(disposed, isTrue);
+
+      // Opened again and left open, it loads and plays
+      final again = VideoOpening();
+      final progress = <double?>[];
+      final played = await again.download(event, onProgress: progress.add);
+      expect(played?.bytes, bytes);
+      expect(progress, isNotEmpty);
+      expect(
+        await again.keep('player', (_) async => fail('disposed')),
+        'player',
       );
     });
 
