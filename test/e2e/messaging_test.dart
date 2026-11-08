@@ -19,6 +19,7 @@ import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:matrix/matrix.dart';
+import 'package:swipe_to_action/swipe_to_action.dart';
 
 import 'utils/test_server.dart';
 
@@ -216,6 +217,34 @@ void main() {
       );
       expect(mine.editsOnDoubleTap, isTrue);
       expect(theirs.editsOnDoubleTap, isFalse);
+    });
+
+    test('your own messages are swiped to the left to reply', () async {
+      final own = await aliceChat.sendTextEvent('Svar meg');
+      await bobChat.sendTextEvent('Bob spør');
+      final mine = await arrives(
+        aliceTimeline,
+        'her message',
+        (e) => e.eventId == own && e.status.isSent,
+      );
+      final theirs = await arrives(
+        aliceTimeline,
+        'bob\'s message',
+        (e) => e.body == 'Bob spør',
+      );
+      expect(
+        mine.replySwipeDirection(rightToLeftSetting: false),
+        SwipeDirection.endToStart,
+      );
+      expect(
+        theirs.replySwipeDirection(rightToLeftSetting: false),
+        SwipeDirection.startToEnd,
+      );
+      // With "swipe right to left to reply" on, every message goes left
+      expect(
+        theirs.replySwipeDirection(rightToLeftSetting: true),
+        SwipeDirection.endToStart,
+      );
     });
 
     test('a location arrives as coordinates', () async {
