@@ -428,7 +428,7 @@ class ChatController extends State<ChatPageWithRoom>
   @override
   void initState() {
     // Before opening the chat marks it read
-    _unreadAtOpen = room.notificationCount;
+    _unreadAtOpen = widget.room.notificationCount;
     inputFocus = FocusNode(onKeyEvent: _customEnterKeyHandling);
 
     scrollController.addListener(_updateScrollController);
