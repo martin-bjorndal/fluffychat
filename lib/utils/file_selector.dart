@@ -39,19 +39,23 @@ Future<List<XFile>> selectFiles(
             default:
           }
         }
+        // Gruppechat: in the browser, a picker that Safari on iPhone doesn't
+        // leave hanging (lib/gruppechat/web_files.dart)
+        final webFiles = await pickWebFiles(
+          type: type,
+          allowMultiple: allowMultiple,
+        );
+        if (webFiles != null) return webFiles;
         if (allowMultiple) {
           final result = await FilePicker.pickFiles(
             type: type,
             dialogTitle: title,
-            // Gruppechat: waits for videos from an iPhone's photo library
-            webOptions: gruppechatWebPickerOptions,
           );
           return result.map((file) => file.xFile).toList();
         }
         final result = await FilePicker.pickFile(
           type: type,
           dialogTitle: title,
-          webOptions: gruppechatWebPickerOptions,
         );
         return [?result?.xFile];
       },

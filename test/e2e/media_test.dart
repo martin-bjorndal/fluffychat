@@ -13,9 +13,11 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/video_opening.dart';
+import 'package:fluffychat/gruppechat/web_pick.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -99,6 +101,74 @@ void main() {
       expect(thumbnail.width, lessThan(1600));
       expect(thumbnail.width / thumbnail.height, closeTo(4 / 3, 0.02));
     });
+
+    test(
+      'a photo and a video picked in the web app on an iPhone arrive',
+      () async {
+        // Safari gives the page its focus back, prepares the video and puts
+        // both on the file input without a change event
+        // (lib/gruppechat/web_pick.dart, as the web app's picker uses it)
+        final picked = <XFile>[];
+        final pick = WebFilePick(
+          selectedCount: () => picked.length,
+          readFiles: () async => List.of(picked),
+          checkEvery: const Duration(milliseconds: 50),
+        );
+        pick.focused();
+        await Future<void>.delayed(const Duration(seconds: 1));
+        picked
+          ..add(
+            XFile.fromData(
+              photo(2000, 1500),
+              name: 'IMG_0001.jpeg',
+              path: 'IMG_0001.jpeg',
+              mimeType: 'image/jpeg',
+            ),
+          )
+          ..add(
+            XFile.fromData(
+              Uint8List.fromList([
+                0, 0, 0, 0x14, ...ascii.encode('ftypqt  '), //
+                ...List.filled(5000, 3),
+              ]),
+              name: 'IMG_0002.MOV',
+              path: 'IMG_0002.MOV',
+              mimeType: 'video/quicktime',
+            ),
+          );
+        final files = await pick.result.timeout(const Duration(seconds: 10));
+        expect(files.map((f) => f.name), ['IMG_0001.jpeg', 'IMG_0002.MOV']);
+
+        // Sent the way the send dialog does in the browser
+        for (final xfile in files) {
+          await aliceChat.sendFileEvent(
+            fileToSend(await xfile.readAsBytes(), xfile.name, xfile.mimeType),
+            shrinkImageMaxDimension: 1600,
+          );
+        }
+
+        final image = await arrives(
+          bobTimeline,
+          'the photo from the web app',
+          (e) => e.body == 'IMG_0001.jpeg',
+        );
+        expect(image.messageType, MessageTypes.Image);
+        final sent = img.decodeImage(
+          (await image.downloadAndDecryptAttachment()).bytes,
+        )!;
+        expect((sent.width, sent.height), (1600, 1200));
+
+        final video = await arrives(
+          bobTimeline,
+          'the video from the web app',
+          (e) => e.body == 'IMG_0002.MOV',
+        );
+        expect(video.messageType, MessageTypes.Video);
+        expect(video.attachmentMimetype, 'video/quicktime');
+        final received = await video.downloadAndDecryptAttachment();
+        expect(received.bytes, await files.last.readAsBytes());
+      },
+    );
 
     test('a GIF is sent as it is, so it keeps moving', () async {
       final bytes = movingGif(48, 36);

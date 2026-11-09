@@ -15,7 +15,6 @@ import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
-import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
@@ -143,14 +142,7 @@ class SendFileDialogState extends State<SendFileDialog> {
         } else {
           final bytes = await _files[i].readAsBytes();
           // Gruppechat: GIFs are sent as they are, so they keep moving
-          file = isGif(mimeType, bytes)
-              ? GifFile(bytes: bytes, name: xfile.name)
-              // Else we just create a MatrixFile
-              : MatrixFile(
-                  bytes: bytes,
-                  name: xfile.name,
-                  mimeType: mimeType,
-                ).detectFileType;
+          file = fileToSend(bytes, xfile.name, mimeType);
         }
 
         if (file.bytes.length > maxUploadSize) {

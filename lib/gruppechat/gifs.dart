@@ -4,6 +4,7 @@
 
 import 'dart:typed_data';
 
+import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:matrix/matrix.dart';
 
 const String gifMimeType = 'image/gif';
@@ -51,6 +52,14 @@ class GifFile extends MatrixFile {
     if (height != null) 'h': height,
   };
 }
+
+/// A picked file the way the send dialog sends it, for everything but videos
+/// on phones, which are compressed first: GIFs as they are, everything else
+/// as a picture, video, audio or file by its type.
+MatrixFile fileToSend(Uint8List bytes, String name, String? mimeType) =>
+    isGif(mimeType, bytes)
+    ? GifFile(bytes: bytes, name: name)
+    : MatrixFile(bytes: bytes, name: name, mimeType: mimeType).detectFileType;
 
 extension GruppechatGifEvent on Event {
   /// Whether this message is a GIF, which the chat plays instead of showing
