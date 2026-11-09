@@ -100,6 +100,31 @@ void main() {
     },
   );
 
+  test('a photo picked in Safari, which has no lastModifiedDate', () async {
+    // Safari's File has lastModified but never had lastModifiedDate; reading
+    // it showed "Null check operator used on a null value" (1.1.21)
+    final saved = _run(
+      'Object.getOwnPropertyDescriptor(File.prototype, "lastModifiedDate")',
+    );
+    _run('delete File.prototype.lastModifiedDate');
+    addTearDown(() {
+      if (saved != null) {
+        (_run('(d) => Object.defineProperty(File.prototype, '
+                    '"lastModifiedDate", d)')
+                as JSFunction)
+            .callAsFunction(null, saved);
+      }
+    });
+    final picked = pickWebFiles(type: FileType.media, allowMultiple: true);
+    await pickerOpens();
+    choose({'IMG_0001.jpeg': 'image/jpeg'});
+    change();
+    final files = (await picked.timeout(const Duration(seconds: 5)))!;
+    expect(files.single.name, 'IMG_0001.jpeg');
+    expect(files.single.mimeType, 'image/jpeg');
+    expect((await files.single.readAsBytes()).length, 1000);
+  });
+
   test('closing the picker picks nothing', () async {
     final picked = pickWebFiles(type: FileType.image);
     await pickerOpens();

@@ -83,6 +83,35 @@ void main() {
     expect((await input.pick.result).single.name, 'photo.jpg');
   });
 
+  test('a picked file keeps what Safari tells about it', () async {
+    // Safari's File: name, type, size and lastModified, no lastModifiedDate
+    final file = webPickedFile(
+      Uint8List(1000),
+      name: 'IMG_0001.jpeg',
+      type: 'image/jpeg',
+      size: 1000,
+      lastModified: 1762650000000,
+    );
+    expect(file.name, 'IMG_0001.jpeg');
+    expect(file.mimeType, 'image/jpeg');
+    expect(await file.length(), 1000);
+    expect(
+      await file.lastModified(),
+      DateTime.fromMillisecondsSinceEpoch(1762650000000),
+    );
+    expect((await file.readAsBytes()).length, 1000);
+  });
+
+  test('a file the browser gives no type gets one from its name', () {
+    final file = webPickedFile(
+      Uint8List(10),
+      name: 'IMG_0003.HEIC',
+      type: '',
+      size: 10,
+    );
+    expect(file.mimeType, 'image/heic');
+  });
+
   test('accept lists pictures and videos the way browsers read it', () {
     expect(webPickerAccept(FileType.media), 'image/*,video/*');
     expect(webPickerAccept(FileType.image), 'image/*');

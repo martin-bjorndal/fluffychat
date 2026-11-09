@@ -53,11 +53,11 @@ Future<XFile> _readFile(web.File file) async {
   if (result is! Uint8List) {
     throw Exception('Could not read ${file.name}: ${reader.error}');
   }
-  return XFile.fromData(
+  return webPickedFile(
     result,
     name: file.name,
-    mimeType: file.type.isEmpty ? null : file.type,
-    length: file.size,
-    lastModified: file.lastModifiedDate,
+    type: file.type,
+    size: file.size,
+    lastModified: file.lastModified,
   );
 }
