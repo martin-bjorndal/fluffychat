@@ -8,10 +8,13 @@
 // be judged on a phone.
 
 import 'package:cross_file/cross_file.dart';
+import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/background_picker.dart';
+import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/gallery_button.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/send_file_dialog.dart';
@@ -266,6 +269,93 @@ void main() {
             .first,
       );
       expect(focus.autofocus, isTrue);
+    });
+  });
+
+  // Wish from 1.1.26: a chat's own colours for its bars and bubbles, not its
+  // background
+  group('chat colours', () {
+    test('are read solid, and nothing else counts', () {
+      expect(parseChatColor({'color': '#E91E63'}), 0xFFE91E63);
+      expect(parseChatColor({'color': '#00E91E63'}), 0xFFE91E63);
+      expect(parseChatColor({}), isNull);
+      expect(parseChatColor({'color': 'rosa'}), isNull);
+      expect(parseChatColor(null), isNull);
+    });
+
+    for (final brightness in Brightness.values) {
+      testWidgets('colour the bars and bubbles in $brightness, not the '
+          'background', (tester) async {
+        late ThemeData base;
+        late ThemeData chat;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                base = FluffyThemes.buildTheme(context, brightness);
+                chat = gruppechatChatTheme(
+                  context,
+                  base,
+                  const Color(0xFF00897B),
+                );
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+        final bars = chat.extension<GruppechatChatColors>()!;
+        expect(chat.brightness, brightness);
+        expect(chat.bubbleColor, isNot(base.bubbleColor));
+        expect(chat.colorScheme.surface, base.colorScheme.surface);
+        expect(chat.scaffoldBackgroundColor, base.scaffoldBackgroundColor);
+        expect(chat.dividerColor, base.dividerColor);
+        expect(bars.bar, isNot(chat.bubbleColor));
+        expect(bars.bar, isNot(chat.colorScheme.secondaryContainer));
+        expect(bars.bar, isNot(base.colorScheme.surfaceContainer));
+        // The bar's text stands out from it
+        final contrast =
+            (bars.bar.computeLuminance() - bars.onBar.computeLuminance()).abs();
+        expect(contrast, greaterThan(0.3));
+      });
+    }
+
+    late Client client;
+    setUpAll(() async => client = await prepareTestClient(loggedIn: true));
+
+    testWidgets('a chat takes its colour, and loses it again', (tester) async {
+      final room = Room(id: '!gruppe:example.invalid', client: client);
+      void setColor(Map<String, Object?> content) => room.setState(
+        StrippedStateEvent(
+          type: GruppechatEventTypes.chatColor,
+          content: content,
+          senderId: client.userID!,
+          stateKey: room.id,
+        ),
+      );
+      ThemeData? seen;
+      Future<void> show() => tester.pumpWidget(
+        MaterialApp(
+          home: GruppechatChatColorTheme(
+            room: room,
+            child: Builder(
+              builder: (context) {
+                seen = Theme.of(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+
+      await show();
+      expect(seen!.extension<GruppechatChatColors>(), isNull);
+      setColor({'color': '#E91E63'});
+      expect(room.gruppechatChatColor, 0xFFE91E63);
+      await show();
+      expect(seen!.extension<GruppechatChatColors>(), isNotNull);
+      setColor({});
+      await show();
+      expect(seen!.extension<GruppechatChatColors>(), isNull);
     });
   });
 }

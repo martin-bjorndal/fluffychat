@@ -16,12 +16,17 @@ abstract final class GruppechatEventTypes {
   static const String nicknameLock = 'im.gruppechat.nickname_lock';
   static const String background = 'im.gruppechat.background';
 
+  /// A chat's own colour for its bars and bubbles, kept where its background
+  /// is, under the chat's room ID; see [parseChatColor].
+  static const String chatColor = 'im.gruppechat.chat_color';
+
   static const Set<String> all = {
     role,
     memberRoles,
     nickname,
     nicknameLock,
     background,
+    chatColor,
   };
 }
 
@@ -65,6 +70,13 @@ String formatHexColor(int argb) {
       ? (argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')
       : (argb & 0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
   return '#${hex.toUpperCase()}';
+}
+
+/// The colour in `im.gruppechat.chat_color` content (`{"color": "#RRGGBB"}`),
+/// always opaque, or null for none. It seeds the chat's colour scheme.
+int? parseChatColor(Map<String, Object?>? content) {
+  final color = parseHexColor(content?['color']);
+  return color == null ? null : color | 0xFF000000;
 }
 
 double? _toDouble(Object? value) => value is num ? value.toDouble() : null;
@@ -533,13 +545,14 @@ String roleIdFromName(String name, Iterable<String> existingIds) {
 }
 
 /// Who may send each custom event type: moderators manage roles, everyone
-/// can set nicknames and the background.
+/// can set nicknames, the background and chat colours.
 const Map<String, int> groupEventPowerLevels = {
   GruppechatEventTypes.role: 50,
   GruppechatEventTypes.memberRoles: 50,
   GruppechatEventTypes.nickname: 0,
   GruppechatEventTypes.nicknameLock: 0,
   GruppechatEventTypes.background: 0,
+  GruppechatEventTypes.chatColor: 0,
 };
 
 bool hasGroupPowerLevels(Map<String, Object?>? powerLevels) {

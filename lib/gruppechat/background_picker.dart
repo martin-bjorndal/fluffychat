@@ -242,7 +242,7 @@ class _BackgroundColorsDialogState extends State<_BackgroundColorsDialog> {
                   runSpacing: 6,
                   children: [
                     for (final color in groupBackgroundPalette)
-                      _Swatch(
+                      GroupColorSwatch(
                         color: Color(color),
                         selected: background.colors[i] == color,
                         onTap: () => setState(
@@ -317,15 +317,17 @@ class _Preview extends StatelessWidget {
   }
 }
 
-class _Swatch extends StatelessWidget {
+/// A round colour to pick, outlined when [selected].
+class GroupColorSwatch extends StatelessWidget {
   final Color color;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
-  const _Swatch({
+  const GroupColorSwatch({
     required this.color,
     required this.selected,
     required this.onTap,
+    super.key,
   });
 
   @override

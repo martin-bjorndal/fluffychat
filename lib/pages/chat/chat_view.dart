@@ -8,6 +8,7 @@ import 'dart:ui' as ui;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
@@ -63,6 +64,8 @@ class ChatView extends StatelessWidget {
     // The room holding the background: the group's space, which also holds
     // the nicknames, or a direct chat itself
     final groupSpaceId = controller.room.gruppechatBackgroundGroup?.space.id;
+    // The chat's own colour for its bars (lib/gruppechat/chat_colors.dart)
+    final chatColors = theme.extension<GruppechatChatColors>();
 
     return PopScope(
       // In a bubble, back at the chat collapses the bubble
@@ -106,6 +109,11 @@ class ChatView extends StatelessWidget {
             if (scrollUpBannerEventId != null && activeThreadId == null) {
               appbarBottomHeight += ChatAppBarListTile.fixedHeight;
             }
+            // Selecting messages and threads keep their own bar colours
+            final appBarColors =
+                controller.selectedEvents.isEmpty && activeThreadId == null
+                ? chatColors
+                : null;
             return Scaffold(
               key: Key('chat_page'),
               extendBodyBehindAppBar: true,
@@ -117,13 +125,15 @@ class ChatView extends StatelessWidget {
                     : null,
                 actionsIconTheme: IconThemeData(
                   color: controller.selectedEvents.isEmpty
-                      ? null
+                      ? appBarColors?.onBar
                       : theme.colorScheme.onTertiaryContainer,
                 ),
+                foregroundColor: appBarColors?.onBar,
                 backgroundColor: controller.selectedEvents.isEmpty
                     ? controller.activeThreadId != null
                           ? theme.colorScheme.secondaryContainer
-                          : theme.colorScheme.surface.withAlpha(240)
+                          : appBarColors?.bar ??
+                                theme.colorScheme.surface.withAlpha(240)
                     : theme.colorScheme.tertiaryContainer,
                 automaticallyImplyLeading: false,
                 leading: controller.selectMode
@@ -490,9 +500,10 @@ class ChatView extends StatelessWidget {
                                             ? theme
                                                   .colorScheme
                                                   .tertiaryContainer
-                                            : theme
-                                                  .colorScheme
-                                                  .surfaceContainer,
+                                            : chatColors?.bar ??
+                                                  theme
+                                                      .colorScheme
+                                                      .surfaceContainer,
                                         borderRadius: BorderRadius.circular(32),
                                         child:
                                             controller.room.isAbandonedDMRoom ==
