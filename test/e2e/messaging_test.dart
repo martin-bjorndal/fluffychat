@@ -134,6 +134,41 @@ void main() {
       );
     });
 
+    test('a double tap reacts quickly, and a second one takes it back', () async {
+      final eventId = await aliceChat.sendTextEvent('Kino på fredag?');
+      final question = await arrives(
+        bobTimeline,
+        'the question',
+        (e) => e.eventId == eventId,
+      );
+      bool aliceSeesHeart() {
+        final message = aliceTimeline.events.firstWhere(
+          (e) => e.eventId == eventId,
+        );
+        return message
+            .aggregatedEvents(aliceTimeline, RelationshipTypes.reaction)
+            .any(
+              (r) =>
+                  r.senderId == bob.userID &&
+                  r.content
+                          .tryGetMap<String, Object?>('m.relates_to')
+                          ?.tryGet<String>('key') ==
+                      '❤️',
+            );
+      }
+
+      await gruppechatQuickReact(question, bobTimeline, '❤️');
+      await eventually('alice sees the heart', aliceSeesHeart);
+      await eventually(
+        "bob's app knows he reacted",
+        () => question
+            .aggregatedEvents(bobTimeline, RelationshipTypes.reaction)
+            .any((r) => r.senderId == bob.userID && !r.redacted),
+      );
+      await gruppechatQuickReact(question, bobTimeline, '❤️');
+      await eventually('the heart is gone', () => !aliceSeesHeart());
+    });
+
     test('typing shows for the other person', () async {
       await bobChat.setTyping(true, timeout: 30000);
       await eventually(

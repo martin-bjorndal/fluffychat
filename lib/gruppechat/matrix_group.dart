@@ -93,6 +93,9 @@ class GruppechatGroup {
   bool get canSetBackground =>
       space.canChangeStateEvent(GruppechatEventTypes.background);
 
+  bool get canSetChatColor =>
+      space.canChangeStateEvent(GruppechatEventTypes.chatColor);
+
   /// Adds the custom event types to the space's power levels.
   Future<void> setUp() async {
     final powerLevels = _powerLevels;
@@ -199,6 +202,17 @@ class GruppechatGroup {
     background?.toContent() ?? <String, Object?>{},
   );
 
+  /// Sets [chat]'s own colour for its bars and bubbles, or removes it when
+  /// [color] is null. Like a channel's background, it is kept here, keyed by
+  /// the chat's room ID; for a direct chat, the chat is its own group.
+  Future<void> setChatColor(Room chat, int? color) =>
+      _client.setRoomStateWithKey(
+        space.id,
+        GruppechatEventTypes.chatColor,
+        chat.id,
+        color == null ? <String, Object?>{} : {'color': formatHexColor(color)},
+      );
+
   /// Sets the group background, or removes it when [background] is null.
   Future<void> setBackground(GroupBackground? background) =>
       _client.setRoomStateWithKey(
@@ -247,6 +261,14 @@ extension GruppechatRoomExtension on Room {
       (inGroup ?? getState(GruppechatEventTypes.background))?.content,
     );
   }
+
+  /// The colour this chat's bars and bubbles take, or null for the app's
+  /// own; see [GruppechatGroup.setChatColor].
+  int? get gruppechatChatColor => parseChatColor(
+    gruppechatBackgroundGroup?.space
+        .getState(GruppechatEventTypes.chatColor, id)
+        ?.content,
+  );
 
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {

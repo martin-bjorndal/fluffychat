@@ -6,6 +6,7 @@
 import 'dart:convert';
 
 import 'package:async/async.dart';
+import 'package:fluffychat/gruppechat/quick_reaction_setting.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -151,6 +152,12 @@ enum AppSettings<T> {
         PlatformInfos.isMobile,
       );
     }
+    // Gruppechat: quick reactions in the web app too
+    await gruppechatTurnOnQuickReaction(
+      store,
+      isWeb: PlatformInfos.isWeb,
+      doubleTapToReactKey: AppSettings.doubleTapToReact.key,
+    );
 
     // Load configuration from config.json file or MDM:
     if (PlatformInfos.isMobile) {

@@ -2,8 +2,38 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:collection/collection.dart';
 import 'package:matrix/matrix.dart';
 import 'package:swipe_to_action/swipe_to_action.dart';
+
+/// A quick reaction, as on a double tap: reacts to [event] with [emoji], or
+/// takes the reaction back when the user has already reacted with it. A
+/// reaction still on its way is left alone, as it can't be taken back yet.
+Future<void> gruppechatQuickReact(
+  Event event,
+  Timeline timeline,
+  String emoji,
+) async {
+  final ownReaction = event
+      .aggregatedEvents(timeline, RelationshipTypes.reaction)
+      .firstWhereOrNull(
+        (e) =>
+            e.senderId == event.room.client.userID &&
+            e.content
+                    .tryGetMap<String, Object?>('m.relates_to')
+                    ?.tryGet<String>('key') ==
+                emoji,
+      );
+  try {
+    if (ownReaction == null) {
+      await event.room.sendReaction(event.eventId, emoji);
+    } else if (ownReaction.status.isSent) {
+      await ownReaction.redactEvent();
+    }
+  } catch (e, s) {
+    Logs().w('Could not react with $emoji', e, s);
+  }
+}
 
 extension GruppechatMessageActionsExtension on Event {
   /// Whether double tapping this message edits it instead of reacting to it:

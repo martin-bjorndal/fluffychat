@@ -16,6 +16,7 @@ import 'package:fluffychat/gruppechat/bot_commands.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/camera.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
+import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/effects.dart';
@@ -1797,7 +1798,10 @@ class ChatController extends State<ChatPageWithRoom>
             },
       child: Row(
         children: [
-          Expanded(child: ChatView(this)),
+          Expanded(
+            // Gruppechat: the chat's own colour (lib/gruppechat/chat_colors.dart)
+            child: GruppechatChatColorTheme(room: room, child: ChatView(this)),
+          ),
           ValueListenableBuilder(
             valueListenable: _displayChatDetailsColumn,
             builder: (context, displayChatDetailsColumn, _) =>

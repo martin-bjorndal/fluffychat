@@ -67,6 +67,7 @@ void main() {
     test('then members may set nicknames and backgrounds, not roles', () {
       expect(bobGroup().canSetNicknames, isTrue);
       expect(bobGroup().canSetBackground, isTrue);
+      expect(bobGroup().canSetChatColor, isTrue);
       expect(bobGroup().canManageRoles, isFalse);
       expect(aliceGroup().canManageRoles, isTrue);
     });
@@ -450,6 +451,113 @@ void main() {
       await eventually(
         'bob sees it removed',
         () => bobChat.gruppechatBackground(enabled: true) == null,
+      );
+    });
+  });
+
+  // Wish from 1.1.26: a chat's own colours for its top and bottom bars and
+  // its bubbles, leaving the background alone. How the colours look can only
+  // be judged on a phone.
+  group('Chat colours', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late Client carol;
+    late TestGroup group;
+    const pink = 0xFFE91E63;
+    const teal = 0xFF00897B;
+    GruppechatGroup groupOf(Client client) =>
+        GruppechatGroup(client.getRoomById(group.spaceId)!);
+    Room channel(Client client, String name) =>
+        client.getRoomById(group.channels[name]!)!;
+    Future<void> shows(Client client, String name, int? color) => eventually(
+      '${client.userID} sees the right colour in $name',
+      () => channel(client, name).gruppechatChatColor == color,
+    );
+
+    setUpAll(() async {
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      carol = await logIn('carol');
+      group = await newGroup(
+        alice,
+        [bob, carol],
+        channels: ['general', 'spill'],
+      );
+    });
+    tearDownAll(logOutEveryone);
+
+    test('a member colours one channel for everyone', () async {
+      expect(channel(bob, 'spill').gruppechatChatColor, isNull);
+      expect(groupOf(bob).canSetChatColor, isTrue);
+      await groupOf(bob).setChatColor(channel(bob, 'spill'), pink);
+      await shows(alice, 'spill', pink);
+      await shows(carol, 'spill', pink);
+      // The other channel, and the background, stay as they were
+      expect(channel(carol, 'general').gruppechatChatColor, isNull);
+      expect(channel(carol, 'spill').gruppechatBackground(enabled: true), isNull);
+    });
+
+    test('someone else changes it, and anyone can remove it', () async {
+      await groupOf(carol).setChatColor(channel(carol, 'spill'), teal);
+      await shows(bob, 'spill', teal);
+      await groupOf(alice).setChatColor(channel(alice, 'spill'), null);
+      await shows(bob, 'spill', null);
+      await shows(carol, 'spill', null);
+    });
+
+    test('a colour sent see-through is shown solid', () async {
+      await bob.setRoomStateWithKey(
+        group.spaceId,
+        GruppechatEventTypes.chatColor,
+        group.channels['general']!,
+        {'color': '#80E91E63'},
+      );
+      await shows(alice, 'general', pink);
+      await groupOf(bob).setChatColor(channel(bob, 'general'), null);
+    });
+
+    test('a group set up before chat colours gets them when opened', () async {
+      // What older versions of the app set up: everything but chat colours
+      final space = alice.getRoomById(group.spaceId)!;
+      final powerLevels = Map<String, Object?>.from(
+        space.getState(EventTypes.RoomPowerLevels)!.content,
+      );
+      powerLevels['events'] = Map<String, Object?>.from(
+        powerLevels['events'] as Map,
+      )..remove(GruppechatEventTypes.chatColor);
+      await alice.setRoomStateWithKey(
+        group.spaceId,
+        EventTypes.RoomPowerLevels,
+        '',
+        powerLevels,
+      );
+      await eventually(
+        'bob may no longer set it',
+        () => !groupOf(bob).canSetChatColor,
+      );
+      expect(groupOf(bob).needsSetup, isTrue);
+      // What the chat page does when alice, an admin, opens a chat
+      await GruppechatGroup.of(channel(alice, 'general'))!.setUpIfNeeded();
+      await eventually('bob may set it', () => groupOf(bob).canSetChatColor);
+      await groupOf(bob).setChatColor(channel(bob, 'general'), teal);
+      await shows(carol, 'general', teal);
+    });
+
+    test('in a direct chat both people can set it', () async {
+      final (aliceChat, bobChat) = await directChat(alice, bob);
+      final aliceSide = aliceChat.gruppechatBackgroundGroup!;
+      final bobSide = bobChat.gruppechatBackgroundGroup!;
+      expect(aliceSide.canSetChatColor, isTrue);
+      expect(bobSide.canSetChatColor, isTrue);
+      await bobSide.setChatColor(bobChat, pink);
+      await eventually(
+        'alice sees it',
+        () => aliceChat.gruppechatChatColor == pink,
+      );
+      await aliceSide.setChatColor(aliceChat, null);
+      await eventually(
+        'bob sees it removed',
+        () => bobChat.gruppechatChatColor == null,
       );
     });
   });

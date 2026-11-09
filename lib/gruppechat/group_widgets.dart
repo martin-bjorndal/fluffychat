@@ -18,6 +18,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import 'background_picker.dart';
+import 'chat_colors.dart';
 import 'group_state.dart';
 import 'matrix_group.dart';
 import 'picture_crop.dart';
@@ -392,6 +393,16 @@ List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
                 ? l10n.gruppechatChatBackground
                 : l10n.gruppechatGroupBackground,
           ),
+        ],
+      ),
+    ),
+    PopupMenuItem<T>(
+      onTap: () => showChatColorDialog(context, room),
+      child: Row(
+        children: [
+          const Icon(Icons.palette_outlined),
+          const SizedBox(width: 12),
+          Text(l10n.gruppechatChatColor),
         ],
       ),
     ),

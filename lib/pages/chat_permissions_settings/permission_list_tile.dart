@@ -82,6 +82,8 @@ class PermissionsListTile extends StatelessWidget {
           return L10n.of(context).gruppechatPermissionNicknameLock;
         case GruppechatEventTypes.background:
           return L10n.of(context).gruppechatPermissionBackground;
+        case GruppechatEventTypes.chatColor:
+          return L10n.of(context).gruppechatPermissionChatColor;
       }
     }
     return permissionKey;
