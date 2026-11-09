@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:matrix/matrix.dart';
 
 extension VisibleInGuiExtension on List<Event> {
@@ -40,7 +41,11 @@ extension IsStateExtension on Event {
       // if we enabled to hide all redacted events, don't show those
       (!AppSettings.hideRedactedEvents.value || !redacted) &&
       // if we enabled to hide all unknown events, don't show those
-      (!AppSettings.hideUnknownEvents.value || isEventTypeKnown);
+      (!AppSettings.hideUnknownEvents.value || isEventTypeKnown) &&
+      // Gruppechat: messages whose time is up leave no trace, nor does
+      // setting the time (lib/gruppechat/message_lifetime.dart)
+      type != gruppechatLifetimeType &&
+      !gruppechatIsGone(this);
 
   bool get isState => !{EventTypes.Message, EventTypes.Sticker}.contains(type);
 

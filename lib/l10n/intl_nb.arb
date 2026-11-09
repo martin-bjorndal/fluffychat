@@ -3500,5 +3500,38 @@
     "gruppechatEffectBalloons": "Ballonger",
     "@gruppechatEffectBalloons": {},
     "gruppechatEffectFireworks": "Fyrverkeri",
-    "@gruppechatEffectFireworks": {}
+    "@gruppechatEffectFireworks": {},
+    "gruppechatMessageLifetime": "Forsvinnende meldinger",
+    "@gruppechatMessageLifetime": {},
+    "gruppechatMessageLifetimeDescription": "Det som sendes i chatten etter at dette er slått på, slettes for alle når tiden er ute.",
+    "@gruppechatMessageLifetimeDescription": {},
+    "gruppechatLifetimeOff": "Av",
+    "@gruppechatLifetimeOff": {},
+    "gruppechatLifetimeHours": "{count, plural, =1{Etter 1 time} other{Etter {count} timer}}",
+    "@gruppechatLifetimeHours": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatHoursLeft": "{count} t",
+    "@gruppechatHoursLeft": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatMinutesLeft": "{count} min",
+    "@gruppechatMinutesLeft": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    }
 }

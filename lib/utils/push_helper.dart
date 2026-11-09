@@ -16,6 +16,7 @@ import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/call_kit_params.dart';
@@ -177,6 +178,10 @@ Future<void> _tryPushHelper(
     return;
   }
 
+  // Gruppechat: nothing about a message whose time is up
+  // (lib/gruppechat/message_lifetime.dart)
+  if (gruppechatIsGone(event)) return;
+
   // Gruppechat: a late push for a message the person has read by now
   // (lib/gruppechat/chat_notifications.dart)
   if (await pushIsAlreadyRead(
@@ -328,6 +333,8 @@ Future<void> _tryPushHelper(
     ),
     importance: Importance.high,
     priority: Priority.max,
+    // Gruppechat: gone from the phone when the message is
+    timeoutAfter: gruppechatNotificationTimeout(event),
     groupKey: client.clientName,
     actions: switch (event.type) {
       EventTypes.Message ||

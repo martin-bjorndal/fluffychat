@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
@@ -274,6 +275,28 @@ class ChatDetailsView extends StatelessWidget {
                           ),
                           trailing: const Icon(Icons.chevron_right_outlined),
                           onTap: () => gruppechatChooseChatSound(context, room),
+                        ),
+                        // Gruppechat: lib/gruppechat/message_lifetime.dart
+                        ListTile(
+                          key: const Key('message_lifetime'),
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.surfaceContainer,
+                            foregroundColor: iconColor,
+                            child: const Icon(Icons.timer_outlined),
+                          ),
+                          title: Text(
+                            L10n.of(context).gruppechatMessageLifetime,
+                          ),
+                          subtitle: Text(
+                            gruppechatLifetimeLabel(
+                              L10n.of(context),
+                              gruppechatMessageLifetime(room),
+                            ),
+                          ),
+                          enabled: gruppechatCanSetMessageLifetime(room),
+                          trailing: const Icon(Icons.chevron_right_outlined),
+                          onTap: () =>
+                              gruppechatChooseMessageLifetime(context, room),
                         ),
                         if (room.canChangeStateEvent(EventTypes.RoomTopic) ||
                             room.topic.isNotEmpty) ...[

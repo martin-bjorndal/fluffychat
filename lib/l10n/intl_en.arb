@@ -3472,5 +3472,38 @@
     "gruppechatEffectBalloons": "Balloons",
     "@gruppechatEffectBalloons": {},
     "gruppechatEffectFireworks": "Fireworks",
-    "@gruppechatEffectFireworks": {}
+    "@gruppechatEffectFireworks": {},
+    "gruppechatMessageLifetime": "Disappearing messages",
+    "@gruppechatMessageLifetime": {},
+    "gruppechatMessageLifetimeDescription": "What is sent in the chat after this is turned on is deleted for everyone when the time is up.",
+    "@gruppechatMessageLifetimeDescription": {},
+    "gruppechatLifetimeOff": "Off",
+    "@gruppechatLifetimeOff": {},
+    "gruppechatLifetimeHours": "{count, plural, =1{After 1 hour} other{After {count} hours}}",
+    "@gruppechatLifetimeHours": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatHoursLeft": "{count} h",
+    "@gruppechatHoursLeft": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatMinutesLeft": "{count} min",
+    "@gruppechatMinutesLeft": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    }
 }

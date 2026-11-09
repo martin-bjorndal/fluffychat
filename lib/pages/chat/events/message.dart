@@ -11,6 +11,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
@@ -573,6 +574,17 @@ class Message extends StatelessWidget {
                                       shadows: wallpaperTextShadow,
                                     ),
                                   ),
+                                // Gruppechat: the time left of a message
+                                // that disappears
+                                // (lib/gruppechat/message_lifetime.dart)
+                                if (event.status.isSent)
+                                  if (gruppechatExpiresAt(event)
+                                      case final expiresAt?)
+                                    GruppechatTimeLeft(
+                                      expiresAt: expiresAt,
+                                      color: eventStateTextColor,
+                                      shadows: wallpaperTextShadow,
+                                    ),
                                 if (isEdited) ...[
                                   Text(' ', style: TextStyle(fontSize: 11)),
                                   Text(

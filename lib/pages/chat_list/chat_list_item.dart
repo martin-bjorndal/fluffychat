@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
 import 'package:fluffychat/pages/chat_list/unread_bubble.dart';
@@ -47,7 +48,12 @@ class ChatListItem extends StatelessWidget {
 
     final isMuted = room.pushRuleState != PushRuleState.notify;
     final typingText = room.getLocalizedTypingText(context);
-    final lastEvent = room.lastEvent;
+    // Gruppechat: a message whose time is up isn't shown here either
+    // (lib/gruppechat/message_lifetime.dart)
+    final lastEvent =
+        room.lastEvent == null || gruppechatIsGone(room.lastEvent!)
+        ? null
+        : room.lastEvent;
     final ownMessage = lastEvent?.senderId == room.client.userID;
     final directChatMatrixId = room.directChatMatrixID;
     final isDirectChat = directChatMatrixId != null;
@@ -359,12 +365,14 @@ class ChatListItem extends StatelessWidget {
                                           '\n',
                                           ' ',
                                         ) ??
-                                        L10n.of(context).noMessagesYet,
+                                        (room.lastEvent == null
+                                            ? L10n.of(context).noMessagesYet
+                                            : ''),
                               softWrap: false,
                               maxLines: room.notificationCount >= 1 ? 2 : 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                decoration: room.lastEvent?.redacted == true
+                                decoration: lastEvent?.redacted == true
                                     ? TextDecoration.lineThrough
                                     : null,
                               ),

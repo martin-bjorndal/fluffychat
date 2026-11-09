@@ -11,6 +11,7 @@ import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/init_with_restore.dart';
@@ -183,6 +184,7 @@ class MatrixState extends State<Matrix> {
   final onNotification = <String, StreamSubscription>{};
   final onRoleMention = <String, StreamSubscription>{};
   final gruppechatWakeRules = <String, GruppechatWakeRules>{};
+  final gruppechatExpiringMedia = <String, GruppechatExpiringMedia>{};
   final onLogoutSub = <String, StreamSubscription<LoginState>>{};
   final onUiaRequest = <String, StreamSubscription<UiaRequest>>{};
 
@@ -289,6 +291,10 @@ class MatrixState extends State<Matrix> {
     onUiaRequest[name] ??= c.onUiaRequest.stream.listen(uiaRequestHandler);
     // Gruppechat: keep muted channels able to wake the phone for mentions
     gruppechatWakeRules.putIfAbsent(name, () => GruppechatWakeRules(c)).start();
+    // Gruppechat: files of messages that disappear go with them
+    gruppechatExpiringMedia
+        .putIfAbsent(name, () => GruppechatExpiringMedia(c))
+        .start();
     if (PlatformInfos.isWeb || PlatformInfos.isLinux) {
       FlutterLocalNotificationsPlugin().initialize(
         settings: InitializationSettings(
@@ -333,6 +339,7 @@ class MatrixState extends State<Matrix> {
     onRoleMention[name]?.cancel();
     onRoleMention.remove(name);
     gruppechatWakeRules.remove(name)?.cancel();
+    gruppechatExpiringMedia.remove(name)?.cancel();
   }
 
   void initMatrix() {

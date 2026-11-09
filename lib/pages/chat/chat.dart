@@ -24,6 +24,7 @@ import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
@@ -430,6 +431,10 @@ class ChatController extends State<ChatPageWithRoom>
   void initState() {
     // Before opening the chat marks it read
     _unreadAtOpen = widget.room.notificationCount;
+    _lifetimeTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _hideExpired(),
+    );
     inputFocus = FocusNode(onKeyEvent: _customEnterKeyHandling);
 
     scrollController.addListener(_updateScrollController);
@@ -580,6 +585,18 @@ class ChatController extends State<ChatPageWithRoom>
   /// The message whose effect plays now, and the effect.
   (String, GruppechatEffect)? playingEffect;
 
+  // Gruppechat: a message whose time is up disappears while the chat is
+  // open, without waiting for the server (lib/gruppechat/message_lifetime.dart)
+  Timer? _lifetimeTimer;
+
+  void _hideExpired() {
+    final events = timeline?.events;
+    if (!mounted || events == null) return;
+    if (events.any((e) => !e.redacted && gruppechatExpiresAt(e) != null)) {
+      setState(() {});
+    }
+  }
+
   void _checkEffects() {
     if (playingEffect != null) return;
     final events = timeline?.events;
@@ -720,6 +737,7 @@ class ChatController extends State<ChatPageWithRoom>
 
   @override
   void dispose() {
+    _lifetimeTimer?.cancel();
     timeline?.cancelSubscriptions();
     timeline = null;
     _storeInputTimeoutTimer?.cancel();
