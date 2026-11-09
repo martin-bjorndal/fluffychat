@@ -11,7 +11,9 @@ import 'package:crop_image/crop_image.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
@@ -82,7 +84,20 @@ class SendFileDialogState extends State<SendFileDialog> {
     });
   }
 
+  // Gruppechat: Enter and the button can't send the files twice
+  bool _sending = false;
+
   Future<void> _send(String? uniqueFileType) async {
+    if (_sending) return;
+    _sending = true;
+    try {
+      await _sendOnce(uniqueFileType);
+    } finally {
+      _sending = false;
+    }
+  }
+
+  Future<void> _sendOnce(String? uniqueFileType) async {
     final l10n = L10n.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(widget.outerContext);
 
@@ -238,7 +253,7 @@ class SendFileDialogState extends State<SendFileDialog> {
     final compressionSupported =
         uniqueFileType != 'video' || PlatformInfos.isMobile;
 
-    return FutureBuilder<String>(
+    final dialog = FutureBuilder<String>(
       future: _calcCombinedFileSize(),
       builder: (context, snapshot) {
         final sizeString =
@@ -473,6 +488,12 @@ class SendFileDialogState extends State<SendFileDialog> {
           ],
         );
       },
+    );
+    // Gruppechat: Enter sends, for a picture pasted on a computer
+    return GruppechatSendOnEnter(
+      enabled: AppSettings.sendOnEnter.value,
+      onSend: () => _send(uniqueFileType),
+      child: dialog,
     );
   }
 }

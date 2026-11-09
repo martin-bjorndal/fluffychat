@@ -220,6 +220,27 @@ class ChatView extends StatelessWidget {
                                 ],
                               ),
                             ),
+                          // Gruppechat: who has read it, by name
+                          if (controller.selectedEvents.single.status.isSent)
+                            PopupMenuItem(
+                              onTap: () {
+                                showGruppechatReaders(
+                                  context: context,
+                                  controller: controller,
+                                  event: controller.selectedEvents.single,
+                                );
+                                controller.clearSelectedEvents();
+                              },
+                              value: null,
+                              child: Row(
+                                mainAxisSize: .min,
+                                children: [
+                                  const Icon(Icons.done_all_outlined),
+                                  const SizedBox(width: 12),
+                                  Text(L10n.of(context).gruppechatReadBy),
+                                ],
+                              ),
+                            ),
                           PopupMenuItem(
                             value: _EventContextAction.info,
                             child: Row(

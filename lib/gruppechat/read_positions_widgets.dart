@@ -6,7 +6,9 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
+import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -89,14 +91,22 @@ class _GruppechatReadPositionsState extends State<GruppechatReadPositions> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _ReadPositionsScope(positions: _positions, child: widget.child);
+  Widget build(BuildContext context) => _ReadPositionsScope(
+    positions: _positions,
+    controller: widget.controller,
+    child: widget.child,
+  );
 }
 
 class _ReadPositionsScope extends InheritedWidget {
   final Map<String, List<String>> positions;
+  final ChatController controller;
 
-  const _ReadPositionsScope({required this.positions, required super.child});
+  const _ReadPositionsScope({
+    required this.positions,
+    required this.controller,
+    required super.child,
+  });
 
   @override
   bool updateShouldNotify(_ReadPositionsScope oldWidget) =>
@@ -111,9 +121,9 @@ class GruppechatReadByRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final readerIds = context
-        .dependOnInheritedWidgetOfExactType<_ReadPositionsScope>()
-        ?.positions[event.eventId];
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<_ReadPositionsScope>();
+    final readerIds = scope?.positions[event.eventId];
     if (readerIds == null || readerIds.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -128,25 +138,35 @@ class GruppechatReadByRow extends StatelessWidget {
         ),
         child: Align(
           alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 1, 8, 4),
-            child: Wrap(
-              spacing: 4,
-              children: [
-                for (final reader in readers)
-                  Tooltip(
-                    message: reader.groupDisplayname(),
-                    // The same avatar as next to their messages: letter
-                    // and colour from the group nickname
-                    child: Avatar(
-                      mxContent: reader.avatarUrl,
-                      name: reader.groupDisplayname(),
-                      size: 16,
+          // Tapping the faces lists everyone who has read the message
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => showGruppechatReaders(
+              context: context,
+              controller: scope!.controller,
+              event: event,
+              positions: scope.positions,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+              child: Wrap(
+                spacing: 4,
+                children: [
+                  for (final reader in readers)
+                    Tooltip(
+                      message: reader.groupDisplayname(),
+                      // The same avatar as next to their messages: letter
+                      // and colour from the group nickname
+                      child: Avatar(
+                        mxContent: reader.avatarUrl,
+                        name: reader.groupDisplayname(),
+                        size: 16,
+                      ),
                     ),
-                  ),
-                if (readerIds.length > _maxAvatars)
-                  _MoreReaders(count: readerIds.length - _maxAvatars),
-              ],
+                  if (readerIds.length > _maxAvatars)
+                    _MoreReaders(count: readerIds.length - _maxAvatars),
+                ],
+              ),
             ),
           ),
         ),
@@ -171,5 +191,66 @@ class _MoreReaders extends StatelessWidget {
         child: Text('+$count', style: const TextStyle(fontSize: 9)),
       ),
     ),
+  );
+}
+
+/// Lists everyone who has read [event] by their full names, as Messenger
+/// does: from the selected message's menu or by tapping the faces under a
+/// message. Worked out the same way as those faces.
+Future<void> showGruppechatReaders({
+  required BuildContext context,
+  required ChatController controller,
+  required Event event,
+  Map<String, List<String>>? positions,
+}) {
+  final timeline = controller.timeline;
+  final room = event.room;
+  final readerIds = timeline == null
+      ? <String>[]
+      // The faces already know the positions; the message menu works them out
+      : positions != null
+      ? readersOf(
+          event.eventId,
+          timeline: [for (final event in timeline.events) event.eventId],
+          positions: positions,
+          senderId: event.senderId,
+        )
+      : gruppechatReadersOf(
+          timeline: timeline,
+          event: event,
+          threadId: controller.activeThreadId,
+          expandedEventIds: controller.expandedEventIds,
+        );
+  final readers = [
+    for (final user in readerIds.map(room.unsafeGetUserFromMemoryOrFallback))
+      (user: user, name: user.groupDisplayname()),
+  ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  return showAdaptiveBottomSheet<void>(
+    context: context,
+    builder: (context) {
+      final l10n = L10n.of(context);
+      final theme = Theme.of(context);
+      return SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(
+                l10n.gruppechatReadBy,
+                style: theme.textTheme.titleMedium,
+              ),
+              subtitle: Text(l10n.gruppechatReadersHint),
+            ),
+            if (readers.isEmpty)
+              ListTile(title: Text(l10n.gruppechatNoReadersYet)),
+            for (final (:user, :name) in readers)
+              ListTile(
+                leading: Avatar(mxContent: user.avatarUrl, name: name),
+                title: Text(name),
+              ),
+          ],
+        ),
+      );
+    },
   );
 }

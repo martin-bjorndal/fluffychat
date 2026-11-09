@@ -106,6 +106,33 @@ void main() {
       });
     });
 
+    // Wish from 1.1.23: tap a message and see by name who has read it
+    test('a message lists everyone who has read it, not its writer', () async {
+      final eventId = (await aliceTimeline.room.sendTextEvent('Hvem leser?'))!;
+      // Alice's app marks her own message as read, which makes her a reader
+      await aliceTimeline.setReadMarker(eventId: eventId, public: true);
+      for (final timeline in [bobTimeline, carolTimeline]) {
+        await arrives(timeline, 'the question', (e) => e.eventId == eventId);
+      }
+      await bobTimeline.setReadMarker(eventId: eventId, public: true);
+      List<String> readers(Timeline timeline) => gruppechatReadersOf(
+        timeline: timeline,
+        event: timeline.events.firstWhere((e) => e.eventId == eventId),
+      );
+      await eventually(
+        'alice sees that bob has read it',
+        () => readers(aliceTimeline).contains(bob.userID),
+      );
+      expect(readers(aliceTimeline), [bob.userID]);
+      // Carol, who turned off read receipts, sees bob but not alice, who
+      // wrote it
+      await eventually(
+        'carol sees that bob has read it',
+        () => readers(carolTimeline).contains(bob.userID),
+      );
+      expect(readers(carolTimeline), [bob.userID]);
+    });
+
     test('someone who leaves is no longer shown', () async {
       await bobTimeline.room.leave();
       await showsReaders({});

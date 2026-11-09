@@ -5,6 +5,7 @@
 
 import 'package:emoji_picker_flutter/locales/default_emoji_set_locale.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/gallery_button.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/recording_input_row.dart';
 import 'package:fluffychat/pages/chat/recording_view_model.dart';
@@ -252,6 +253,14 @@ class ChatInputRow extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  // Gruppechat: the gallery one tap away
+                  GruppechatGalleryButton(
+                    hidden: textMessageOnly,
+                    height: height,
+                    onPressed: () => controller.onAddPopupMenuButtonSelected(
+                      AddPopupMenuActions.media,
                     ),
                   ),
                   Container(

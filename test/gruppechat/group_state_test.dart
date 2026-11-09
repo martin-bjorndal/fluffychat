@@ -266,6 +266,75 @@ void main() {
       expect(GroupBackground.fromContent({'kind': 'image'}), isNull);
     });
 
+    test('a pattern has its figures and two colours', () {
+      final hearts = GroupBackground.fromContent({
+        'kind': 'pattern',
+        'pattern': 'hearts',
+        'colors': ['#FFEBF0', '#F48FB1'],
+        'opacity': 60,
+      })!;
+      expect(hearts.pattern, GroupBackgroundPattern.hearts);
+      expect(hearts.colors, [0xFFFFEBF0, 0xFFF48FB1]);
+      final parsed = GroupBackground.fromContent(hearts.toContent())!;
+      expect(parsed.toContent(), hearts.toContent());
+      expect(hearts.toContent()['pattern'], 'hearts');
+      for (final invalid in [
+        {
+          'kind': 'pattern',
+          'colors': ['#FFFFFF', '#000000'],
+        },
+        {
+          'kind': 'pattern',
+          'pattern': 'unicorns',
+          'colors': ['#FFFFFF', '#000000'],
+        },
+        {
+          'kind': 'pattern',
+          'pattern': 'dots',
+          'colors': ['#FFFFFF'],
+        },
+      ]) {
+        expect(
+          GroupBackground.fromContent(invalid),
+          isNull,
+          reason: '$invalid',
+        );
+      }
+      // A pattern only belongs to the pattern kind
+      final solid = GroupBackground.fromContent({
+        'kind': 'solid',
+        'pattern': 'dots',
+        'colors': ['#FFFFFF'],
+      })!;
+      expect(solid.pattern, isNull);
+      expect(
+        hearts.copyWith(kind: GroupBackgroundKind.solid).toContent(),
+        isNot(contains('pattern')),
+      );
+    });
+
+    test('switching kind in the picker keeps the chosen colours', () {
+      const pink = GroupBackground(
+        kind: GroupBackgroundKind.solid,
+        colors: [0xFFF8BBD0],
+        opacity: 0.6,
+      );
+      final gradient = pink.withKind(GroupBackgroundKind.gradient);
+      expect(gradient.isValid, isTrue);
+      expect(gradient.colors.first, 0xFFF8BBD0);
+      expect(gradient.rotation, 135);
+      final pattern = gradient
+          .withKind(GroupBackgroundKind.pattern)
+          .withColor(1, 0xFF000000);
+      expect(pattern.isValid, isTrue);
+      expect(pattern.pattern, GroupBackgroundPattern.dots);
+      expect(pattern.colors, [0xFFF8BBD0, 0xFF000000]);
+      expect(pattern.opacity, 0.6);
+      final solid = pattern.withKind(GroupBackgroundKind.solid);
+      expect(solid.colors, [0xFFF8BBD0]);
+      expect(solid.toContent(), isNot(contains('pattern')));
+    });
+
     test('content round trip', () {
       final image = GroupBackground(
         kind: GroupBackgroundKind.image,

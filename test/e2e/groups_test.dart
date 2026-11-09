@@ -376,6 +376,29 @@ void main() {
       await shows(alice, 'musikk', sunset);
     });
 
+    // Wish from 1.1.23: chats in pink, with flowers, or in people's own
+    // colours, as a pattern, a gradient or one colour
+    test('someone makes a channel their own pattern', () async {
+      final own = groupBackgroundPresets[0].$2
+          .withKind(GroupBackgroundKind.pattern)
+          .copyWith(pattern: GroupBackgroundPattern.hearts)
+          .withColor(0, groupBackgroundPalette[1])
+          .withColor(1, groupBackgroundPalette[4]);
+      await groupOf(bob).setChannelBackground(channel(bob, 'spill'), own);
+      await shows(alice, 'spill', own);
+      await shows(carol, 'spill', own);
+      final shown = shownIn(carol, 'spill')!;
+      expect(shown.pattern, GroupBackgroundPattern.hearts);
+      expect(shown.colors, [
+        groupBackgroundPalette[1],
+        groupBackgroundPalette[4],
+      ]);
+      // The others keep the group's
+      await shows(carol, 'general', sunset);
+      await groupOf(bob).setChannelBackground(channel(bob, 'spill'), null);
+      await shows(alice, 'spill', sunset);
+    });
+
     test('a picture works as background', () async {
       final mxc = await bob.uploadContent(
         Uint8List.fromList(List.filled(64, 200)),

@@ -114,6 +114,42 @@ Map<String, List<String>> gruppechatReadPositions({
   );
 }
 
+/// Everyone who has read [eventId]: whose read position, from
+/// [readPositions], is at that message or newer in [timeline] (newest
+/// first), in no particular order. [senderId], who wrote it, isn't
+/// counted, as in Messenger.
+List<String> readersOf(
+  String eventId, {
+  required List<String> timeline,
+  required Map<String, List<String>> positions,
+  String? senderId,
+}) {
+  final index = timeline.indexOf(eventId);
+  if (index < 0) return [];
+  return [
+    for (var i = 0; i <= index; i++) ...?positions[timeline[i]],
+  ].where((userId) => userId != senderId).toList();
+}
+
+/// Everyone who has read [event], from the read positions the chat shows
+/// (see [gruppechatReadPositions] for the arguments). People who left and
+/// people who send no read receipts aren't among them.
+List<String> gruppechatReadersOf({
+  required Timeline timeline,
+  required Event event,
+  String? threadId,
+  Set<String> expandedEventIds = const {},
+}) => readersOf(
+  event.eventId,
+  timeline: [for (final event in timeline.events) event.eventId],
+  positions: gruppechatReadPositions(
+    timeline: timeline,
+    threadId: threadId,
+    expandedEventIds: expandedEventIds,
+  ),
+  senderId: event.senderId,
+);
+
 bool _hasLeft(Room room, String userId) {
   final membership = room
       .getState(EventTypes.RoomMember, userId)

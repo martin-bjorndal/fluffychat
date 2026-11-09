@@ -80,4 +80,19 @@ void main() {
       r'$m2': [bob, carol],
     });
   });
+
+  test('a message is read by everyone at it or further down', () {
+    final read = positions([(bob, r'$m3'), (carol, r'$m2'), (alice, r'$m3')]);
+    List<String> readersOfMessage(String eventId, String sender) => readersOf(
+      eventId,
+      timeline: timeline,
+      positions: read,
+      senderId: sender,
+    );
+    // Its sender isn't listed: alice wrote m3
+    expect(readersOfMessage(r'$m3', alice), [bob]);
+    expect(readersOfMessage(r'$m2', me), unorderedEquals([alice, bob, carol]));
+    expect(readersOfMessage(r'$m1', bob), unorderedEquals([alice, carol]));
+    expect(readersOfMessage(r'$unknown', bob), isEmpty);
+  });
 }
