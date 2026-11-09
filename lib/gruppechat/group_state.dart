@@ -128,14 +128,21 @@ class GroupNickname {
   };
 }
 
-enum GroupBackgroundKind { solid, gradient, image, none }
+enum GroupBackgroundKind { solid, gradient, pattern, image, none }
+
+/// Figures a [GroupBackgroundKind.pattern] background repeats.
+enum GroupBackgroundPattern { dots, stripes, checks, hearts, flowers, stars }
 
 class GroupBackground {
   final GroupBackgroundKind kind;
 
   /// ARGB colors: one for [GroupBackgroundKind.solid], two or more for
-  /// [GroupBackgroundKind.gradient].
+  /// [GroupBackgroundKind.gradient], and for [GroupBackgroundKind.pattern]
+  /// the ground and then the figures.
   final List<int> colors;
+
+  /// The figures of a [GroupBackgroundKind.pattern] background.
+  final GroupBackgroundPattern? pattern;
 
   /// Gradient rotation in degrees.
   final double rotation;
@@ -152,6 +159,7 @@ class GroupBackground {
   const GroupBackground({
     required this.kind,
     this.colors = const [],
+    this.pattern,
     this.rotation = 0,
     this.opacity = 1,
     this.blur = 0,
@@ -170,6 +178,9 @@ class GroupBackground {
     final url = content['url'];
     final background = GroupBackground(
       kind: kind,
+      pattern: kind == GroupBackgroundKind.pattern
+          ? GroupBackgroundPattern.values.asNameMap()[content['pattern']]
+          : null,
       colors: rawColors is List
           ? rawColors.map(parseHexColor).whereType<int>().toList()
           : const [],
@@ -184,14 +195,18 @@ class GroupBackground {
   bool get isValid => switch (kind) {
     GroupBackgroundKind.solid => colors.isNotEmpty,
     GroupBackgroundKind.gradient => colors.length >= 2,
+    GroupBackgroundKind.pattern => pattern != null && colors.length >= 2,
     GroupBackgroundKind.image => url != null,
     GroupBackgroundKind.none => true,
   };
 
   Map<String, Object?> toContent() {
     final url = this.url;
+    final pattern = this.pattern;
     return {
       'kind': kind.name,
+      if (kind == GroupBackgroundKind.pattern && pattern != null)
+        'pattern': pattern.name,
       if (colors.isNotEmpty) 'colors': colors.map(formatHexColor).toList(),
       if (kind == GroupBackgroundKind.gradient) 'rotation': rotation.round(),
       'opacity': (opacity * 100).round(),
@@ -199,6 +214,50 @@ class GroupBackground {
       if (url != null) 'url': url.toString(),
     };
   }
+
+  GroupBackground copyWith({
+    GroupBackgroundKind? kind,
+    List<int>? colors,
+    GroupBackgroundPattern? pattern,
+  }) => GroupBackground(
+    kind: kind ?? this.kind,
+    colors: colors ?? this.colors,
+    pattern: pattern ?? this.pattern,
+    rotation: rotation,
+    opacity: opacity,
+    blur: blur,
+    url: url,
+  );
+
+  /// This colour background made into [kind] (solid, gradient or pattern),
+  /// as the picker does when people switch between them: the colours they
+  /// chose stay, one is added when the new kind needs two, a gradient gets
+  /// a slant and a pattern dots, unless they had one already.
+  GroupBackground withKind(GroupBackgroundKind kind) {
+    final first = colors.firstOrNull ?? groupBackgroundPalette[2];
+    final rest = colors.skip(1).toList();
+    return GroupBackground(
+      kind: kind,
+      colors: kind == GroupBackgroundKind.solid
+          ? [first]
+          : [
+              first,
+              ...(rest.isEmpty ? [groupBackgroundPalette[3]] : rest),
+            ],
+      pattern: kind == GroupBackgroundKind.pattern
+          ? pattern ?? GroupBackgroundPattern.dots
+          : null,
+      rotation: kind == GroupBackgroundKind.gradient
+          ? (rotation == 0 ? 135 : rotation)
+          : 0,
+      opacity: opacity,
+      blur: blur,
+    );
+  }
+
+  /// This background with colour number [index] set to [argb].
+  GroupBackground withColor(int index, int argb) =>
+      copyWith(colors: [...colors]..[index] = argb);
 }
 
 /// Built-in backgrounds offered in the picker.
@@ -254,6 +313,92 @@ const List<(String, GroupBackground)> groupBackgroundPresets = [
       opacity: 0.6,
     ),
   ),
+  // Added in 1.1.23, after the six above (tests pick those by index)
+  (
+    'Pink',
+    GroupBackground(
+      kind: GroupBackgroundKind.solid,
+      colors: [0xFFF8BBD0],
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'Lavender',
+    GroupBackground(
+      kind: GroupBackgroundKind.gradient,
+      colors: [0xFFF8BBD0, 0xFFD1C4E9],
+      rotation: 135,
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'Hearts',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.hearts,
+      colors: [0xFFFFEBF0, 0xFFF48FB1],
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'Flowers',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.flowers,
+      colors: [0xFFFFF8E1, 0xFFF06292],
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'Dots',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.dots,
+      colors: [0xFFE0F7FA, 0xFF4DD0E1],
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'StarryNight',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.stars,
+      colors: [0xFF1B1F3B, 0xFFFFD54F],
+      opacity: 0.6,
+    ),
+  ),
+];
+
+/// Colours offered when people pick their own background colours.
+const List<int> groupBackgroundPalette = [
+  0xFFFFFFFF,
+  0xFFFFEBF0,
+  0xFFF8BBD0,
+  0xFFF48FB1,
+  0xFFF06292,
+  0xFFE91E63,
+  0xFFD1C4E9,
+  0xFF9575CD,
+  0xFF673AB7,
+  0xFFBBDEFB,
+  0xFF64B5F6,
+  0xFF1E88E5,
+  0xFFE0F7FA,
+  0xFF4DD0E1,
+  0xFF00897B,
+  0xFFC8E6C9,
+  0xFF81C784,
+  0xFF2E7D32,
+  0xFFFFF8E1,
+  0xFFFFD54F,
+  0xFFFF9800,
+  0xFFFF6B6B,
+  0xFF795548,
+  0xFFE9DCC4,
+  0xFF9E9E9E,
+  0xFF556270,
+  0xFF1B1F3B,
+  0xFF000000,
 ];
 
 /// Picks the background to draw: a channel's own background overrides the

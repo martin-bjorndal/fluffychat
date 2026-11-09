@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
+import 'background_picker.dart';
 import 'group_state.dart';
 import 'matrix_group.dart';
 import 'picture_crop.dart';
@@ -45,6 +46,17 @@ class GroupBackgroundLayer extends StatelessWidget {
           ),
         ),
         child: SizedBox(width: size.width, height: size.height),
+      ),
+      // Drawn once and kept, so scrolling the chat doesn't paint it again
+      GroupBackgroundKind.pattern => RepaintBoundary(
+        child: CustomPaint(
+          size: size,
+          painter: GroupPatternPainter(
+            pattern: background.pattern!,
+            ground: colors[0],
+            figure: colors[1],
+          ),
+        ),
       ),
       GroupBackgroundKind.image => MxcImage(
         cacheKey: url.toString(),
@@ -156,16 +168,24 @@ String _backgroundLabel(L10n l10n, GroupBackground? background) =>
       null || GroupBackgroundKind.none => l10n.gruppechatNoBackground,
       GroupBackgroundKind.solid => l10n.gruppechatBackgroundSolid,
       GroupBackgroundKind.gradient => l10n.gruppechatBackgroundGradient,
+      GroupBackgroundKind.pattern => l10n.gruppechatBackgroundPattern,
       GroupBackgroundKind.image => l10n.gruppechatBackgroundImage,
     };
 
-String _presetLabel(L10n l10n, String name) => switch (name) {
+/// The name shown for the preset called [name] in [groupBackgroundPresets].
+String groupBackgroundPresetLabel(L10n l10n, String name) => switch (name) {
   'Midnight' => l10n.gruppechatPresetMidnight,
   'Forest' => l10n.gruppechatPresetForest,
   'Sand' => l10n.gruppechatPresetSand,
   'Sunset' => l10n.gruppechatPresetSunset,
   'Aurora' => l10n.gruppechatPresetAurora,
   'Fjord' => l10n.gruppechatPresetFjord,
+  'Pink' => l10n.gruppechatPresetPink,
+  'Lavender' => l10n.gruppechatPresetLavender,
+  'Hearts' => l10n.gruppechatPatternHearts,
+  'Flowers' => l10n.gruppechatPatternFlowers,
+  'Dots' => l10n.gruppechatPatternDots,
+  'StarryNight' => l10n.gruppechatPresetStarryNight,
   _ => name,
 };
 
@@ -320,7 +340,7 @@ Future<void> showInviteRoleMenu({
   );
 }
 
-enum _BackgroundAction { preset, image, clear, none, toggleVisibility }
+enum _BackgroundAction { colors, image, clear, none, toggleVisibility }
 
 /// "Pictures and files" in a chat's menu: the gallery and file list of the
 /// chat's search, as Messenger's media overview.
@@ -398,7 +418,7 @@ Future<void> showGroupBackgroundMenu({
       ? group.setBackground(background)
       : group.setChannelBackground(channel, background);
 
-  final picked = await showModalActionPopup<(_BackgroundAction, int)>(
+  final picked = await showModalActionPopup<_BackgroundAction>(
     context: context,
     title: channel != null
         ? l10n.gruppechatChannelBackground
@@ -415,21 +435,20 @@ Future<void> showGroupBackgroundMenu({
     cancelLabel: l10n.cancel,
     actions: [
       if (canSet) ...[
-        for (var i = 0; i < groupBackgroundPresets.length; i++)
-          AdaptiveModalAction(
-            label: _presetLabel(l10n, groupBackgroundPresets[i].$1),
-            value: (_BackgroundAction.preset, i),
-            icon: const Icon(Icons.brush_outlined),
-          ),
+        AdaptiveModalAction(
+          label: l10n.gruppechatColorsAndPatterns,
+          value: _BackgroundAction.colors,
+          icon: const Icon(Icons.palette_outlined),
+        ),
         AdaptiveModalAction(
           label: l10n.gruppechatImageFromDevice,
-          value: (_BackgroundAction.image, 0),
+          value: _BackgroundAction.image,
           icon: const Icon(Icons.photo_outlined),
         ),
         if (channel != null && current?.kind != GroupBackgroundKind.none)
           AdaptiveModalAction(
             label: l10n.gruppechatNoBackgroundHere,
-            value: (_BackgroundAction.none, 0),
+            value: _BackgroundAction.none,
             icon: const Icon(Icons.format_color_reset_outlined),
           ),
         if (current != null)
@@ -439,7 +458,7 @@ Future<void> showGroupBackgroundMenu({
                 : isDirect
                 ? l10n.gruppechatRemoveBackground
                 : l10n.gruppechatRemoveGroupBackground,
-            value: (_BackgroundAction.clear, 0),
+            value: _BackgroundAction.clear,
             icon: const Icon(Icons.delete_outlined),
             isDestructive: channel == null,
           ),
@@ -448,7 +467,7 @@ Future<void> showGroupBackgroundMenu({
         label: showing
             ? l10n.gruppechatHideGroupBackgrounds
             : l10n.gruppechatShowGroupBackgrounds,
-        value: (_BackgroundAction.toggleVisibility, 0),
+        value: _BackgroundAction.toggleVisibility,
         icon: Icon(
           showing ? Icons.visibility_off_outlined : Icons.visibility_outlined,
         ),
@@ -457,12 +476,16 @@ Future<void> showGroupBackgroundMenu({
   );
   if (picked == null || !context.mounted) return;
 
-  switch (picked.$1) {
-    case _BackgroundAction.preset:
-      final preset = groupBackgroundPresets[picked.$2].$2;
+  switch (picked) {
+    case _BackgroundAction.colors:
+      final chosen = await showBackgroundColorsDialog(
+        context: context,
+        current: current,
+      );
+      if (chosen == null || !context.mounted) return;
       await showFutureLoadingDialog(
         context: context,
-        future: () => set(preset),
+        future: () => set(chosen),
       );
     case _BackgroundAction.image:
       final files = await selectFiles(context, type: FileType.image);
