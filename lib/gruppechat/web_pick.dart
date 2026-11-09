@@ -16,9 +16,11 @@
 library;
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:mime/mime.dart';
 
 /// The `accept` attribute for a file input. file_picker gave pictures and
 /// videos together as `video/*|image/*`, which browsers don't understand.
@@ -34,6 +36,27 @@ String webPickerAccept(FileType type, [List<String>? allowedExtensions]) =>
           '.${extension.replaceFirst(RegExp(r'^\.'), '')}',
       ].join(','),
     };
+
+/// A picked file as the app sends it, from what the browser's `File` gives:
+/// [lastModified] in milliseconds, and the type from the name when the
+/// browser gives none. Safari's `File` has no `lastModifiedDate`;
+/// reading that showed "Null check operator used on a null value" on iPhone.
+XFile webPickedFile(
+  Uint8List bytes, {
+  required String name,
+  required String type,
+  required int size,
+  int? lastModified,
+}) => XFile.fromData(
+  bytes,
+  name: name,
+  path: name,
+  mimeType: type.isNotEmpty ? type : lookupMimeType(name),
+  length: size,
+  lastModified: lastModified == null
+      ? null
+      : DateTime.fromMillisecondsSinceEpoch(lastModified),
+);
 
 /// One pick, from opening the picker until there are files or there won't
 /// be any. The browser side reports what happens; [result] gives the files,

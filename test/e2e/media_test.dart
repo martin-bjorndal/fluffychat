@@ -116,24 +116,27 @@ void main() {
         );
         pick.focused();
         await Future<void>.delayed(const Duration(seconds: 1));
+        final jpeg = photo(2000, 1500);
         picked
           ..add(
-            XFile.fromData(
-              photo(2000, 1500),
+            // As the picker reads Safari's File (webPickedFile)
+            webPickedFile(
+              jpeg,
               name: 'IMG_0001.jpeg',
-              path: 'IMG_0001.jpeg',
-              mimeType: 'image/jpeg',
+              type: 'image/jpeg',
+              size: jpeg.length,
+              lastModified: 1762650000000,
             ),
           )
           ..add(
-            XFile.fromData(
+            webPickedFile(
               Uint8List.fromList([
                 0, 0, 0, 0x14, ...ascii.encode('ftypqt  '), //
                 ...List.filled(5000, 3),
               ]),
               name: 'IMG_0002.MOV',
-              path: 'IMG_0002.MOV',
-              mimeType: 'video/quicktime',
+              type: 'video/quicktime',
+              size: 5012,
             ),
           );
         final files = await pick.result.timeout(const Duration(seconds: 10));
