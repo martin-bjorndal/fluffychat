@@ -382,15 +382,21 @@ class ChatInputRow extends StatelessWidget {
                               ),
                             ),
                           )
-                        : IconButton(
-                            key: Key('send_button'),
-                            tooltip: L10n.of(context).send,
-                            onPressed: controller.send,
-                            style: IconButton.styleFrom(
-                              backgroundColor: theme.bubbleColor,
-                              foregroundColor: theme.onBubbleColor,
+                        // Gruppechat: a long press sends with an effect
+                        // (lib/gruppechat/effects.dart)
+                        : GestureDetector(
+                            onLongPress: controller.sendWithEffectAction,
+                            onSecondaryTap: controller.sendWithEffectAction,
+                            child: IconButton(
+                              key: Key('send_button'),
+                              tooltip: L10n.of(context).send,
+                              onPressed: controller.send,
+                              style: IconButton.styleFrom(
+                                backgroundColor: theme.bubbleColor,
+                                foregroundColor: theme.onBubbleColor,
+                              ),
+                              icon: const Icon(Icons.send_outlined),
                             ),
-                            icon: const Icon(Icons.send_outlined),
                           ),
                   ),
                 ],

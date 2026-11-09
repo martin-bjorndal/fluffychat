@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hanne Chat: the notification sounds a chat can have
+     (scripts/gruppechat_sounds.py) are only named in code, so resource
+     shrinking must keep them -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/gc_*" />

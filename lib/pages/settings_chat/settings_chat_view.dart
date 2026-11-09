@@ -63,6 +63,12 @@ class SettingsChatView extends StatelessWidget {
                 title: L10n.of(context).sendOnEnter,
                 setting: AppSettings.sendOnEnter,
               ),
+              // Gruppechat: lib/gruppechat/sounds.dart
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).gruppechatChatSounds,
+                subtitle: L10n.of(context).gruppechatChatSoundsDescription,
+                setting: AppSettings.gruppechatChatSounds,
+              ),
               SettingsSwitchListTile.adaptive(
                 title: L10n.of(context).swipeRightToLeftToReply,
                 setting: AppSettings.swipeRightToLeftToReply,

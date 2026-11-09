@@ -12,15 +12,18 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/bot_commands.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
 import 'package:fluffychat/gruppechat/camera.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/chat_reading.dart';
+import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
@@ -424,6 +427,8 @@ class ChatController extends State<ChatPageWithRoom>
 
   @override
   void initState() {
+    // Before opening the chat marks it read
+    _unreadAtOpen = room.notificationCount;
     inputFocus = FocusNode(onKeyEvent: _customEnterKeyHandling);
 
     scrollController.addListener(_updateScrollController);
@@ -435,6 +440,8 @@ class ChatController extends State<ChatPageWithRoom>
       _checkMatrixRtcCallSupport();
       // Gruppechat: the group's permissions get their defaults
       GruppechatGroup.of(room)?.setUpIfNeeded();
+      // Gruppechat: bots' commands are suggested as soon as «!» is typed
+      gruppechatPrepareBotCommands(room);
       if (widget.action == 'call') {
         Matrix.of(context).activeCallRoomId.value = room.id;
       }
@@ -561,9 +568,54 @@ class ChatController extends State<ChatPageWithRoom>
 
   String? animateInEventId;
 
+  // Gruppechat: sounds and effects (lib/gruppechat/sounds.dart, effects.dart)
+  // for what comes in while the chat is open, and effects of what was
+  // unread when it opened
+  final _openedAt = DateTime.now();
+  late final int _unreadAtOpen;
+  final _playedEffects = <String>{};
+  final _soundedEvents = <String>{};
+
+  /// The message whose effect plays now, and the effect.
+  (String, GruppechatEffect)? playingEffect;
+
+  void _checkEffects() {
+    if (playingEffect != null) return;
+    final events = timeline?.events;
+    if (events == null) return;
+    final event = gruppechatEffectToPlay(
+      events,
+      played: _playedEffects,
+      openedAt: _openedAt,
+      unreadAtOpen: _unreadAtOpen,
+    );
+    if (event == null) return;
+    _playedEffects.add(event.eventId);
+    playingEffect = (event.eventId, gruppechatEffectOf(event)!);
+  }
+
+  void effectDone() {
+    if (!mounted) return;
+    setState(() => playingEffect = null);
+    _checkEffects();
+  }
+
+  Future<void> sendWithEffectAction() async {
+    if (sendController.text.trim().isEmpty || editEvent != null) return;
+    final effect = await gruppechatPickEffect(context);
+    if (effect == null || !mounted) return;
+    await send(effect: effect);
+  }
+
   Future<void> _insert(int index) async {
     if (index > 0) return;
     final firstEvent = timeline?.events.firstOrNull;
+    if (firstEvent != null &&
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+        _soundedEvents.add(firstEvent.eventId) &&
+        gruppechatPlaysReceivedSound(firstEvent, _openedAt)) {
+      GruppechatSounds.received();
+    }
     final eventId = firstEvent?.transactionId ?? firstEvent?.eventId;
     animateInEventId = eventId;
     await Future.delayed(FluffyThemes.animationDuration);
@@ -573,7 +625,7 @@ class ChatController extends State<ChatPageWithRoom>
   void updateView() {
     if (!mounted) return;
     setReadMarker();
-    setState(() {});
+    setState(_checkEffects);
   }
 
   Future<void>? loadTimelineFuture;
@@ -712,7 +764,7 @@ class ChatController extends State<ChatPageWithRoom>
     Matrix.of(context).setActiveClient(c);
   });
 
-  Future<void> send() async {
+  Future<void> send({GruppechatEffect? effect}) async {
     final proceed = await showTrustUserInRoomDialog(context, room);
     if (!mounted || !proceed) return;
     _storeInputTimeoutTimer?.cancel();
@@ -761,14 +813,26 @@ class ChatController extends State<ChatPageWithRoom>
       room.setTyping(false);
     }
 
-    // ignore: unawaited_futures
-    room.sendTextEvent(
-      sendController.text,
-      inReplyTo: replyEvent,
-      editEventId: editEvent?.eventId,
-      parseCommands: parseCommands,
-      threadRootEventId: activeThreadId,
-    );
+    if (effect != null && editEvent == null) {
+      // ignore: unawaited_futures
+      gruppechatSendWithEffect(
+        room,
+        sendController.text,
+        effect,
+        inReplyTo: replyEvent,
+        threadRootEventId: activeThreadId,
+      );
+    } else {
+      // ignore: unawaited_futures
+      room.sendTextEvent(
+        sendController.text,
+        inReplyTo: replyEvent,
+        editEventId: editEvent?.eventId,
+        parseCommands: parseCommands,
+        threadRootEventId: activeThreadId,
+      );
+    }
+    if (editEvent == null) GruppechatSounds.sent();
     sendController.value = TextEditingValue(
       text: pendingText,
       selection: const TextSelection.collapsed(offset: 0),

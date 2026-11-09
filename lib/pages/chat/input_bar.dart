@@ -6,6 +6,7 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/bot_commands.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/markdown_context_builder.dart';
@@ -77,6 +78,14 @@ class InputBar extends StatelessWidget {
 
         if (ret.length > maxResults) return ret;
       }
+    }
+    // Gruppechat: the commands of bots in the chat, such as «!status»
+    for (final command in gruppechatBotCommandSuggestions(room, searchText)) {
+      ret.add({
+        'type': 'bot_command',
+        'name': command.command,
+        'description': command.description,
+      });
     }
     final emojiMatch = RegExp(
       r'(?:\s|^):(?:([\p{L}\p{N}_-]+)~)?([\p{L}\p{N}_-]+)$',
@@ -250,6 +259,21 @@ class InputBar extends StatelessWidget {
         ),
       );
     }
+    if (suggestion['type'] == 'bot_command') {
+      return ListTile(
+        onTap: () => onSelected(suggestion),
+        title: Text(
+          suggestion['name']!,
+          style: const TextStyle(fontFamily: 'RobotoMono'),
+        ),
+        subtitle: Text(
+          suggestion['description'] ?? '',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall,
+        ),
+      );
+    }
     if (suggestion['type'] == 'emoji') {
       final label = suggestion['label']!;
       return Tooltip(
@@ -350,6 +374,13 @@ class InputBar extends StatelessWidget {
       startText = replaceText.replaceAllMapped(
         RegExp(r'^(/\w*)$'),
         (Match m) => '/$insertText',
+      );
+    }
+    if (suggestion['type'] == 'bot_command') {
+      insertText = '${suggestion['name']!} ';
+      startText = replaceText.replaceAllMapped(
+        RegExp(r'^!\w*$'),
+        (Match m) => insertText,
       );
     }
     if (suggestion['type'] == 'emoji') {

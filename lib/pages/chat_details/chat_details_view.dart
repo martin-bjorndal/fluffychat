@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/pages/chat_details/participant_list_item.dart';
@@ -254,6 +255,25 @@ class ChatDetailsView extends StatelessWidget {
                           trailing: const Icon(Icons.chevron_right_outlined),
                           onTap: () =>
                               context.push(gruppechatMediaLocation(room)),
+                        ),
+                        // Gruppechat: lib/gruppechat/sounds.dart
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.surfaceContainer,
+                            foregroundColor: iconColor,
+                            child: const Icon(Icons.music_note_outlined),
+                          ),
+                          title: Text(
+                            L10n.of(context).gruppechatNotificationSound,
+                          ),
+                          subtitle: Text(
+                            gruppechatChatSound(
+                                  room,
+                                )?.label(L10n.of(context)) ??
+                                L10n.of(context).gruppechatDefaultSound,
+                          ),
+                          trailing: const Icon(Icons.chevron_right_outlined),
+                          onTap: () => gruppechatChooseChatSound(context, room),
                         ),
                         if (room.canChangeStateEvent(EventTypes.RoomTopic) ||
                             room.topic.isNotEmpty) ...[

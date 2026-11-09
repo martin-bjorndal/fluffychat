@@ -8,6 +8,7 @@ import 'dart:ui' as ui;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
@@ -438,6 +439,15 @@ class ChatView extends StatelessWidget {
                             child: ChatEventList(controller: controller),
                           ),
                         ),
+                        // Gruppechat: a message's effect plays over the chat
+                        if (controller.playingEffect case final effect?)
+                          Positioned.fill(
+                            child: GruppechatEffectOverlay(
+                              key: ValueKey(effect),
+                              effect: effect.$2,
+                              onDone: controller.effectDone,
+                            ),
+                          ),
                         Positioned(
                           bottom: 0,
                           left: 0,

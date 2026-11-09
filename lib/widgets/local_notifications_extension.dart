@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
@@ -93,7 +94,15 @@ extension LocalNotificationsExtension on MatrixState {
         method: thumbnailMethod,
       );
 
-      if (AppSettings.webNotificationSound.value) _audioPlayer.play();
+      if (AppSettings.webNotificationSound.value) {
+        // Gruppechat: a chat's own sound (lib/gruppechat/sounds.dart)
+        final sound = gruppechatChatSound(event.room);
+        if (sound != null) {
+          GruppechatSounds.play(sound.asset);
+        } else {
+          _audioPlayer.play();
+        }
+      }
 
       html.Notification(
         title,

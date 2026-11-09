@@ -16,6 +16,7 @@ import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/call_kit_params.dart';
 import 'package:fluffychat/utils/client_manager.dart';
@@ -287,9 +288,19 @@ Future<void> _tryPushHelper(
   // bubble (lib/gruppechat/bubbles.dart)
   final bubble = await GruppechatBubbles.isEnabled();
 
+  // Gruppechat: a chat can have its own sound (lib/gruppechat/sounds.dart)
+  final channel = gruppechatNotificationChannel(
+    event.room,
+    usualId: AppConfig.pushNotificationsChannelId,
+    usualName: l10n.incomingMessages,
+    l10n: l10n,
+  );
   final androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    AppConfig.pushNotificationsChannelId,
-    l10n.incomingMessages,
+    channel.id,
+    channel.name,
+    sound: channel.sound == null
+        ? null
+        : RawResourceAndroidNotificationSound(channel.sound),
     number: notification.counts?.unread,
     category: AndroidNotificationCategory.message,
     shortcutId: event.room.id,
