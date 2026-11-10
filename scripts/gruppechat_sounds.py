@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: 2026 Martin Bjørndal
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Makes Hanne Chat's sounds (lib/gruppechat/sounds.dart) from scratch, so
-they are our own: the chat sounds, the notification sounds a chat can have,
-and the sounds of message effects.
+"""Makes Hanne Chat's sounds (lib/gruppechat/sounds.dart): the chat sounds,
+the notification sounds a chat can have, and the sounds of message effects.
+They are made from scratch, so they are our own, except the cats: those are
+cut from a real recording in recordings/ (CC BY 4.0, see its README.md).
 
     python scripts/gruppechat_sounds.py
 
@@ -91,23 +92,66 @@ def sparkles(count, seconds, seed):
     )
 
 
-def meow(low, high, seconds, loudness=1.0):
-    """A cat's "mi-a-u": the pitch rises to high and falls back below low,
-    and the voice opens (more overtones) at the top and closes at the end."""
-    n = int(RATE * seconds)
-    out, phase = [], 0.0
+# A real cat, since 1.1.30: five meows of a British Shorthair asking for
+# food, cut from a recording on Wikimedia Commons (see recordings/README.md,
+# CC BY 4.0). Where each meow starts and ends in the excerpt, in seconds.
+RECORDING = Path(__file__).resolve().parent / "recordings" / "kortharkatt.wav"
+MEOWS = [(0.0, 1.2), (1.45, 3.2), (3.45, 4.8), (5.05, 6.65), (6.9, 8.2)]
+
+
+def recording() -> list[float]:
+    with wave.open(str(RECORDING)) as file:
+        assert (file.getnchannels(), file.getsampwidth(), file.getframerate()) == (1, 2, RATE)
+        frames = file.readframes(file.getnframes())
+    return [s / 32768 for (s,) in struct.iter_unpack("<h", frames)]
+
+
+def faded(samples, seconds=0.015):
+    """Fades both ends in and out, so a cut doesn't click."""
+    n = min(int(RATE * seconds), len(samples) // 2)
+    out = list(samples)
     for i in range(n):
-        x = i / n
-        # Up quickly, down slowly, ending a little below where it started
-        shape = math.sin(math.pi * min(1.0, x / 0.85) ** 0.6)
-        f = low * (0.9 + 0.1 * (1 - x)) + (high - low) * shape
-        f *= 1 + 0.012 * math.sin(2 * math.pi * 6 * i / RATE)
-        phase += 2 * math.pi * f / RATE
-        bright = 0.25 + 0.6 * shape
-        sample = sum(math.sin(k * phase) * bright ** (k - 1) / k for k in range(1, 7))
-        envelope = min(1.0, x / 0.08) * min(1.0, (1 - x) / 0.25)
-        out.append(loudness * envelope * sample)
+        out[i] *= i / n
+        out[-1 - i] *= i / n
     return out
+
+
+def lowpass(samples, cutoff):
+    """A windowed-sinc low-pass filter, cutoff in Hz."""
+    taps = 63
+    fc = cutoff / RATE
+    kernel = []
+    for i in range(taps):
+        m = i - taps // 2
+        sinc = 2 * fc if m == 0 else math.sin(2 * math.pi * fc * m) / (math.pi * m)
+        kernel.append(sinc * (0.54 - 0.46 * math.cos(2 * math.pi * i / (taps - 1))))
+    total = sum(kernel)
+    kernel = [k / total for k in kernel]
+    half = taps // 2
+    padded = [0.0] * half + list(samples) + [0.0] * half
+    return [sum(k * padded[i + j] for j, k in enumerate(kernel)) for i in range(len(samples))]
+
+
+def meow(index, pitch=1.0, loudness=1.0):
+    """Meow number index of the recording; pitch above 1 plays it faster,
+    so higher and shorter, like a kitten."""
+    start, end = MEOWS[index]
+    samples = CAT[int(start * RATE) : int(end * RATE)]
+    if pitch != 1.0:
+        # Filtered first, so what goes above half the rate doesn't fold back
+        samples = lowpass(samples, 0.45 * RATE / pitch)
+        n = int(len(samples) / pitch)
+        out = []
+        for i in range(n):
+            x = i * pitch
+            j = int(x)
+            nxt = samples[j + 1] if j + 1 < len(samples) else 0.0
+            out.append(samples[j] + (x - j) * (nxt - samples[j]))
+        samples = out
+    return [loudness * s for s in faded(samples)]
+
+
+CAT = recording()
 
 
 SOUNDS = {
@@ -121,8 +165,8 @@ SOUNDS = {
     "gc_boble": mix((0, tone(300, 0.09, 18, SOFT, glide=900)), (0.13, tone(380, 0.09, 18, SOFT, glide=1100))),
     "gc_floyte": tone(700, 0.55, 3, ((1, 1.0), (2, 0.12)), attack=0.06, glide=1050, vibrato=0.01),
     "gc_dobbeltpip": mix(*[(i * 0.16, tone(1000, 0.1, 10, ((1, 1.0), (3, 0.2), (5, 0.07)), attack=0.008)) for i in range(2)]),
-    "gc_mjau": meow(520, 820, 0.6),
-    "gc_kattunge": mix((0, meow(880, 1250, 0.26)), (0.32, meow(950, 1400, 0.3))),
+    "gc_mjau": meow(0),
+    "gc_kattunge": mix((0, meow(2, 1.5)), (0.7, meow(4, 1.6))),
     # Message effects
     "gc_effect_konfetti": mix((0, noise(0.25, 18, 3, 0.9)), (0.05, tone(180, 0.12, 25, SOFT)), (0.1, sparkles(22, 1.4, 4))),
     "gc_effect_hjerter": mix(
@@ -139,10 +183,10 @@ SOUNDS = {
         (0.8, sparkles(30, 1.0, 8)),
     ),
     "gc_effect_katter": mix(
-        (0, meow(560, 860, 0.55, 0.8)),
-        (0.45, meow(900, 1300, 0.3, 0.6)),
-        (0.8, meow(480, 760, 0.7, 0.8)),
-        (1.15, meow(1000, 1450, 0.28, 0.5)),
+        (0, meow(1, 1.0, 0.8)),
+        (0.5, meow(2, 1.5, 0.6)),
+        (1.0, meow(3, 1.0, 0.7)),
+        (1.4, meow(4, 1.6, 0.5)),
     ),
 }
 

@@ -10,6 +10,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/notification_background_handler.dart';
@@ -78,6 +79,8 @@ void main(List<String> args) => runZonedGuarded(() async {
   Logs().i('Welcome to ${AppSettings.applicationName.value} <3');
 
   unawaited(GruppechatBubbles.start());
+  // Gruppechat: credits for the cat sounds (lib/gruppechat/sounds.dart)
+  gruppechatRegisterSoundLicenses();
 
   kEnableMatrixSdkBenchmarks = AppSettings.benchmarksInLogs.value;
 

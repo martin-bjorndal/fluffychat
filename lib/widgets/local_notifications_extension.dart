@@ -21,10 +21,6 @@ import 'package:matrix/matrix.dart';
 import 'package:universal_html/html.dart' as html;
 
 extension LocalNotificationsExtension on MatrixState {
-  static final html.AudioElement _audioPlayer = html.AudioElement()
-    ..src = 'assets/assets/sounds/notification.mp3'
-    ..load();
-
   Future<void> showLocalNotification(Event event) async {
     // Gruppechat: a muted channel's wake rule with nothing to check
     if (event.isUndecryptedWakeUp) return;
@@ -96,12 +92,8 @@ extension LocalNotificationsExtension on MatrixState {
 
       if (AppSettings.webNotificationSound.value) {
         // Gruppechat: a chat's own sound (lib/gruppechat/sounds.dart)
-        final sound = gruppechatChatSound(event.room);
-        if (sound != null) {
-          GruppechatSounds.play(sound.asset);
-        } else {
-          _audioPlayer.play();
-        }
+        // and the volume chosen in the chat settings
+        GruppechatSounds.notification(event.room);
       }
 
       html.Notification(

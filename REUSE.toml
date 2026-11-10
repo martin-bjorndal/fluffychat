@@ -71,3 +71,16 @@ path = [
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026-Present Christian Kußowski"
 SPDX-License-Identifier = "LicenseRef-All-Rights-Reserved"
+# Hanne Chat: real cat meows (scripts/recordings/README.md)
+[[annotations]]
+path = [
+    "scripts/recordings/kortharkatt.wav",
+    "assets/sounds/gc_mjau.wav",
+    "assets/sounds/gc_kattunge.wav",
+    "assets/sounds/gc_effect_katter.wav",
+    "android/app/src/main/res/raw/gc_mjau.wav",
+    "android/app/src/main/res/raw/gc_kattunge.wav"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "PantheraLeo1359531 (Wikimedia Commons)"
+SPDX-License-Identifier = "CC-BY-4.0"

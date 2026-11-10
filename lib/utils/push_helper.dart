@@ -44,6 +44,8 @@ Future<void> pushHelper(
   List<Client>? clients,
   L10n? l10n,
   String? activeRoomId,
+  // Gruppechat: whether the app is open (lib/gruppechat/sounds.dart)
+  bool? appOnScreen,
   required FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
 }) async {
   l10n ??= await lookupL10n(PlatformDispatcher.instance.locale);
@@ -54,6 +56,7 @@ Future<void> pushHelper(
       clients: clients,
       l10n: l10n,
       activeRoomId: activeRoomId,
+      appOnScreen: appOnScreen,
       flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin,
     ).timeout(const Duration(seconds: 30));
   } catch (e, s) {
@@ -107,6 +110,7 @@ Future<void> _tryPushHelper(
   List<Client>? clients,
   L10n? l10n,
   String? activeRoomId,
+  bool? appOnScreen,
   required FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
 }) async {
   final isBackgroundMessage = clients == null;
@@ -293,16 +297,19 @@ Future<void> _tryPushHelper(
   // bubble (lib/gruppechat/bubbles.dart)
   final bubble = await GruppechatBubbles.isEnabled();
 
-  // Gruppechat: a chat can have its own sound (lib/gruppechat/sounds.dart)
-  final channel = gruppechatNotificationChannel(
+  // Gruppechat: a chat can have its own sound, and while the app is open,
+  // the app plays it (lib/gruppechat/sounds.dart)
+  final channel = await gruppechatPushChannel(
     event.room,
     usualId: AppConfig.pushNotificationsChannelId,
     usualName: l10n.incomingMessages,
     l10n: l10n,
+    appOnScreen: appOnScreen ?? gruppechatAppOnScreen(),
   );
   final androidPlatformChannelSpecifics = AndroidNotificationDetails(
     channel.id,
     channel.name,
+    playSound: !channel.soundInApp,
     sound: channel.sound == null
         ? null
         : RawResourceAndroidNotificationSound(channel.sound),
@@ -418,6 +425,8 @@ Future<void> _tryPushHelper(
     icon: roomIcon,
     bubble: bubble,
   );
+
+  if (channel.soundInApp) unawaited(GruppechatSounds.notification(event.room));
 
   // Send summary notification on Android
   if (PlatformInfos.isAndroid) {
