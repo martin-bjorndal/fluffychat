@@ -454,7 +454,7 @@ class ChatView extends StatelessWidget {
                           Positioned.fill(
                             child: GruppechatEffectOverlay(
                               key: ValueKey(effect),
-                              effect: effect.$2,
+                              play: effect.$2,
                               onDone: controller.effectDone,
                             ),
                           ),

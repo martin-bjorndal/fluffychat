@@ -18,7 +18,9 @@ enum GruppechatSound {
   chimes('gc_klokkespill'),
   bubble('gc_boble'),
   flute('gc_floyte'),
-  doubleBeep('gc_dobbeltpip');
+  doubleBeep('gc_dobbeltpip'),
+  meow('gc_mjau'),
+  kitten('gc_kattunge');
 
   /// The file's name, as an Android raw resource and in assets/sounds/.
   final String file;
@@ -34,6 +36,8 @@ enum GruppechatSound {
     bubble => l10n.gruppechatSoundBubble,
     flute => l10n.gruppechatSoundFlute,
     doubleBeep => l10n.gruppechatSoundDoubleBeep,
+    meow => l10n.gruppechatSoundMeow,
+    kitten => l10n.gruppechatSoundKitten,
   };
 
   /// Android fixes a notification channel's sound once it exists, so each

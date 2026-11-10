@@ -19,12 +19,17 @@ enum GruppechatEffect {
   confetti('🎉', 'gc_effect_konfetti'),
   hearts('❤️', 'gc_effect_hjerter'),
   balloons('🎈', 'gc_effect_ballonger'),
-  fireworks('🎆', 'gc_effect_fyrverkeri');
+  fireworks('🎆', 'gc_effect_fyrverkeri'),
+  cats('🐱', 'gc_effect_katter', floats: true);
 
   final String emoji;
   final String sound;
 
-  const GruppechatEffect(this.emoji, this.sound);
+  /// Whether it is drawn as its [emoji] floating up, as a message of only
+  /// a [gruppechatFloatingEmojis] emoji is.
+  final bool floats;
+
+  const GruppechatEffect(this.emoji, this.sound, {this.floats = false});
 
   String get asset => 'assets/sounds/$sound.wav';
 
@@ -33,6 +38,7 @@ enum GruppechatEffect {
     hearts => l10n.gruppechatEffectHearts,
     balloons => l10n.gruppechatEffectBalloons,
     fireworks => l10n.gruppechatEffectFireworks,
+    cats => l10n.gruppechatEffectCats,
   };
 
   static GruppechatEffect? byName(Object? name) =>
@@ -48,6 +54,67 @@ GruppechatEffect? gruppechatEffectOf(Event event) =>
     event.type == EventTypes.Message && !event.redacted
     ? GruppechatEffect.byName(event.content[gruppechatEffectKey])
     : null;
+
+/// The emojis that, sent on their own, float up over the chat as they do
+/// in Messenger: hearts and loving faces.
+const gruppechatFloatingEmojis = [
+  '❤️‍🔥', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '🩷', '🩵', //
+  '🩶', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '🥰', '😍', '😘', '😻',
+];
+
+/// The emoji that floats up for [event]: a text message, not an edit and
+/// without an effect, that is one to three of one of
+/// [gruppechatFloatingEmojis] and nothing else. ❤ counts as ❤️, as some
+/// keyboards leave out the variation selector.
+String? gruppechatFloatingEmojiOf(Event event) {
+  if (event.type != EventTypes.Message ||
+      event.redacted ||
+      event.messageType != MessageTypes.Text ||
+      event.relationshipType == RelationshipTypes.edit ||
+      event.content[gruppechatEffectKey] != null) {
+    return null;
+  }
+  // Longer than three of any of them with spaces: not worth looking at
+  if (event.body.length > 40) return null;
+  final body = _bare(event.body);
+  for (var n = 1; n <= 3; n++) {
+    if (body.length % n != 0) continue;
+    final one = body.substring(0, body.length ~/ n);
+    if (one * n == body) {
+      if (_floatingByBare[one] case final emoji?) return emoji;
+    }
+  }
+  return null;
+}
+
+final _invisible = RegExp(r'[\s\uFE0F]');
+
+String _bare(String text) => text.replaceAll(_invisible, '');
+
+final _floatingByBare = {
+  for (final emoji in gruppechatFloatingEmojis) _bare(emoji): emoji,
+};
+
+/// What [played] in [gruppechatEffectToPlay] knows a message by: the id
+/// the sender's phone gave it, if it has one, as one's own message has
+/// another id until the server has it.
+String gruppechatPlayKey(Event event) => event.transactionId ?? event.eventId;
+
+/// What plays over the chat for a message: the effect it was sent with, if
+/// any, and the emoji its animation shows; without an effect it is a quiet
+/// burst of a [gruppechatFloatingEmojiOf] emoji.
+typedef GruppechatPlay = ({GruppechatEffect? effect, String emoji});
+
+/// What plays over the chat for [event], if anything.
+GruppechatPlay? gruppechatPlayOf(Event event) {
+  if (gruppechatEffectOf(event) case final effect?) {
+    return (effect: effect, emoji: effect.emoji);
+  }
+  if (gruppechatFloatingEmojiOf(event) case final emoji?) {
+    return (effect: null, emoji: emoji);
+  }
+  return null;
+}
 
 /// Sends [text] to [room] with [effect], formatted and with its mentions
 /// as Room.sendTextEvent sends a message.
@@ -101,9 +168,12 @@ String? _mentioned(Room room, String word) =>
     word.isValidMatrixIdStrict() ? word : room.getMention(word);
 
 /// The message in [newestFirst], the chat's timeline, whose effect should
-/// play now: the newest one with an effect not [played] yet that came in
+/// play now: the newest one with an effect or a floating emoji
+/// ([gruppechatPlayOf]) not [played] yet that came in
 /// after the chat opened at [openedAt], or was among the [unreadAtOpen]
-/// newest messages from others when it opened.
+/// newest messages from others when it opened. Of floating emojis only the
+/// newest plays, so a row of hearts floats once. [played] holds
+/// [gruppechatPlayKey]s.
 Event? gruppechatEffectToPlay(
   List<Event> newestFirst, {
   required Set<String> played,
@@ -112,26 +182,36 @@ Event? gruppechatEffectToPlay(
 }) {
   final ownId = newestFirst.firstOrNull?.room.client.userID;
   var fromOthers = 0;
+  var newerFloats = false;
   for (final event in newestFirst) {
-    if (event.type != EventTypes.Message) continue;
+    if (event.type != EventTypes.Message || event.status.isError) continue;
     final mine = event.senderId == ownId;
     final unread = !mine && fromOthers < unreadAtOpen;
     if (!mine) fromOthers++;
-    if (gruppechatEffectOf(event) == null || played.contains(event.eventId)) {
-      continue;
+    final old = event.originServerTs.isBefore(openedAt);
+    // Nothing older is new or unread either
+    if (old && !unread && fromOthers >= unreadAtOpen) break;
+    final play = gruppechatPlayOf(event);
+    if (play == null) continue;
+    if (play.effect == null) {
+      if (newerFloats) continue;
+      newerFloats = true;
     }
-    if (!event.originServerTs.isBefore(openedAt) || unread) return event;
+    if (played.contains(gruppechatPlayKey(event))) continue;
+    return event;
   }
   return null;
 }
 
-/// Plays [effect] over whatever is under it, then removes itself.
+/// Plays [play] ([gruppechatPlayOf]) over whatever is under it, then
+/// removes itself: its effect with the effect's sound, or without one, its
+/// emoji floating up without a sound.
 class GruppechatEffectOverlay extends StatefulWidget {
-  final GruppechatEffect effect;
+  final GruppechatPlay play;
   final VoidCallback onDone;
 
   const GruppechatEffectOverlay({
-    required this.effect,
+    required this.play,
     required this.onDone,
     super.key,
   });
@@ -147,17 +227,36 @@ class _GruppechatEffectOverlayState extends State<GruppechatEffectOverlay>
     vsync: this,
     duration: const Duration(milliseconds: 3200),
   )..forward().whenComplete(widget.onDone);
-  late final List<_Particle> _particles = _Particle.many(widget.effect);
+  late final GruppechatEffect? _effect = widget.play.effect;
+
+  late final bool _floats = _effect?.floats ?? true;
+  late final List<_Particle> _particles = _Particle.many(_effect);
+
+  /// Each particle's emoji, laid out once.
+  late final List<TextPainter> _emojis = [
+    if (_floats)
+      for (final p in _particles)
+        TextPainter(
+          text: TextSpan(
+            text: widget.play.emoji,
+            style: TextStyle(fontSize: 30 * p.size),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    GruppechatSounds.play(widget.effect.asset);
+    if (_effect case final effect?) GruppechatSounds.play(effect.asset);
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    for (final emoji in _emojis) {
+      emoji.dispose();
+    }
     super.dispose();
   }
 
@@ -172,7 +271,9 @@ class _GruppechatEffectOverlayState extends State<GruppechatEffectOverlay>
         animation: _controller,
         builder: (context, _) => CustomPaint(
           size: Size.infinite,
-          painter: _EffectPainter(widget.effect, _particles, _controller.value),
+          painter: _floats
+              ? _EmojiPainter(_emojis, _particles, _controller.value)
+              : _EffectPainter(_effect!, _particles, _controller.value),
         ),
       ),
     );
@@ -192,6 +293,13 @@ class _Particle {
 
   _Particle(this.x, this.delay, this.size, this.spin, this.drift, this.color);
 
+  /// How far along its own flight it is at [progress], 0 to 1.
+  double lifeAt(double progress) =>
+      ((progress - delay) / (1 - delay)).clamp(0.0, 1.0);
+
+  /// 1, going to 0 over the last fifth of its flight [t].
+  static double endingAt(double t) => t > 0.8 ? (1 - t) / 0.2 : 1.0;
+
   static const _party = [
     Color(0xFFFF4F8B),
     Color(0xFFFFC93C),
@@ -201,13 +309,15 @@ class _Particle {
     Color(0xFFFF8A50),
   ];
 
-  static List<_Particle> many(GruppechatEffect effect) {
+  /// The particles of [effect], or of a floating emoji for null.
+  static List<_Particle> many(GruppechatEffect? effect) {
     final random = Random();
     final count = switch (effect) {
       GruppechatEffect.confetti => 90,
       GruppechatEffect.hearts => 28,
       GruppechatEffect.balloons => 14,
       GruppechatEffect.fireworks => 5,
+      GruppechatEffect.cats || null => 22,
     };
     return [
       for (var i = 0; i < count; i++)
@@ -239,9 +349,9 @@ class _EffectPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
-      final t = ((progress - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
+      final t = p.lifeAt(progress);
       if (t <= 0 || t >= 1) continue;
-      final fade = t > 0.8 ? (1 - t) / 0.2 : 1.0;
+      final fade = _Particle.endingAt(t);
       final paint = Paint()..color = p.color.withValues(alpha: fade);
       switch (effect) {
         case GruppechatEffect.confetti:
@@ -306,6 +416,9 @@ class _EffectPainter extends CustomPainter {
               paint,
             );
           }
+        case GruppechatEffect.cats:
+          // Floating 🐱, drawn by _EmojiPainter
+          break;
       }
     }
   }
@@ -334,6 +447,39 @@ class _EffectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_EffectPainter old) => old.progress != progress;
+}
+
+/// Emojis floating up from the bottom, swaying, and fading at the end.
+class _EmojiPainter extends CustomPainter {
+  final List<TextPainter> emojis;
+  final List<_Particle> particles;
+  final double progress;
+
+  _EmojiPainter(this.emojis, this.particles, this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var i = 0; i < particles.length; i++) {
+      final p = particles[i];
+      final t = p.lifeAt(progress);
+      if (t <= 0 || t >= 1) continue;
+      final emoji = emojis[i];
+      final center = Offset(
+        (p.x + p.drift * sin(t * 7)) * size.width,
+        size.height + 30 - t * (size.height + 80),
+      );
+      // Shrinks away at the end: fading a picture would take a layer each
+      final shrink = _Particle.endingAt(t);
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.scale(shrink);
+      emoji.paint(canvas, Offset(-emoji.width / 2, -emoji.height / 2));
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_EmojiPainter old) => old.progress != progress;
 }
 
 /// Asks which effect to send a message with, from the send button's long

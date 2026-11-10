@@ -582,8 +582,8 @@ class ChatController extends State<ChatPageWithRoom>
   final _playedEffects = <String>{};
   final _soundedEvents = <String>{};
 
-  /// The message whose effect plays now, and the effect.
-  (String, GruppechatEffect)? playingEffect;
+  /// The message whose effect or floating emoji plays now, and what plays.
+  (String, GruppechatPlay)? playingEffect;
 
   // Gruppechat: a message whose time is up disappears while the chat is
   // open, without waiting for the server (lib/gruppechat/message_lifetime.dart)
@@ -608,8 +608,8 @@ class ChatController extends State<ChatPageWithRoom>
       unreadAtOpen: _unreadAtOpen,
     );
     if (event == null) return;
-    _playedEffects.add(event.eventId);
-    playingEffect = (event.eventId, gruppechatEffectOf(event)!);
+    _playedEffects.add(gruppechatPlayKey(event));
+    playingEffect = (event.eventId, gruppechatPlayOf(event)!);
   }
 
   void effectDone() {
