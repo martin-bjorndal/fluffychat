@@ -96,6 +96,9 @@ enum AppSettings<T> {
   // Hanne Chat: sounds when sending and getting messages in an open chat
   // (lib/gruppechat/sounds.dart)
   gruppechatChatSounds<bool>('chatapp.marbjo.no.chat_sounds', true),
+  // Hanne Chat: how loud the sounds the app plays itself are, 0 to 1
+  // (lib/gruppechat/sounds.dart)
+  gruppechatSoundVolume<double>('chatapp.marbjo.no.sound_volume', 1.0),
   benchmarksInLogs<bool>('chat.fluffy.benchmarks_in_logs', false),
   autoSendErrorReports<bool?>('chat.fluffy.auto_send_eror_reports', null),
   knownErrorHashes<List<String>>('chat.fluffy.known_crash_hashes', []),

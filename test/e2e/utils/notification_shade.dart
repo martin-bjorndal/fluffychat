@@ -48,6 +48,17 @@ class NotificationShade extends AndroidFlutterLocalNotificationsPlugin {
   Future<List<ActiveNotification>> getActiveNotifications() async =>
       notifications.values.toList();
 
+  /// The notification channels the person has changed in Android's
+  /// settings, by id; a channel the app makes doesn't change them.
+  final channels = <String, AndroidNotificationChannel>{};
+
+  @override
+  Future<List<AndroidNotificationChannel>> getNotificationChannels() async =>
+      channels.values.toList();
+
+  @override
+  Future<bool> areNotificationsEnabled() async => true;
+
   @override
   Future<void> createNotificationChannel(
     AndroidNotificationChannel notificationChannel,
