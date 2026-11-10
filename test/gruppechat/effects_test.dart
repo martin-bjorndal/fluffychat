@@ -32,7 +32,13 @@ void main() {
   });
 
   testWidgets('an effect plays over the chat, then goes', (tester) async {
-    for (final effect in GruppechatEffect.values) {
+    // Each effect, and an emoji floating up on its own (lib/gruppechat/
+    // effects.dart, gruppechatFloatingEmojiOf)
+    for (final play in [
+      for (final effect in GruppechatEffect.values)
+        (effect: effect, emoji: effect.emoji),
+      (effect: null, emoji: '🥰'),
+    ]) {
       var done = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -41,8 +47,8 @@ void main() {
               const Placeholder(),
               Positioned.fill(
                 child: GruppechatEffectOverlay(
-                  key: ValueKey(effect),
-                  effect: effect,
+                  key: ValueKey(play),
+                  play: play,
                   onDone: () => done = true,
                 ),
               ),
@@ -54,7 +60,7 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
       expect(done, isFalse);
       await tester.pump(const Duration(seconds: 3));
-      expect(done, isTrue, reason: effect.name);
+      expect(done, isTrue, reason: play.emoji);
     }
   });
 }

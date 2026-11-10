@@ -91,6 +91,25 @@ def sparkles(count, seconds, seed):
     )
 
 
+def meow(low, high, seconds, loudness=1.0):
+    """A cat's "mi-a-u": the pitch rises to high and falls back below low,
+    and the voice opens (more overtones) at the top and closes at the end."""
+    n = int(RATE * seconds)
+    out, phase = [], 0.0
+    for i in range(n):
+        x = i / n
+        # Up quickly, down slowly, ending a little below where it started
+        shape = math.sin(math.pi * min(1.0, x / 0.85) ** 0.6)
+        f = low * (0.9 + 0.1 * (1 - x)) + (high - low) * shape
+        f *= 1 + 0.012 * math.sin(2 * math.pi * 6 * i / RATE)
+        phase += 2 * math.pi * f / RATE
+        bright = 0.25 + 0.6 * shape
+        sample = sum(math.sin(k * phase) * bright ** (k - 1) / k for k in range(1, 7))
+        envelope = min(1.0, x / 0.08) * min(1.0, (1 - x) / 0.25)
+        out.append(loudness * envelope * sample)
+    return out
+
+
 SOUNDS = {
     # In a chat that is open: what you send, and what comes in
     "gc_sent": tone(520, 0.12, 22, SOFT, glide=1100),
@@ -102,6 +121,8 @@ SOUNDS = {
     "gc_boble": mix((0, tone(300, 0.09, 18, SOFT, glide=900)), (0.13, tone(380, 0.09, 18, SOFT, glide=1100))),
     "gc_floyte": tone(700, 0.55, 3, ((1, 1.0), (2, 0.12)), attack=0.06, glide=1050, vibrato=0.01),
     "gc_dobbeltpip": mix(*[(i * 0.16, tone(1000, 0.1, 10, ((1, 1.0), (3, 0.2), (5, 0.07)), attack=0.008)) for i in range(2)]),
+    "gc_mjau": meow(520, 820, 0.6),
+    "gc_kattunge": mix((0, meow(880, 1250, 0.26)), (0.32, meow(950, 1400, 0.3))),
     # Message effects
     "gc_effect_konfetti": mix((0, noise(0.25, 18, 3, 0.9)), (0.05, tone(180, 0.12, 25, SOFT)), (0.1, sparkles(22, 1.4, 4))),
     "gc_effect_hjerter": mix(
@@ -117,9 +138,24 @@ SOUNDS = {
         (0.62, [s * 0.5 for s in tone(70, 0.5, 6, SOFT)]),
         (0.8, sparkles(30, 1.0, 8)),
     ),
+    "gc_effect_katter": mix(
+        (0, meow(560, 860, 0.55, 0.8)),
+        (0.45, meow(900, 1300, 0.3, 0.6)),
+        (0.8, meow(480, 760, 0.7, 0.8)),
+        (1.15, meow(1000, 1450, 0.28, 0.5)),
+    ),
 }
 
-NOTIFICATION_SOUNDS = {"gc_bjelle", "gc_pling", "gc_klokkespill", "gc_boble", "gc_floyte", "gc_dobbeltpip"}
+NOTIFICATION_SOUNDS = {
+    "gc_bjelle",
+    "gc_pling",
+    "gc_klokkespill",
+    "gc_boble",
+    "gc_floyte",
+    "gc_dobbeltpip",
+    "gc_mjau",
+    "gc_kattunge",
+}
 
 
 def write(path: Path, samples: list[float]) -> None:
