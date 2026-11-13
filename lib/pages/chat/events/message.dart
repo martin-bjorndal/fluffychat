@@ -9,6 +9,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
+import 'package:fluffychat/gruppechat/hover_reply.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
@@ -394,7 +395,12 @@ class Message extends StatelessWidget {
                               ),
                             ),
 
-                            Container(
+                            // Gruppechat: a reply button beside the message
+                            // while the mouse is over it
+                            HoverReplyContainer(
+                              ownMessage: ownMessage,
+                              enabled: !longPressSelect && event.repliesOnHover,
+                              onReply: onSwipe,
                               alignment: alignment,
                               padding: const EdgeInsets.only(left: 8),
                               child: GestureDetector(

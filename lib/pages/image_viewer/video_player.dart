@@ -7,8 +7,10 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:fluffychat/gruppechat/video_opening.dart';
+import 'package:fluffychat/gruppechat/video_source.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/event_extension.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/blur_hash.dart';
 import 'package:flutter/foundation.dart';
@@ -37,6 +39,8 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
   // Gruppechat: closing while the video loads must not crash or play it.
   final _opening = VideoOpening();
+  WebVideoSource? _webSource;
+  MatrixFile? _unplayable;
 
   // The video_player package only doesn't support Windows and Linux.
   final _supportsVideoPlayer =
@@ -60,10 +64,11 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
       late VideoPlayerController videoPlayerController;
 
       // Create the VideoPlayerController from the contents of videoFile.
+      // Gruppechat: on the web from a Blob URL, so Safari plays it.
+      WebVideoSource? webSource;
       if (kIsWeb) {
-        videoPlayerController = VideoPlayerController.networkUrl(
-          Uri.dataFromBytes(videoFile.bytes, mimeType: videoFile.mimeType),
-        );
+        webSource = WebVideoSource(videoFile);
+        videoPlayerController = VideoPlayerController.networkUrl(webSource.uri);
       } else {
         final tempDir = await getTemporaryDirectory();
         final fileNameStr =
@@ -79,16 +84,21 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
       try {
         await videoPlayerController.initialize();
-      } catch (_) {
-        await videoPlayerController.dispose();
-        rethrow;
+      } catch (e, s) {
+        await disposeVideoPlayer(videoPlayerController, webSource);
+        // Gruppechat: the browser can't play this one; offer it as a file.
+        if (webSource == null) rethrow;
+        Logs().w('The browser could not play the video', e, s);
+        if (mounted) setState(() => _unplayable = videoFile);
+        return;
       }
       final keptController = await _opening.keep(
         videoPlayerController,
-        (controller) => controller.dispose(),
+        (controller) => disposeVideoPlayer(controller, webSource),
       );
       if (keptController == null) return;
       _videoPlayerController = keptController;
+      _webSource = webSource;
 
       // Create a ChewieController on top.
       setState(() {
@@ -114,9 +124,11 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
 
   void _disposeControllers() {
     _chewieController?.dispose();
-    _videoPlayerController?.dispose();
+    // Gruppechat: the Blob URL goes once the player no longer uses it.
+    disposeVideoPlayer(_videoPlayerController, _webSource).ignore();
     _chewieController = null;
     _videoPlayerController = null;
+    _webSource = null;
   }
 
   @override
@@ -186,9 +198,13 @@ class EventVideoPlayerState extends State<EventVideoPlayer> {
                 ),
               ),
               Center(
-                child: CircularProgressIndicator.adaptive(
-                  value: _downloadProgress,
-                ),
+                child: _unplayable != null
+                    ? VideoCannotPlayHere(
+                        onDownload: () => _unplayable!.save(context),
+                      )
+                    : CircularProgressIndicator.adaptive(
+                        value: _downloadProgress,
+                      ),
               ),
             ],
           );

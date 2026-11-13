@@ -8,6 +8,7 @@
 // be judged on a phone.
 
 import 'package:cross_file/cross_file.dart';
+import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/background_picker.dart';
 import 'package:fluffychat/gruppechat/chat_colors.dart';
@@ -22,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/test_client.dart';
 
@@ -237,19 +239,40 @@ void main() {
       expect(sent, 0);
     });
 
-    // A PDF, since a picture's preview doesn't load in a widget test
-    testWidgets('in the dialog for a pasted file', (tester) async {
+    bool dialogTakesFocus(WidgetTester tester) => tester
+        .widget<Focus>(
+          find
+              .descendant(
+                of: find.byType(GruppechatSendOnEnter),
+                matching: find.byType(Focus),
+              )
+              .first,
+        )
+        .autofocus;
+
+    // PDFs, since a picture's preview doesn't load in a widget test
+    Future<void> paste(
+      WidgetTester tester, {
+      required bool sendOnEnter,
+      int files = 1,
+    }) async {
+      SharedPreferences.setMockInitialValues({});
+      await AppSettings.init(loadWebConfigFile: false);
+      await AppSettings.reset(loadWebConfigFile: false);
+      addTearDown(() => AppSettings.reset(loadWebConfigFile: false));
+      await AppSettings.sendOnEnter.setItem(sendOnEnter);
       await open(
         tester,
         Builder(
           builder: (context) => SendFileDialog(
             room: room,
             files: [
-              XFile.fromData(
-                Uint8List.fromList(List.filled(100, 1)),
-                name: 'skjermbilde.pdf',
-                mimeType: 'application/pdf',
-              ),
+              for (var i = 0; i < files; i++)
+                XFile.fromData(
+                  Uint8List.fromList(List.filled(100, 1)),
+                  name: 'skjermbilde$i.pdf',
+                  mimeType: 'application/pdf',
+                ),
             ],
             outerContext: context,
             threadLastEventId: null,
@@ -258,17 +281,46 @@ void main() {
         ),
         settle: false,
       );
+    }
+
+    testWidgets('in the dialog for pasted files', (tester) async {
+      // Several files have no message field
+      await paste(tester, sendOnEnter: true, files: 2);
       expect(find.byType(GruppechatSendOnEnter), findsOneWidget);
       // The dialog has the focus as it opens, so Enter reaches it
-      final focus = tester.widget<Focus>(
-        find
-            .descendant(
-              of: find.byType(GruppechatSendOnEnter),
-              matching: find.byType(Focus),
-            )
-            .first,
-      );
-      expect(focus.autofocus, isTrue);
+      expect(dialogTakesFocus(tester), isTrue);
+    });
+
+    // Bug from 1.1.30: after pasting a picture on a computer, people want to
+    // write a message at once and send it with Enter
+    EditableText? focusedField() => FocusManager.instance.primaryFocus?.context
+        ?.findAncestorWidgetOfExactType<EditableText>();
+
+    // On a Mac, the browser draws the dialog's field as on an iPhone
+    testWidgets(
+      'the message field has the focus after pasting',
+      variant: const TargetPlatformVariant({
+        TargetPlatform.windows,
+        TargetPlatform.macOS,
+      }),
+      (tester) async {
+        await paste(tester, sendOnEnter: true);
+        expect(focusedField(), isNotNull);
+        expect(dialogTakesFocus(tester), isFalse);
+        // What people type goes into the message; Enter from a field sends,
+        // as "from the message field" tests
+        tester.testTextInput.enterText('Se her');
+        await tester.pump();
+        expect(focusedField()!.controller.text, 'Se her');
+      },
+    );
+
+    testWidgets('but not where Enter makes a new line, as on phones', (
+      tester,
+    ) async {
+      await paste(tester, sendOnEnter: false);
+      expect(focusedField(), isNull);
+      expect(dialogTakesFocus(tester), isTrue);
     });
   });
 

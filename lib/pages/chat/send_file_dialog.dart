@@ -253,6 +253,12 @@ class SendFileDialogState extends State<SendFileDialog> {
     final compressionSupported =
         uniqueFileType != 'video' || PlatformInfos.isMobile;
 
+    // Gruppechat: on a computer, people type the message at once
+    final focusMessage = gruppechatFocusMessageField(
+      sendOnEnter: AppSettings.sendOnEnter.value,
+      hasField: _files.length == 1,
+    );
+
     final dialog = FutureBuilder<String>(
       future: _calcCombinedFileSize(),
       builder: (context, snapshot) {
@@ -410,6 +416,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: DialogTextField(
                         controller: _labelTextController,
+                        autofocus: focusMessage, // Gruppechat
                         labelText: L10n.of(context).optionalMessage,
                         minLines: 1,
                         maxLines: 1,
@@ -489,9 +496,11 @@ class SendFileDialogState extends State<SendFileDialog> {
         );
       },
     );
-    // Gruppechat: Enter sends, for a picture pasted on a computer
+    // Gruppechat: Enter sends, for a picture pasted on a computer, and the
+    // message field has the focus when there is one
     return GruppechatSendOnEnter(
       enabled: AppSettings.sendOnEnter.value,
+      autofocus: !focusMessage,
       onSend: () => _send(uniqueFileType),
       child: dialog,
     );

@@ -13,8 +13,8 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A WAV file's channels, sample rate and length in seconds.
@@ -82,11 +82,15 @@ void main() {
     addTearDown(() => GruppechatSounds.onPlay = null);
 
     await tester.pumpWidget(
-      const MaterialApp(
-        locale: Locale('nb'),
-        localizationsDelegates: L10n.localizationsDelegates,
+      MaterialApp(
+        locale: const Locale('nb'),
+        // As the app has them, so material_ui speaks Norwegian too
+        localizationsDelegates: const [
+          ...L10n.localizationsDelegates,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: L10n.supportedLocales,
-        home: Scaffold(body: GruppechatSoundVolumeTile()),
+        home: const Scaffold(body: GruppechatSoundVolumeTile()),
       ),
     );
     await tester.pumpAndSettle();

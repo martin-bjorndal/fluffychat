@@ -45,6 +45,13 @@ extension GruppechatMessageActionsExtension on Event {
       status.isSent &&
       !redacted;
 
+  /// Whether a reply button shows when the mouse is over this message: once
+  /// it is sent, unless it is deleted, in a chat the user may write in.
+  /// Unlike the reply button at the bottom, it isn't offered for deleted
+  /// messages or where the user can't write.
+  bool get repliesOnHover =>
+      status.isSent && !redacted && room.canSendDefaultMessages;
+
   /// Which way to swipe this message to reply to it. The user's own
   /// messages sit on the right, so they are swiped to the left, away from
   /// the edge; other people's follow the "swipe right to left" setting.

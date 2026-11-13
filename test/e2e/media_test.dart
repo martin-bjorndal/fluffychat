@@ -16,7 +16,10 @@ import 'dart:typed_data';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/pending_attachments.dart';
+import 'package:fluffychat/gruppechat/stickers.dart';
 import 'package:fluffychat/gruppechat/video_opening.dart';
+import 'package:fluffychat/gruppechat/video_source.dart';
 import 'package:fluffychat/gruppechat/web_pick.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
@@ -208,6 +211,70 @@ void main() {
       );
       expect(event.relationshipType, RelationshipTypes.thread);
       expect(event.relationshipEventId, rootId);
+    });
+
+    test('a sticker shows while it is being sent, and arrives', () async {
+      final bytes = photo(64, 64);
+      final url = await alice.uploadContent(
+        bytes,
+        filename: 'katt.png',
+        contentType: 'image/png',
+      );
+      final sticker = ImagePackImageContent(
+        url: url,
+        body: 'katt',
+        info: {'w': 64, 'h': 64, 'mimetype': 'image/png'},
+      );
+
+      // The chat shows the sticker at once, before the server has it
+      final onTheWay = alice.onTimelineEvent.stream.firstWhere(
+        (e) =>
+            e.roomId == aliceChat.id &&
+            e.type == EventTypes.Sticker &&
+            !e.status.isSent,
+      );
+      final sending = sendSticker(aliceChat, sticker);
+      final echo = await onTheWay;
+      final shown = await echo.downloadableAttachment
+          .downloadAndDecryptAttachment(getThumbnail: echo.hasThumbnail);
+      expect(shown.bytes, bytes);
+      expect(await sending, isNotNull);
+
+      final event = await arrives(
+        bobTimeline,
+        'the sticker',
+        (e) => e.type == EventTypes.Sticker && e.body == 'katt',
+      );
+      final received = await event.downloadableAttachment
+          .downloadAndDecryptAttachment(getThumbnail: event.hasThumbnail);
+      expect(received.bytes, bytes);
+    });
+
+    test('a forwarded photo shows while it is being sent', () async {
+      final bytes = photo(40, 30);
+      await aliceChat.sendFileEvent(
+        MatrixImageFile(bytes: bytes, name: 'videre.png'),
+      );
+      final original = await arrives(
+        bobTimeline,
+        'the photo to forward',
+        (e) => e.body == 'videre.png',
+      );
+
+      final onTheWay = bob.onTimelineEvent.stream.firstWhere(
+        (e) =>
+            e.roomId == bobTimeline.room.id &&
+            e.body == 'videre.png' &&
+            !e.status.isSent,
+      );
+      // As the chat forwards a message: its content, sent again
+      final sending = bobTimeline.room.sendEvent(original.content.copy());
+      final echo = await onTheWay;
+      final shown = await echo.downloadableAttachment
+          .downloadAndDecryptAttachment(getThumbnail: echo.hasThumbnail);
+      expect(shown.bytes, bytes);
+      // And the forward still goes out
+      expect(await sending, isNotNull);
     });
 
     for (final (container, from, expectedType) in [
@@ -406,6 +473,49 @@ void main() {
         'player',
       );
     });
+
+    test(
+      'videos with an odd type from other apps reach the browser as MP4',
+      () async {
+        // An iPhone video that another app sent without a proper type, and
+        // an ordinary MP4. Safari refuses a video whose type it doesn't know.
+        final quickTime = Uint8List.fromList([
+          0, 0, 0, 0x14, ...ascii.encode('ftypqt  '), //
+          ...List.filled(5000, 3),
+        ]);
+        final mp4 = Uint8List.fromList([
+          0, 0, 0, 0x18, ...ascii.encode('ftypmp42'), //
+          ...List.filled(5000, 4),
+        ]);
+        for (final (name, bytes, type) in [
+          ('IMG_0003.MOV', quickTime, 'application/octet-stream'),
+          ('klipp.mp4', mp4, 'video/x-m4v'),
+        ]) {
+          await aliceChat.sendFileEvent(
+            MatrixVideoFile(bytes: bytes, name: name, mimeType: type),
+          );
+        }
+
+        // bob opens each in the web app's video viewer, which tells the
+        // browser the type the bytes have (outside the browser the source is
+        // a data: URL, so the type can be read back)
+        final played = <String, String?>{};
+        for (final (name, bytes) in [
+          ('IMG_0003.MOV', quickTime),
+          ('klipp.mp4', mp4),
+        ]) {
+          final event = await arrives(bobTimeline, name, (e) => e.body == name);
+          expect(event.messageType, MessageTypes.Video);
+          final file = await VideoOpening().download(event);
+          expect(file!.bytes, bytes);
+          final source = WebVideoSource(file);
+          played[name] = source.uri.data?.mimeType;
+          source.release();
+          expect(source.isReleased, isTrue);
+        }
+        expect(played, {'IMG_0003.MOV': 'video/mp4', 'klipp.mp4': 'video/mp4'});
+      },
+    );
 
     test('a deleted photo shows as deleted', () async {
       final eventId = await aliceChat.sendFileEvent(

@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:matrix/matrix.dart';
 
@@ -41,7 +42,11 @@ extension IsStateExtension on Event {
       // if we enabled to hide all redacted events, don't show those
       (!AppSettings.hideRedactedEvents.value || !redacted) &&
       // if we enabled to hide all unknown events, don't show those
-      (!AppSettings.hideUnknownEvents.value || isEventTypeKnown) &&
+      // (Gruppechat: lines saying who changed what count as known,
+      // lib/gruppechat/change_notices.dart)
+      (!AppSettings.hideUnknownEvents.value ||
+          isEventTypeKnown ||
+          isGroupChangeLine(this)) &&
       // Gruppechat: messages whose time is up leave no trace, nor does
       // setting the time (lib/gruppechat/message_lifetime.dart)
       type != gruppechatLifetimeType &&
@@ -54,6 +59,8 @@ extension IsStateExtension on Event {
     EventTypes.Sticker,
     EventTypes.RoomCreate,
     EventTypes.RoomTombstone,
+    // Gruppechat: who changed what stays in sight
+    gruppechatChangeType,
   }.contains(type);
 
   bool get isKnownHiddenStates =>

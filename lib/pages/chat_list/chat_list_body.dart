@@ -33,7 +33,9 @@ class ChatListViewBody extends StatelessWidget {
 
     final client = Matrix.of(context).client;
     final activeSpace = controller.activeSpaceId;
-    if (activeSpace != null) {
+    // Gruppechat: a deleted group (lib/gruppechat/delete_room.dart) shows
+    // the chat list instead of an empty page
+    if (activeSpace != null && client.getRoomById(activeSpace) != null) {
       return SpaceView(
         key: ValueKey(activeSpace),
         spaceId: activeSpace,

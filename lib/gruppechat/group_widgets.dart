@@ -18,6 +18,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import 'background_picker.dart';
+import 'change_notices.dart';
 import 'chat_colors.dart';
 import 'group_state.dart';
 import 'matrix_group.dart';
@@ -130,7 +131,11 @@ class GruppechatSettingsTiles extends StatelessWidget {
           title: Text(l10n.gruppechatGroupBackground),
           subtitle: Text(_backgroundLabel(l10n, background)),
           trailing: const Icon(Icons.chevron_right_outlined),
-          onTap: () => showGroupBackgroundMenu(context: context, group: group),
+          onTap: () => showGroupBackgroundMenu(
+            context: context,
+            group: group,
+            chat: room,
+          ),
         ),
         if (isChannel)
           ListTile(
@@ -381,6 +386,7 @@ List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
         context: context,
         group: group,
         channel: isChannel ? room : null,
+        chat: room,
       ),
       child: Row(
         children: [
@@ -410,11 +416,13 @@ List<PopupMenuEntry<T>> gruppechatBackgroundMenuItems<T>(
 }
 
 /// Picks the group's background, or with [channel] that channel's own
-/// background, which overrides the group's there.
+/// background, which overrides the group's there. A line in [channel], or
+/// else in [chat], the chat it was opened from, says who changed it.
 Future<void> showGroupBackgroundMenu({
   required BuildContext context,
   required GruppechatGroup group,
   Room? channel,
+  Room? chat,
 }) async {
   final l10n = L10n.of(context);
   final client = group.space.client;
@@ -422,12 +430,9 @@ Future<void> showGroupBackgroundMenu({
   final canSet = group.canSetBackground;
   // A direct chat keeps its own background, as a group does
   final isDirect = group.space.isDirectChat;
-  final current = channel == null
-      ? group.state.background
-      : channel.gruppechatChannelBackground;
-  Future<void> set(GroupBackground? background) => channel == null
-      ? group.setBackground(background)
-      : group.setChannelBackground(channel, background);
+  final current = groupBackgroundOf(group, channel);
+  Future<void> set(GroupBackground? background) =>
+      changeGroupBackground(group, background, channel: channel, from: chat);
 
   final picked = await showModalActionPopup<_BackgroundAction>(
     context: context,
@@ -574,12 +579,13 @@ Future<void> showGroupNicknameDialog({
     initialText: current?.name,
     okLabel: l10n.save,
     cancelLabel: l10n.cancel,
-    maxLength: 64,
+    maxLength: gruppechatMaxNicknameLength,
   );
   if (name == null || !context.mounted) return;
   await showFutureLoadingDialog(
     context: context,
-    future: () => group.setNickname(user.id, name),
+    // A line in the chat whose member list it was set from
+    future: () => changeGroupNickname(group, user.id, name, from: user.room),
   );
 }
 

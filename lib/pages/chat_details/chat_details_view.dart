@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
@@ -387,6 +388,8 @@ class ChatDetailsView extends StatelessWidget {
                             ),
                           ),
                           GruppechatSettingsTiles(room: room),
+                          // Gruppechat: lib/gruppechat/delete_room.dart
+                          GruppechatDeleteRoomTile(room: room),
                         ],
                         Divider(color: theme.dividerColor),
                         ListTile(

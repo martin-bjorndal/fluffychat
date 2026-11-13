@@ -10,12 +10,19 @@
 library;
 
 import 'dart:typed_data';
+import 'dart:ui' show Locale;
 
+import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/avatar_letters.dart';
+import 'package:fluffychat/gruppechat/change_notices.dart';
+import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matrix/matrix.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'utils/test_server.dart';
 
@@ -494,7 +501,10 @@ void main() {
       await shows(carol, 'spill', pink);
       // The other channel, and the background, stay as they were
       expect(channel(carol, 'general').gruppechatChatColor, isNull);
-      expect(channel(carol, 'spill').gruppechatBackground(enabled: true), isNull);
+      expect(
+        channel(carol, 'spill').gruppechatBackground(enabled: true),
+        isNull,
+      );
     });
 
     test('someone else changes it, and anyone can remove it', () async {
@@ -593,6 +603,279 @@ void main() {
         expect(_wellFormedUtf16(avatar), isTrue);
       });
     }
+  });
+
+  group('Deleting a chat', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late Client carol;
+    late TestGroup group;
+
+    setUpAll(() async {
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      carol = await logIn('carol');
+      group = await newGroup(
+        alice,
+        [bob, carol],
+        name: 'Slettegruppe',
+        channels: ['general', 'old', 'mods', 'more'],
+      );
+    });
+    tearDownAll(logOutEveryone);
+
+    Room aliceRoom(String id) => alice.getRoomById(id)!;
+
+    test('only someone who outranks everyone in it may delete it', () async {
+      final channel = group.channels['general']!;
+      expect(gruppechatCanDeleteRoom(aliceRoom(channel)), isTrue);
+      expect(gruppechatCanDeleteRoom(bob.getRoomById(channel)!), isFalse);
+      final (aliceDirect, _) = await directChat(alice, bob);
+      expect(gruppechatCanDeleteRoom(aliceDirect), isFalse);
+    });
+
+    test('a deleted channel is gone for everyone, and stays shut', () async {
+      final channel = group.channels['old']!;
+      // Open to anyone in the group, so being put out isn't enough
+      await aliceRoom(channel).setJoinRules(JoinRules.public);
+      await gruppechatDeleteRoom(aliceRoom(channel), reason: 'Sletta');
+      for (final client in [bob, carol]) {
+        await eventually(
+          '${client.userID} is out of the deleted channel',
+          () => client.getRoomById(channel) == null,
+        );
+      }
+      expect(alice.getRoomById(channel), isNull);
+      await eventually(
+        'bob no longer sees it in the group',
+        () => bob
+            .getRoomById(group.spaceId)!
+            .spaceChildren
+            .every((child) => child.roomId != channel),
+      );
+      // Nobody is left in it to let him back in
+      await expectLater(bob.joinRoom(channel), throwsA(isA<MatrixException>()));
+    });
+
+    test('another admin in it keeps it from being deleted', () async {
+      final channel = group.channels['mods']!;
+      await aliceRoom(channel).setPower(bob.userID!, 100);
+      // bob steps down again afterwards, as only he can
+      addTearDown(() async {
+        await bob.getRoomById(channel)!.setPower(bob.userID!, 0);
+        await eventually(
+          'alice sees bob step down',
+          () =>
+              aliceRoom(channel).getPowerLevelByUserId(bob.userID!).level == 0,
+        );
+      });
+      await eventually(
+        'alice sees bob as admin',
+        () =>
+            aliceRoom(channel).getPowerLevelByUserId(bob.userID!).level == 100,
+      );
+      expect(gruppechatCanDeleteRoom(aliceRoom(channel)), isFalse);
+      // Nor the group it is in
+      expect(gruppechatCanDeleteRoom(aliceRoom(group.spaceId)), isFalse);
+    });
+
+    test('a deleted group takes all its channels with it', () async {
+      final space = aliceRoom(group.spaceId);
+      expect(gruppechatCanDeleteRoom(space), isTrue);
+      await gruppechatDeleteRoom(space, reason: 'Sletta');
+      final rooms = [group.spaceId, ...group.channels.values];
+      for (final client in [alice, bob, carol]) {
+        await eventually(
+          '${client.userID} is out of the group and every channel',
+          () => rooms.every((id) => client.getRoomById(id) == null),
+        );
+      }
+    });
+  });
+
+  group('Lines saying who changed what', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late Client carol;
+    late TestGroup group;
+    late L10n l10n;
+    late String pushkey;
+    late Timeline aliceTimeline;
+    GruppechatGroup groupOf(Client client) =>
+        GruppechatGroup(client.getRoomById(group.spaceId)!);
+    Room channel(Client client, String name) =>
+        client.getRoomById(group.channels[name]!)!;
+    String nameOf(Client client) => channel(
+      alice,
+      'spill',
+    ).unsafeGetUserFromMemoryOrFallback(client.userID!).calcDisplayname();
+    Future<Event> lineFrom(Client sender, String kind) => arrives(
+      aliceTimeline,
+      'a $kind line from ${sender.userID}',
+      (event) =>
+          event.type == gruppechatChangeType &&
+          event.senderId == sender.userID &&
+          event.content['kind'] == kind,
+    );
+
+    setUpAll(() async {
+      SharedPreferences.setMockInitialValues({});
+      await AppSettings.init(loadWebConfigFile: false);
+      l10n = await lookupL10n(const Locale('nb'));
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      carol = await logIn('carol');
+      group = await newGroup(
+        alice,
+        [bob, carol],
+        channels: ['general', 'spill'],
+      );
+      pushkey = await addPusher(carol);
+      aliceTimeline = await channel(alice, 'spill').getTimeline();
+    });
+    tearDownAll(logOutEveryone);
+
+    test(
+      'a nickname set from a channel shows there, with who set it',
+      () async {
+        // The nickname dialog, opened from the member list of spill
+        await changeGroupNickname(
+          groupOf(bob),
+          carol.userID!,
+          'Kaptein',
+          from: channel(bob, 'spill'),
+        );
+        final line = await lineFrom(bob, 'nickname');
+        expect(channel(alice, 'spill').encrypted, isTrue);
+        expect(line.type, gruppechatChangeType, reason: 'sent unencrypted');
+        expect(line.isVisibleInGui, isTrue);
+        expect(line.isCollapsedState, isFalse);
+        expect(
+          groupChangeText(line, l10n),
+          l10n.gruppechatGaveNickname(nameOf(bob), nameOf(carol), 'Kaptein'),
+          reason: 'their own names, not the nickname just given',
+        );
+      },
+    );
+
+    test('the line wakes nobody, though it is about carol', () async {
+      final line = await lineFrom(bob, 'nickname');
+      // A message after it shows that pushes still flow
+      final loudId = await channel(alice, 'spill').sendTextEvent('Hallo');
+      await waitForPush(pushkey, loudId!);
+      final pushes = await testServer.recorded('pushes');
+      expect(
+        pushes.where((push) => eventIdOfPush(push) == line.eventId),
+        isEmpty,
+      );
+    });
+
+    test('saving the same nickname again says nothing', () async {
+      await eventually(
+        'bob sees the nickname',
+        () => groupOf(bob).state.nicknameOf(carol.userID!)?.name == 'Kaptein',
+      );
+      await changeGroupNickname(
+        groupOf(bob),
+        carol.userID!,
+        'Kaptein',
+        from: channel(bob, 'spill'),
+      );
+      final afterId = await channel(bob, 'spill').sendTextEvent('Etter');
+      await arrives(
+        aliceTimeline,
+        'the message after',
+        (e) => e.eventId == afterId,
+      );
+      expect(
+        aliceTimeline.events.where(
+          (e) => e.type == gruppechatChangeType && e.senderId == bob.userID,
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('someone removing their own nickname', () async {
+      await eventually(
+        'carol sees the nickname bob gave her',
+        () => groupOf(carol).state.nicknameOf(carol.userID!) != null,
+      );
+      await changeGroupNickname(
+        groupOf(carol),
+        carol.userID!,
+        '',
+        from: channel(carol, 'spill'),
+      );
+      final line = await lineFrom(carol, 'nickname');
+      expect(line.content.containsKey('nickname'), isFalse);
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatDroppedNickname(nameOf(carol)),
+      );
+    });
+
+    test('the group background, set from a channel', () async {
+      final sunset = groupBackgroundPresets[3].$2;
+      // The background menu, opened from spill
+      await changeGroupBackground(
+        groupOf(bob),
+        sunset,
+        from: channel(bob, 'spill'),
+      );
+      final line = await lineFrom(bob, 'group_background');
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatChangedGroupBackground(nameOf(bob)),
+      );
+      await groupOf(bob).setBackground(null);
+    });
+
+    test('a chat colour', () async {
+      final spill = channel(carol, 'spill');
+      await changeChatColor(groupOf(carol), spill, 0xFFE91E63);
+      final line = await lineFrom(carol, 'chat_color');
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatChangedChatColor(nameOf(carol)),
+      );
+      await groupOf(carol).setChatColor(spill, null);
+    });
+
+    test("a direct chat's background is the chat's own", () async {
+      final (aliceChat, bobChat) = await directChat(alice, bob);
+      final forest = groupBackgroundPresets[1].$2;
+      await changeGroupBackground(
+        bobChat.gruppechatBackgroundGroup!,
+        forest,
+        from: bobChat,
+      );
+      final timeline = await aliceChat.getTimeline();
+      final line = await arrives(
+        timeline,
+        'the background line',
+        (e) => e.type == gruppechatChangeType,
+      );
+      expect(line.content['kind'], 'chat_background');
+      await bobChat.gruppechatBackgroundGroup!.setBackground(null);
+    });
+
+    test('nothing is posted in the space itself', () async {
+      final space = groupOf(alice).space;
+      final timeline = await space.getTimeline();
+      await changeGroupBackground(
+        groupOf(alice),
+        groupBackgroundPresets[0].$2,
+        from: space,
+      );
+      // alice may write in the space; her message comes after any line
+      final afterId = await space.sendTextEvent('Etter');
+      await arrives(timeline, 'the message after', (e) => e.eventId == afterId);
+      expect(
+        timeline.events.where((e) => e.type == gruppechatChangeType),
+        isEmpty,
+      );
+      await groupOf(alice).setBackground(null);
+    });
   });
 }
 

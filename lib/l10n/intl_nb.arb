@@ -3545,5 +3545,92 @@
                 "type": "int"
             }
         }
-    }
+    },
+    "gruppechatDeleteChat": "Slett chatten for alle",
+    "@gruppechatDeleteChat": {},
+    "gruppechatDeleteGroup": "Slett gruppen for alle",
+    "@gruppechatDeleteGroup": {},
+    "gruppechatDeleteChatDescription": "Alle fjernes fra chatten, og den forsvinner fra chattelistene deres. Dette kan ikke angres.",
+    "@gruppechatDeleteChatDescription": {},
+    "gruppechatDeleteGroupDescription": "Alle fjernes fra gruppen og alle kanalene i den, og de forsvinner fra chattelistene deres. Dette kan ikke angres.",
+    "@gruppechatDeleteGroupDescription": {},
+    "gruppechatChatWasDeleted": "Chatten ble slettet",
+    "@gruppechatChatWasDeleted": {},
+    "gruppechatChangedGroupBackground": "{name} endret bakgrunnen for gruppen",
+    "@gruppechatChangedGroupBackground": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatChangedChatBackground": "{name} endret bakgrunnen i denne chatten",
+    "@gruppechatChangedChatBackground": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatChangedChatColor": "{name} endret fargen på denne chatten",
+    "@gruppechatChangedChatColor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatGaveNickname": "{name} ga {user} kallenavnet «{nickname}»",
+    "@gruppechatGaveNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            },
+            "nickname": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovedNickname": "{name} fjernet kallenavnet til {user}",
+    "@gruppechatRemovedNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatTookNickname": "{name} kaller seg nå «{nickname}»",
+    "@gruppechatTookNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "nickname": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDroppedNickname": "{name} fjernet sitt eget kallenavn",
+    "@gruppechatDroppedNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatVideoCannotPlayHere": "Denne videoen kan ikke spilles av i denne nettleseren.",
+    "@gruppechatVideoCannotPlayHere": {}
 }
