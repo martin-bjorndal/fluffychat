@@ -148,17 +148,14 @@ abstract final class GruppechatBubbles {
   }) async {
     final android = details.android;
     if (bubble && android != null) {
-      // Bubbles are for when the person is elsewhere: while they use the
-      // app, a chat only keeps a bubble it already has
-      final usingApp =
-          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
-          !active;
       try {
         await _channel.invokeMethod('post', {
           'notification': _notification(id, title, body, payload, android),
           'roomId': roomId,
           'icon': icon,
-          'onlyIfBubbled': usingApp,
+          'onlyIfBubbled': onlyKeepsBubbles(
+            WidgetsBinding.instance.lifecycleState,
+          ),
         });
         return;
       } catch (e, s) {
@@ -322,6 +319,16 @@ abstract final class GruppechatBubbles {
     }
   }
 }
+
+/// Whether a message notification may only keep a bubble its chat already
+/// has, without starting a new one. Bubbles are for when the person is
+/// elsewhere, so not while they use the app, in the main window or in an
+/// open bubble: there a new bubble would push itself over the chat the
+/// person has open. The app is in use while its window is in front, with
+/// focus (resumed) or without, as under the pulled-down shade (inactive).
+bool onlyKeepsBubbles(AppLifecycleState? lifecycle) =>
+    lifecycle == AppLifecycleState.resumed ||
+    lifecycle == AppLifecycleState.inactive;
 
 /// Which chats Android lets the app show as bubbles.
 enum BubblePreference { all, selected, none }

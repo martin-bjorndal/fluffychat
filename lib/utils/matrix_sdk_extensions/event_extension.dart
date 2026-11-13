@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:async/async.dart' as async;
+import 'package:fluffychat/gruppechat/pending_attachments.dart';
 import 'package:fluffychat/utils/size_string.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/foundation.dart';
@@ -20,7 +21,7 @@ extension LocalizedBody on Event {
           final fileSize = infoMap['size'] is int
               ? infoMap['size'] as int
               : null;
-          return downloadAndDecryptAttachment(
+          return downloadableAttachment.downloadAndDecryptAttachment(
             onDownloadProgress: fileSize == null
                 ? null
                 : (bytes) => onProgress(bytes / fileSize),

@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/pending_attachments.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -118,9 +119,8 @@ class _MxcImageState extends State<MxcImage> {
           }.contains(event.messageType)) {
         Logs().e('Event of type ${event.messageType} has no thumbnail!');
       }
-      final data = await event.downloadAndDecryptAttachment(
-        getThumbnail: useThumbnail,
-      );
+      final data = await event.downloadableAttachment
+          .downloadAndDecryptAttachment(getThumbnail: useThumbnail);
       if (data.detectFileType is MatrixImageFile) {
         if (!mounted) return;
         setState(() {
@@ -143,6 +143,9 @@ class _MxcImageState extends State<MxcImage> {
       _tryLoad();
     } on MatrixException catch (e) {
       Logs().d('Unable to load image', e);
+    } catch (e, s) {
+      // Gruppechat: a picture that can't be loaded stays a placeholder
+      Logs().w('Unable to load image', e, s);
     }
   }
 

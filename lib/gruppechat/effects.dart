@@ -6,7 +6,7 @@ import 'dart:math';
 
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 // The same Markdown as any message the app sends
 // ignore: implementation_imports

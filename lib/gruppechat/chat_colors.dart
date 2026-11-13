@@ -15,6 +15,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import 'background_picker.dart';
+import 'change_notices.dart';
 import 'group_state.dart';
 import 'matrix_group.dart';
 
@@ -234,6 +235,6 @@ Future<void> showChatColorDialog(BuildContext context, Room room) async {
   if (!context.mounted) return;
   await showFutureLoadingDialog(
     context: context,
-    future: () => group.setChatColor(room, picked.$1),
+    future: () => changeChatColor(group, room, picked.$1),
   );
 }

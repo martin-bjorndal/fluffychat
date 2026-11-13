@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -164,6 +165,31 @@ void main() {
       );
       // Android 11 only says when all chats may bubble
       expect(bubbleHint(status(preference: null)), BubbleHint.notAllowed);
+    });
+  });
+
+  // Bug from 1.1.30: with a chat open in a bubble, a message in another chat
+  // opened that chat as a new bubble
+  group('onlyKeepsBubbles', () {
+    test('a new message starts no bubble while the app is in use, in the '
+        'main window or in an open bubble', () {
+      // An open bubble's window reports the app's lifecycle, like the main
+      // window (SharedEngineFragment)
+      expect(onlyKeepsBubbles(AppLifecycleState.resumed), true);
+      // In front without focus, as under the pulled-down shade
+      expect(onlyKeepsBubbles(AppLifecycleState.inactive), true);
+    });
+
+    test('a new message can start a bubble while the person is elsewhere, '
+        'such as with the bubble collapsed', () {
+      for (final state in [
+        null,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.detached,
+      ]) {
+        expect(onlyKeepsBubbles(state), false, reason: '$state');
+      }
     });
   });
 }

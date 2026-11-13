@@ -3517,5 +3517,92 @@
                 "type": "int"
             }
         }
-    }
+    },
+    "gruppechatDeleteChat": "Delete chat for everyone",
+    "@gruppechatDeleteChat": {},
+    "gruppechatDeleteGroup": "Delete group for everyone",
+    "@gruppechatDeleteGroup": {},
+    "gruppechatDeleteChatDescription": "Everyone is removed from the chat and it disappears from their chat list. This can't be undone.",
+    "@gruppechatDeleteChatDescription": {},
+    "gruppechatDeleteGroupDescription": "Everyone is removed from the group and all its channels, and they disappear from their chat lists. This can't be undone.",
+    "@gruppechatDeleteGroupDescription": {},
+    "gruppechatChatWasDeleted": "The chat was deleted",
+    "@gruppechatChatWasDeleted": {},
+    "gruppechatChangedGroupBackground": "{name} changed the group background",
+    "@gruppechatChangedGroupBackground": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatChangedChatBackground": "{name} changed the background in this chat",
+    "@gruppechatChangedChatBackground": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatChangedChatColor": "{name} changed the colour of this chat",
+    "@gruppechatChangedChatColor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatGaveNickname": "{name} gave {user} the nickname “{nickname}”",
+    "@gruppechatGaveNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            },
+            "nickname": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovedNickname": "{name} removed {user}'s nickname",
+    "@gruppechatRemovedNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatTookNickname": "{name} now goes by “{nickname}”",
+    "@gruppechatTookNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "nickname": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDroppedNickname": "{name} removed their own nickname",
+    "@gruppechatDroppedNickname": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatVideoCannotPlayHere": "This video can't be played in this browser.",
+    "@gruppechatVideoCannotPlayHere": {}
 }

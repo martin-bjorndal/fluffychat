@@ -2,8 +2,18 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
+
+/// Whether a dialog's message field takes the focus as the dialog opens, so
+/// people can type at once after pasting a picture: where Enter sends, and
+/// not in the phone app, as with the chat's own input bar. Otherwise the
+/// [GruppechatSendOnEnter] around the dialog takes it.
+bool gruppechatFocusMessageField({
+  required bool sendOnEnter,
+  required bool hasField,
+}) => sendOnEnter && hasField && !PlatformInfos.isMobile;
 
 /// Lets Enter on a keyboard press "Send" in [child], such as the dialog for a
 /// picture pasted into the chat on a computer. Enter counts while nothing in
@@ -18,10 +28,15 @@ class GruppechatSendOnEnter extends StatefulWidget {
   /// The "send with Enter" setting, on by default on computers.
   final bool enabled;
 
+  /// Whether the dialog as a whole takes the focus as it opens. Off when a
+  /// text field in [child] takes it instead, so people can type at once.
+  final bool autofocus;
+
   const GruppechatSendOnEnter({
     required this.onSend,
     required this.child,
     this.enabled = true,
+    this.autofocus = true,
     super.key,
   });
 
@@ -67,5 +82,5 @@ class _GruppechatSendOnEnterState extends State<GruppechatSendOnEnter> {
 
   @override
   Widget build(BuildContext context) =>
-      Focus(focusNode: _node, autofocus: true, child: widget.child);
+      Focus(focusNode: _node, autofocus: widget.autofocus, child: widget.child);
 }

@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/utd_dialog.dart';
@@ -54,9 +55,12 @@ class StateMessage extends StatelessWidget {
                           children: [
                             if (event.type != EventTypes.Encrypted)
                               TextSpan(
-                                text: event.calcLocalizedBodyFallback(
-                                  MatrixLocals(L10n.of(context)),
-                                ),
+                                text:
+                                    // Gruppechat: who changed what
+                                    groupChangeText(event, L10n.of(context)) ??
+                                    event.calcLocalizedBodyFallback(
+                                      MatrixLocals(L10n.of(context)),
+                                    ),
                               )
                             else ...[
                               WidgetSpan(

@@ -282,6 +282,53 @@ void main() {
       );
     });
 
+    test('the mouse over a message offers to reply to it', () async {
+      final own = await aliceChat.sendTextEvent('Hover over meg');
+      await bobChat.sendTextEvent('Og meg');
+      final mine = await arrives(
+        aliceTimeline,
+        'her message',
+        (e) => e.eventId == own && e.status.isSent,
+      );
+      final theirs = await arrives(
+        aliceTimeline,
+        'his message',
+        (e) => e.body == 'Og meg',
+      );
+      expect(mine.repliesOnHover, isTrue);
+      expect(theirs.repliesOnHover, isTrue);
+
+      // Replying from the button works as from the bottom one
+      await aliceChat.sendTextEvent('Svar', inReplyTo: theirs);
+      await arrives(
+        bobTimeline,
+        'the reply',
+        (e) => e.inReplyToEventId() == theirs.eventId,
+      );
+
+      // A deleted message has nothing to reply to
+      await bobChat.redactEvent(theirs.eventId);
+      final deleted = await arrives(
+        aliceTimeline,
+        'the deletion',
+        (e) => e.eventId == theirs.eventId && e.redacted,
+      );
+      expect(deleted.repliesOnHover, isFalse);
+
+      // Where bob can't write, such as a group's space, nothing is offered
+      final group = await newGroup(alice, [bob], setUp: false);
+      final space = alice.getRoomById(group.spaceId)!;
+      final notice = await space.sendTextEvent('Velkommen');
+      final bobsSpace = await joined(bob, group.spaceId);
+      final bobsView = await arrives(
+        await bobsSpace.getTimeline(),
+        'the notice',
+        (e) => e.eventId == notice,
+      );
+      expect(bobsSpace.canSendDefaultMessages, isFalse);
+      expect(bobsView.repliesOnHover, isFalse);
+    });
+
     test('a location arrives as coordinates', () async {
       await aliceChat.sendLocation('Her er jeg', 'geo:59.9139,10.7522');
       final location = await arrives(

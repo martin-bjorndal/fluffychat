@@ -24,6 +24,9 @@ class DialogTextField extends StatelessWidget {
   final int? maxLength;
   final bool autocorrect = true;
   final bool readOnly;
+
+  // Gruppechat: the field can take the focus as the dialog opens
+  final bool autofocus;
   final TextCapitalization textCapitalization;
   final TextStyle? textStyle;
 
@@ -43,6 +46,7 @@ class DialogTextField extends StatelessWidget {
     this.errorText,
     this.obscureText = false,
     this.readOnly = false,
+    this.autofocus = false,
     this.textCapitalization = TextCapitalization.none,
     this.textStyle,
   });
@@ -60,6 +64,7 @@ class DialogTextField extends StatelessWidget {
       case TargetPlatform.windows:
         return TextField(
           readOnly: readOnly,
+          autofocus: autofocus,
           controller: controller,
           obscureText: obscureText,
           minLines: minLines,
@@ -98,6 +103,7 @@ class DialogTextField extends StatelessWidget {
               child: CupertinoTextField(
                 controller: controller,
                 readOnly: readOnly,
+                autofocus: autofocus,
                 obscureText: obscureText,
                 minLines: minLines,
                 maxLines: maxLines,
