@@ -154,7 +154,7 @@ class PollWidget extends StatelessWidget {
                                       horizontal: 2.0,
                                     ),
                                     child: Avatar(
-                                      mxContent: user?.avatarUrl,
+                                      mxContent: user?.groupAvatarUrl,
                                       name:
                                           user?.groupDisplayname() ??
                                           userId.localpart,

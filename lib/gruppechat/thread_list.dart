@@ -228,7 +228,7 @@ class _ThreadTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: Avatar(
-        mxContent: root.senderFromMemoryOrFallback.avatarUrl,
+        mxContent: root.senderFromMemoryOrFallback.groupAvatarUrl,
         name: senderName,
       ),
       title: Row(

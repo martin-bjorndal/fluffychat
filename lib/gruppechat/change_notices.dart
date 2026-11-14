@@ -27,7 +27,8 @@ enum GroupChange {
   groupBackground('group_background'),
   chatBackground('chat_background'),
   chatColor('chat_color'),
-  nickname('nickname');
+  nickname('nickname'),
+  avatar('avatar');
 
   final String key;
   const GroupChange(this.key);
@@ -45,6 +46,7 @@ Future<void> announceGroupChange(
   GroupChange change, {
   String? userId,
   String? nickname,
+  bool removed = false,
 }) async {
   if (chat == null || chat.isSpace || chat.membership != Membership.join) {
     return;
@@ -54,6 +56,7 @@ Future<void> announceGroupChange(
     'kind': change.key,
     'user': ?userId,
     if (name != null && name.isNotEmpty) 'nickname': name,
+    if (removed) 'removed': true,
   };
   try {
     await chat.client.sendMessage(
@@ -92,6 +95,37 @@ Future<void> changeGroupNickname(
     userId: userId,
     nickname: name,
   );
+}
+
+/// Whether the current user may give [userId] a picture in [group]: anyone
+/// who may set pictures, unless [userId] has locked their nickname and
+/// picture, which only they can then change.
+bool mayChangeGroupAvatar(GruppechatGroup group, String userId) =>
+    group.canSetMemberAvatars &&
+    (group.space.client.userID == userId ||
+        !group.state.isNicknameLocked(userId));
+
+/// Gives [userId] the picture [url] in [group], or with null removes the
+/// one they have there, as the member menu does, and says so in [from]. The
+/// line holds no picture, only that it changed. Picking the picture they
+/// have, removing one they don't have, or changing a locked one does
+/// nothing. Returns whether it changed.
+Future<bool> changeGroupAvatar(
+  GruppechatGroup group,
+  String userId,
+  Uri? url, {
+  Room? from,
+}) async {
+  if (!mayChangeGroupAvatar(group, userId)) return false;
+  if (group.state.avatarOf(userId) == url) return false;
+  await group.setMemberAvatar(userId, url);
+  await announceGroupChange(
+    from,
+    GroupChange.avatar,
+    userId: userId,
+    removed: url == null,
+  );
+  return true;
 }
 
 /// [group]'s background, or with [channel] that channel's own.
@@ -146,7 +180,10 @@ const int gruppechatMaxNicknameLength = 64;
   final change = GroupChange.fromKey(event.content['kind']);
   if (change == null) return null;
   final user = event.content.tryGet<String>('user');
-  if (change == GroupChange.nickname && user == null) return null;
+  if ((change == GroupChange.nickname || change == GroupChange.avatar) &&
+      user == null) {
+    return null;
+  }
   return (change, user);
 }
 
@@ -185,5 +222,18 @@ String? groupChangeText(Event event, L10n l10n) {
       return nickname == null
           ? l10n.gruppechatRemovedNickname(name, user)
           : l10n.gruppechatGaveNickname(name, user, nickname);
+    case GroupChange.avatar:
+      final removed = event.content['removed'] == true;
+      if (userId == event.senderId) {
+        return removed
+            ? l10n.gruppechatDroppedGroupPicture(name)
+            : l10n.gruppechatTookGroupPicture(name);
+      }
+      final user = event.room
+          .unsafeGetUserFromMemoryOrFallback(userId!)
+          .calcDisplayname();
+      return removed
+          ? l10n.gruppechatRemovedGroupPicture(name, user)
+          : l10n.gruppechatGaveGroupPicture(name, user);
   }
 }

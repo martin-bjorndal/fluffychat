@@ -3044,22 +3044,22 @@
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatLetOthersRenameMe": "La andre gi meg kallenavn",
+    "gruppechatLetOthersRenameMe": "La andre gi meg kallenavn eller bilde",
     "@gruppechatLetOthersRenameMe": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatStopOthersRenamingMe": "Hindre andre i å gi meg kallenavn",
+    "gruppechatStopOthersRenamingMe": "Hindre andre i å gi meg kallenavn eller bilde",
     "@gruppechatStopOthersRenamingMe": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatNicknameLocked": "Kallenavnet er låst",
+    "gruppechatNicknameLocked": "Kallenavn og bilde er låst",
     "@gruppechatNicknameLocked": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatNicknameLockedDescription": "{name} har valgt å sette kallenavnet sitt selv.",
+    "gruppechatNicknameLockedDescription": "{name} har valgt å sette kallenavn og bilde selv.",
     "@gruppechatNicknameLockedDescription": {
         "type": "String",
         "placeholders": {
@@ -3409,7 +3409,7 @@
     "@gruppechatPermissionMemberRoles": {},
     "gruppechatPermissionNicknames": "Endre kallenavn",
     "@gruppechatPermissionNicknames": {},
-    "gruppechatPermissionNicknameLock": "Låse sitt eget kallenavn",
+    "gruppechatPermissionNicknameLock": "Låse sitt eget kallenavn og bilde",
     "@gruppechatPermissionNicknameLock": {},
     "gruppechatPermissionBackground": "Endre bakgrunnen",
     "@gruppechatPermissionBackground": {},
@@ -3632,5 +3632,77 @@
         }
     },
     "gruppechatVideoCannotPlayHere": "Denne videoen kan ikke spilles av i denne nettleseren.",
-    "@gruppechatVideoCannotPlayHere": {}
+    "@gruppechatVideoCannotPlayHere": {},
+    "gruppechatPictureInGroup": "Bilde i gruppen",
+    "@gruppechatPictureInGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPictureFor": "Bilde for {name}",
+    "@gruppechatPictureFor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatPictureDescription": "Alle i gruppen ser dette bildet i stedet for bildet til {name}. Profilen deres blir som den er.",
+    "@gruppechatPictureDescription": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovePicture": "Fjern bildet",
+    "@gruppechatRemovePicture": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPermissionAvatars": "Endre bilder i gruppen",
+    "@gruppechatPermissionAvatars": {},
+    "gruppechatGaveGroupPicture": "{name} ga {user} et nytt bilde i gruppen",
+    "@gruppechatGaveGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovedGroupPicture": "{name} fjernet bildet til {user} i gruppen",
+    "@gruppechatRemovedGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatTookGroupPicture": "{name} byttet sitt bilde i gruppen",
+    "@gruppechatTookGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDroppedGroupPicture": "{name} fjernet sitt eget bilde i gruppen",
+    "@gruppechatDroppedGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    }
 }

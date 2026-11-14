@@ -78,6 +78,8 @@ class PermissionsListTile extends StatelessWidget {
           return L10n.of(context).gruppechatPermissionMemberRoles;
         case GruppechatEventTypes.nickname:
           return L10n.of(context).gruppechatPermissionNicknames;
+        case GruppechatEventTypes.avatar:
+          return L10n.of(context).gruppechatPermissionAvatars;
         case GruppechatEventTypes.nicknameLock:
           return L10n.of(context).gruppechatPermissionNicknameLock;
         case GruppechatEventTypes.background:

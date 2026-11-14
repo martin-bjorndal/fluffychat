@@ -226,6 +226,49 @@ void main() {
     });
   });
 
+  group('pictures in the group', () {
+    const picture = 'mxc://example.org/picture';
+
+    test('anyone can give anyone a picture', () {
+      final reader = FakeStateReader()
+        ..set(GruppechatEventTypes.avatar, userStateKey(bob), {
+          'url': picture,
+        }, sender: alice);
+      expect(GroupState(reader).avatarOf(bob), Uri.parse(picture));
+      expect(GroupState(reader).avatarOf(alice), isNull);
+    });
+
+    test('empty content or a URL that is not mxc gives none', () {
+      final reader = FakeStateReader()
+        ..set(GruppechatEventTypes.avatar, userStateKey(bob), {})
+        ..set(GruppechatEventTypes.avatar, userStateKey(alice), {
+          'url': 'https://example.org/picture.png',
+        });
+      expect(GroupState(reader).avatarOf(bob), isNull);
+      expect(GroupState(reader).avatarOf(alice), isNull);
+    });
+
+    test('the nickname lock keeps only a picture you set yourself', () {
+      final reader = FakeStateReader()
+        ..set(GruppechatEventTypes.avatar, userStateKey(bob), {
+          'url': picture,
+        }, sender: alice)
+        ..set(GruppechatEventTypes.nicknameLock, bob, {
+          'locked': true,
+        }, sender: bob);
+      expect(GroupState(reader).avatarOf(bob), isNull);
+      reader.set(GruppechatEventTypes.avatar, userStateKey(bob), {
+        'url': picture,
+      }, sender: bob);
+      expect(GroupState(reader).avatarOf(bob), Uri.parse(picture));
+    });
+
+    test('everyone may set them once the group is set up', () {
+      expect(groupEventPowerLevels[GruppechatEventTypes.avatar], 0);
+      expect(GruppechatEventTypes.all, contains(GruppechatEventTypes.avatar));
+    });
+  });
+
   group('backgrounds', () {
     test('parses a gradient', () {
       final background = GroupBackground.fromContent({

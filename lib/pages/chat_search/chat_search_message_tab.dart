@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_search/search_footer.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
@@ -106,7 +107,7 @@ class _MessageSearchResultListTile extends StatelessWidget {
     return ListTile(
       title: Row(
         children: [
-          Avatar(mxContent: sender.avatarUrl, name: displayname, size: 16),
+          Avatar(mxContent: sender.groupAvatarUrl, name: displayname, size: 16),
           const SizedBox(width: 8),
           Text(displayname),
           Expanded(

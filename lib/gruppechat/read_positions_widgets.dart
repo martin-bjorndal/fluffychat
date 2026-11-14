@@ -158,7 +158,7 @@ class GruppechatReadByRow extends StatelessWidget {
                       // The same avatar as next to their messages: letter
                       // and colour from the group nickname
                       child: Avatar(
-                        mxContent: reader.avatarUrl,
+                        mxContent: reader.groupAvatarUrl,
                         name: reader.groupDisplayname(),
                         size: 16,
                       ),
@@ -245,7 +245,7 @@ Future<void> showGruppechatReaders({
               ListTile(title: Text(l10n.gruppechatNoReadersYet)),
             for (final (:user, :name) in readers)
               ListTile(
-                leading: Avatar(mxContent: user.avatarUrl, name: name),
+                leading: Avatar(mxContent: user.groupAvatarUrl, name: name),
                 title: Text(name),
               ),
           ],

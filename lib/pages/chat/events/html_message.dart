@@ -197,7 +197,7 @@ class HtmlMessage extends StatelessWidget {
               child: MatrixPill(
                 key: Key('user_pill_$matrixId'),
                 name: user.groupDisplayname(),
-                avatar: user.avatarUrl,
+                avatar: user.groupAvatarUrl,
                 uri: href,
                 outerContext: context,
                 fontSize: fontSize,

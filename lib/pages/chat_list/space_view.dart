@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
 import 'package:fluffychat/pages/chat_list/unread_bubble.dart';
@@ -197,7 +198,8 @@ class _SpaceViewState extends State<SpaceView> {
 
         final success = await showFutureLoadingDialog(
           context: context,
-          future: () async => await space?.leave(),
+          future: () async =>
+              space == null ? null : await gruppechatLeaveRoom(space),
         );
         if (!mounted) return;
         if (success.error != null) return;
@@ -360,7 +362,7 @@ class _SpaceViewState extends State<SpaceView> {
       case SpaceChildAction.leave:
         await showFutureLoadingDialog(
           context: context,
-          future: () => room!.leave(),
+          future: () => gruppechatLeaveRoom(room!),
         );
     }
   }

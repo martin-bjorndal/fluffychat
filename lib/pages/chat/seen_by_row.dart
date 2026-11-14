@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_ui/material_ui.dart';
@@ -64,8 +65,8 @@ class SeenByRow extends StatelessWidget {
                         : seenByUsers)
                     .map(
                       (user) => Avatar(
-                        mxContent: user.avatarUrl,
-                        name: user.calcDisplayname(),
+                        mxContent: user.groupAvatarUrl,
+                        name: user.groupDisplayname(),
                         size: 16,
                       ),
                     ),

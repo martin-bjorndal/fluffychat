@@ -90,6 +90,9 @@ class GruppechatGroup {
   bool get canSetNicknames =>
       space.canChangeStateEvent(GruppechatEventTypes.nickname);
 
+  bool get canSetMemberAvatars =>
+      space.canChangeStateEvent(GruppechatEventTypes.avatar);
+
   bool get canSetBackground =>
       space.canChangeStateEvent(GruppechatEventTypes.background);
 
@@ -137,7 +140,18 @@ class GruppechatGroup {
             : GroupNickname.contentFor(name),
       );
 
-  /// Stops (or allows) other people from renaming the current user. The
+  /// Sets [userId]'s picture in the group to [url], an uploaded `mxc://`
+  /// picture, or with null removes it. Their own profile stays as it is.
+  Future<void> setMemberAvatar(String userId, Uri? url) =>
+      _client.setRoomStateWithKey(
+        space.id,
+        GruppechatEventTypes.avatar,
+        userStateKey(userId),
+        url == null ? <String, Object?>{} : {'url': url.toString()},
+      );
+
+  /// Stops (or allows) other people from renaming the current user, or
+  /// giving them a picture. The
   /// state key is the user's own ID, so only they can change it.
   Future<void> setOwnNicknameLocked(bool locked) => _client.setRoomStateWithKey(
     space.id,
@@ -289,6 +303,10 @@ extension GruppechatUserExtension on User {
   }) =>
       GruppechatGroup.of(room)?.state.nicknameOf(id)?.displayName ??
       calcDisplayname(i18n: i18n);
+
+  /// Like [avatarUrl], but prefers the picture the user has in the group.
+  Uri? get groupAvatarUrl =>
+      GruppechatGroup.of(room)?.state.avatarOf(id) ?? avatarUrl;
 }
 
 extension GruppechatEventExtension on Event {

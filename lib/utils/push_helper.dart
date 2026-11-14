@@ -228,12 +228,12 @@ Future<void> _tryPushHelper(
   final avatar = event.room.avatar;
   final senderAvatar = event.room.isDirectChat
       ? avatar
-      : event.senderFromMemoryOrFallback.avatarUrl;
+      : event.senderFromMemoryOrFallback.groupAvatarUrl;
 
   final ownUser = event.room.unsafeGetUserFromMemoryOrFallback(client.userID!);
 
   final userAvatarFile = await client.tryDownloadNotificationAvatar(
-    ownUser.avatarUrl,
+    ownUser.groupAvatarUrl,
   );
   final roomAvatarFile = await client.tryDownloadNotificationAvatar(avatar);
   final senderAvatarFile = await client.tryDownloadNotificationAvatar(

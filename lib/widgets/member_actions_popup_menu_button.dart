@@ -56,7 +56,7 @@ Future<void> showMemberActionsPopupMenu({
         child: Row(
           spacing: 12.0,
           children: [
-            Avatar(name: displayname, size: 30, mxContent: user.avatarUrl),
+            Avatar(name: displayname, size: 30, mxContent: user.groupAvatarUrl),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 200),
               child: Text(
@@ -78,6 +78,17 @@ Future<void> showMemberActionsPopupMenu({
               const Icon(Icons.edit_outlined),
               const SizedBox(width: 18),
               Text(L10n.of(context).gruppechatNicknameInGroup),
+            ],
+          ),
+        ),
+      if (group != null && group.canSetMemberAvatars)
+        PopupMenuItem(
+          value: _MemberActions.groupAvatar,
+          child: Row(
+            children: [
+              const Icon(Icons.portrait_outlined),
+              const SizedBox(width: 18),
+              Text(L10n.of(context).gruppechatPictureInGroup),
             ],
           ),
         ),
@@ -266,6 +277,10 @@ Future<void> showMemberActionsPopupMenu({
       if (group == null) return;
       await showGroupNicknameDialog(context: context, group: group, user: user);
       return;
+    case _MemberActions.groupAvatar:
+      if (group == null) return;
+      await showGroupAvatarDialog(context: context, group: group, user: user);
+      return;
     case _MemberActions.groupNicknameLock:
       if (group == null) return;
       await toggleOwnNicknameLock(context: context, group: group);
@@ -368,7 +383,7 @@ Future<void> showMemberActionsPopupMenu({
         profile: Profile(
           userId: user.id,
           displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
+          avatarUrl: user.groupAvatarUrl,
         ),
       );
       return;
@@ -435,6 +450,7 @@ enum _MemberActions {
   unban,
   report,
   groupNickname,
+  groupAvatar,
   groupNicknameLock,
   groupRoles,
 }

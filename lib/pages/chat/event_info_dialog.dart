@@ -6,6 +6,7 @@
 import 'dart:convert';
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
@@ -48,7 +49,7 @@ class EventInfoDialog extends StatelessWidget {
         children: [
           ListTile(
             leading: Avatar(
-              mxContent: event.senderFromMemoryOrFallback.avatarUrl,
+              mxContent: event.senderFromMemoryOrFallback.groupAvatarUrl,
               name: event.senderFromMemoryOrFallback.calcDisplayname(),
               client: event.room.client,
               presenceUserId: event.senderId,

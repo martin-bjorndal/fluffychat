@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:material_ui/material_ui.dart';
@@ -67,8 +68,8 @@ class CallTile extends StatelessWidget {
                   : Center(
                       child: Avatar(
                         size: 64,
-                        mxContent: user.avatarUrl,
-                        name: user.calcDisplayname(),
+                        mxContent: user.groupAvatarUrl,
+                        name: user.groupDisplayname(),
                       ),
                     ),
               Positioned.fill(
