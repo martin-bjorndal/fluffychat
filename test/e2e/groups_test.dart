@@ -18,8 +18,12 @@ import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/new_chat_power_levels.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -619,19 +623,21 @@ void main() {
         alice,
         [bob, carol],
         name: 'Slettegruppe',
-        channels: ['general', 'old', 'mods', 'more'],
+        channels: ['general', 'old', 'mods', 'left', 'more'],
       );
     });
     tearDownAll(logOutEveryone);
 
     Room aliceRoom(String id) => alice.getRoomById(id)!;
+    Map<String, Object?> powerLevels(String id) =>
+        aliceRoom(id).getState(EventTypes.RoomPowerLevels)!.content;
 
     test('only someone who outranks everyone in it may delete it', () async {
       final channel = group.channels['general']!;
-      expect(gruppechatCanDeleteRoom(aliceRoom(channel)), isTrue);
-      expect(gruppechatCanDeleteRoom(bob.getRoomById(channel)!), isFalse);
+      expect(await gruppechatCanDeleteRoom(aliceRoom(channel)), isTrue);
+      expect(await gruppechatCanDeleteRoom(bob.getRoomById(channel)!), isFalse);
       final (aliceDirect, _) = await directChat(alice, bob);
-      expect(gruppechatCanDeleteRoom(aliceDirect), isFalse);
+      expect(await gruppechatCanDeleteRoom(aliceDirect), isFalse);
     });
 
     test('a deleted channel is gone for everyone, and stays shut', () async {
@@ -674,14 +680,101 @@ void main() {
         () =>
             aliceRoom(channel).getPowerLevelByUserId(bob.userID!).level == 100,
       );
-      expect(gruppechatCanDeleteRoom(aliceRoom(channel)), isFalse);
+      expect(await gruppechatCanDeleteRoom(aliceRoom(channel)), isFalse);
       // Nor the group it is in
-      expect(gruppechatCanDeleteRoom(aliceRoom(group.spaceId)), isFalse);
+      expect(await gruppechatCanDeleteRoom(aliceRoom(group.spaceId)), isFalse);
+    });
+
+    test("an admin who has left doesn't keep it from being deleted", () async {
+      final channel = group.channels['left']!;
+      await aliceRoom(channel).setPower(bob.userID!, 100);
+      await eventually(
+        'alice sees bob as admin',
+        () =>
+            aliceRoom(channel).getPowerLevelByUserId(bob.userID!).level == 100,
+      );
+      await bob.getRoomById(channel)!.leave();
+      await eventually(
+        'alice sees bob leave',
+        () =>
+            aliceRoom(
+              channel,
+            ).unsafeGetUserFromMemoryOrFallback(bob.userID!).membership ==
+            Membership.leave,
+      );
+      expect(await gruppechatCanDeleteRoom(aliceRoom(channel)), isTrue);
+      await gruppechatDeleteRoom(aliceRoom(channel), reason: 'Sletta');
+      expect(alice.getRoomById(channel), isNull);
+      await eventually(
+        'carol is out of it',
+        () => carol.getRoomById(channel) == null,
+      );
+      // Closed before anyone was put out, so bob can't come back
+      await expectLater(bob.joinRoom(channel), throwsA(isA<MatrixException>()));
+    });
+
+    test("a channel that can't be deleted doesn't stop the rest", () async {
+      final stuck = [group.channels['general']!, group.channels['more']!];
+      final done = [group.channels['mods']!];
+      // alice's other device makes carol admin in two channels, and this
+      // one hasn't seen it yet
+      await alice.abortSync();
+      try {
+        for (final id in stuck) {
+          final levels = powerLevels(id);
+          await alice.setRoomStateWithKey(id, EventTypes.RoomPowerLevels, '', {
+            ...levels,
+            'users': {
+              ...?levels.tryGetMap<String, Object?>('users'),
+              carol.userID!: 100,
+            },
+          });
+        }
+        expect(await gruppechatCanDeleteRoom(aliceRoom(group.spaceId)), isTrue);
+        await expectLater(
+          gruppechatDeleteRoom(aliceRoom(group.spaceId), reason: 'Sletta'),
+          throwsA(isA<GruppechatCannotDeleteRoom>()),
+        );
+      } finally {
+        alice.backgroundSync = true;
+      }
+      for (final client in [bob, carol]) {
+        await eventually(
+          '${client.userID} is out of the other channel',
+          () => done.every((id) => client.getRoomById(id) == null),
+        );
+      }
+      // Left as they were, to try again: carol keeps the rest from
+      // being put out, but not the other channels from going
+      for (final id in stuck) {
+        expect(bob.getRoomById(id)?.membership, Membership.join);
+        expect(carol.getRoomById(id)?.membership, Membership.join);
+        expect(aliceRoom(id).membership, Membership.join);
+      }
+      // The group stays, with both still in it, for alice to try again
+      expect(carol.getRoomById(group.spaceId)?.membership, Membership.join);
+      await eventually(
+        'alice sees only those two left in the group',
+        () => setEquals(
+          aliceRoom(
+            group.spaceId,
+          ).spaceChildren.map((child) => child.roomId).toSet(),
+          stuck.toSet(),
+        ),
+      );
+      // carol steps down again, so alice can finish
+      for (final id in stuck) {
+        await carol.getRoomById(id)!.setPower(carol.userID!, 0);
+        await eventually(
+          'alice sees carol step down',
+          () => aliceRoom(id).getPowerLevelByUserId(carol.userID!).level == 0,
+        );
+      }
     });
 
     test('a deleted group takes all its channels with it', () async {
       final space = aliceRoom(group.spaceId);
-      expect(gruppechatCanDeleteRoom(space), isTrue);
+      expect(await gruppechatCanDeleteRoom(space), isTrue);
       await gruppechatDeleteRoom(space, reason: 'Sletta');
       final rooms = [group.spaceId, ...group.channels.values];
       for (final client in [alice, bob, carol]) {
@@ -875,6 +968,141 @@ void main() {
         isEmpty,
       );
       await groupOf(alice).setBackground(null);
+    });
+  });
+
+  group('A new chat', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late String roomId;
+    Room bobRoom() => bob.getRoomById(roomId)!;
+
+    setUpAll(() async {
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      // As the app makes a chat outside any space (new_group.dart)
+      roomId = await alice.createGroupChat(
+        visibility: Visibility.private,
+        preset: CreateRoomPreset.privateChat,
+        groupName: 'Innstillingar',
+        powerLevelContentOverride: newChatPowerLevels(),
+        initialState: [],
+      );
+      await alice.getRoomById(roomId)!.invite(bob.userID!);
+      await accept(bob, roomId);
+    });
+    tearDownAll(logOutEveryone);
+
+    test('every member may change the general chat settings', () async {
+      final levels = bobRoom().getState(EventTypes.RoomPowerLevels)!.content;
+      expect(levels['state_default'], 0);
+      await bobRoom().setName('Bob sitt namn');
+      await bobRoom().setDescription('Bob sitt emne');
+      await eventually(
+        'alice sees the new name',
+        () => alice.getRoomById(roomId)!.name == 'Bob sitt namn',
+      );
+    });
+
+    test('access, security and roles stay with admins and moderators', () {
+      expect(bobRoom().canChangePowerLevel, isFalse);
+      expect(bobRoom().canChangeStateEvent(EventTypes.RoomJoinRules), isFalse);
+      expect(bobRoom().canChangeStateEvent('m.room.server_acl'), isFalse);
+      expect(bobRoom().canChangeStateEvent(EventTypes.RoomTombstone), isFalse);
+      expect(
+        bobRoom().canChangeStateEvent(EventTypes.HistoryVisibility),
+        isFalse,
+      );
+      expect(gruppechatCanSetMessageLifetime(bobRoom()), isFalse);
+      expect(GruppechatGroup(bobRoom()).canManageRoles, isFalse);
+      expect(GruppechatGroup(bobRoom()).canSetNicknames, isTrue);
+      expect(GruppechatGroup(bobRoom()).needsSetup, isFalse);
+    });
+
+    test('the server refuses those to a member', () async {
+      expect(
+        await isForbidden(() => bobRoom().setJoinRules(JoinRules.public)),
+        isTrue,
+      );
+      expect(
+        await isForbidden(
+          () => bob.setRoomStateWithKey(roomId, 'm.room.server_acl', '', {
+            'allow': ['*'],
+            'deny': ['example.org'],
+          }),
+        ),
+        isTrue,
+      );
+      expect(
+        await isForbidden(
+          () => gruppechatSetMessageLifetime(
+            bobRoom(),
+            const Duration(hours: 1),
+          ),
+        ),
+        isTrue,
+      );
+      final levels = bobRoom().getState(EventTypes.RoomPowerLevels)!.content;
+      expect(
+        await isForbidden(
+          () => bob.setRoomStateWithKey(
+            roomId,
+            EventTypes.RoomPowerLevels,
+            '',
+            {...levels, 'state_default': 100},
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        await isForbidden(
+          () => bob.setRoomStateWithKey(
+            roomId,
+            EventTypes.SpaceParent,
+            '!annan:localhost',
+            {
+              'via': ['localhost'],
+            },
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        await isForbidden(
+          () => bob.setRoomStateWithKey(
+            roomId,
+            GruppechatEventTypes.role,
+            'bobs-rolle',
+            {'name': 'Bobs rolle'},
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('everyone may still start a call', () {
+      expect(
+        bobRoom().canChangeStateEvent(MatrixRtcCallMember.eventType),
+        isTrue,
+      );
+    });
+
+    test('a public chat gets the same levels', () async {
+      final publicId = await alice.createGroupChat(
+        visibility: Visibility.private,
+        preset: CreateRoomPreset.publicChat,
+        groupName: 'Open chat',
+        powerLevelContentOverride: newChatPowerLevels(),
+        initialState: [],
+      );
+      await bob.joinRoomById(publicId);
+      final room = await joined(bob, publicId);
+      await room.setName('Bob kalla han dette');
+      expect(room.canChangeStateEvent(MatrixRtcCallMember.eventType), isTrue);
+      expect(
+        await isForbidden(() => room.setJoinRules(JoinRules.invite)),
+        isTrue,
+      );
     });
   });
 }

@@ -13,6 +13,7 @@ import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
+import 'package:fluffychat/gruppechat/swipe_back.dart';
 import 'package:fluffychat/gruppechat/thread_list.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -67,7 +68,7 @@ class ChatView extends StatelessWidget {
     // The chat's own colour for its bars (lib/gruppechat/chat_colors.dart)
     final chatColors = theme.extension<GruppechatChatColors>();
 
-    return PopScope(
+    final chat = PopScope(
       // In a bubble, back at the chat collapses the bubble
       canPop:
           !GruppechatBubbles.active &&
@@ -554,7 +555,12 @@ class ChatView extends StatelessWidget {
                                                 mainAxisSize: .min,
                                                 children: [
                                                   ReplyDisplay(controller),
-                                                  ChatInputRow(controller),
+                                                  // Typing is not a swipe back
+                                                  GruppechatSwipeBack.exempt(
+                                                    child: ChatInputRow(
+                                                      controller,
+                                                    ),
+                                                  ),
                                                   ChatEmojiPicker(controller),
                                                 ],
                                               ),
@@ -579,6 +585,12 @@ class ChatView extends StatelessWidget {
           },
         ),
       ),
+    );
+    // Swiping right goes back to the chat list (lib/gruppechat/swipe_back.dart)
+    return GruppechatSwipeBack(
+      enabled: !FluffyThemes.isColumnMode(context) && !GruppechatBubbles.active,
+      onBack: () => Navigator.of(context).maybePop(),
+      child: chat,
     );
   }
 }

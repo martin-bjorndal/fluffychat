@@ -6,11 +6,11 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/new_chat_power_levels.dart';
 import 'package:fluffychat/gruppechat/picture_crop.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/new_group/new_group_view.dart';
 import 'package:fluffychat/utils/file_selector.dart';
-import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -91,11 +91,8 @@ class NewGroupController extends State<NewGroup> {
           ? sdk.CreateRoomPreset.publicChat
           : sdk.CreateRoomPreset.privateChat,
       groupName: nameController.text.isNotEmpty ? nameController.text : null,
-      powerLevelContentOverride: publicGroup
-          ? null
-          : {
-              'events': {MatrixRtcCallMember.eventType: 0},
-            },
+      // Gruppechat: members may change general settings, and join calls
+      powerLevelContentOverride: newChatPowerLevels(),
       initialState: [
         if (avatar != null)
           sdk.StateEvent(

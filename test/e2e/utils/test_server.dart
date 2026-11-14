@@ -15,6 +15,7 @@ import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/invite_codes.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/new_chat_power_levels.dart';
 import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call_member.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -386,9 +387,7 @@ Future<TestGroup> newGroup(
       visibility: Visibility.private,
       preset: CreateRoomPreset.privateChat,
       groupName: channel,
-      powerLevelContentOverride: {
-        'events': {MatrixRtcCallMember.eventType: 0},
-      },
+      powerLevelContentOverride: newChatPowerLevels(),
       initialState: [],
     );
     await space.setSpaceChild(roomId);
