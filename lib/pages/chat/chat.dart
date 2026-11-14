@@ -24,6 +24,7 @@ import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -130,7 +131,7 @@ class ChatPageWithRoom extends StatefulWidget {
 
 class ChatController extends State<ChatPageWithRoom>
     with WidgetsBindingObserver {
-  Room get room => sendingClient.getRoomById(roomId) ?? widget.room;
+  Room get room => gruppechatChatRoom(sendingClient, widget.room);
 
   late Client sendingClient;
 
@@ -254,7 +255,7 @@ class ChatController extends State<ChatPageWithRoom>
   Future<void> leaveChat() async {
     final success = await showFutureLoadingDialog(
       context: context,
-      future: room.leave,
+      future: () => gruppechatLeaveRoom(room),
     );
     if (!mounted) return;
     if (success.error != null) return;

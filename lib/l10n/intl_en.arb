@@ -3016,22 +3016,22 @@
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatLetOthersRenameMe": "Let others give me a nickname",
+    "gruppechatLetOthersRenameMe": "Let others give me a nickname or picture",
     "@gruppechatLetOthersRenameMe": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatStopOthersRenamingMe": "Stop others giving me a nickname",
+    "gruppechatStopOthersRenamingMe": "Stop others giving me a nickname or picture",
     "@gruppechatStopOthersRenamingMe": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatNicknameLocked": "Nickname locked",
+    "gruppechatNicknameLocked": "Nickname and picture locked",
     "@gruppechatNicknameLocked": {
         "type": "String",
         "placeholders": {}
     },
-    "gruppechatNicknameLockedDescription": "{name} has chosen to set their own nickname.",
+    "gruppechatNicknameLockedDescription": "{name} has chosen to set their own nickname and picture.",
     "@gruppechatNicknameLockedDescription": {
         "type": "String",
         "placeholders": {
@@ -3381,7 +3381,7 @@
     "@gruppechatPermissionMemberRoles": {},
     "gruppechatPermissionNicknames": "Change nicknames",
     "@gruppechatPermissionNicknames": {},
-    "gruppechatPermissionNicknameLock": "Lock their own nickname",
+    "gruppechatPermissionNicknameLock": "Lock their own nickname and picture",
     "@gruppechatPermissionNicknameLock": {},
     "gruppechatPermissionBackground": "Change the background",
     "@gruppechatPermissionBackground": {},
@@ -3604,5 +3604,77 @@
         }
     },
     "gruppechatVideoCannotPlayHere": "This video can't be played in this browser.",
-    "@gruppechatVideoCannotPlayHere": {}
+    "@gruppechatVideoCannotPlayHere": {},
+    "gruppechatPictureInGroup": "Picture in group",
+    "@gruppechatPictureInGroup": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPictureFor": "Picture for {name}",
+    "@gruppechatPictureFor": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatPictureDescription": "Everyone in the group sees this picture instead of {name}'s own. Their profile stays as it is.",
+    "@gruppechatPictureDescription": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovePicture": "Remove the picture",
+    "@gruppechatRemovePicture": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPermissionAvatars": "Change pictures in the group",
+    "@gruppechatPermissionAvatars": {},
+    "gruppechatGaveGroupPicture": "{name} gave {user} a new picture in the group",
+    "@gruppechatGaveGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatRemovedGroupPicture": "{name} removed {user}'s picture in the group",
+    "@gruppechatRemovedGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "user": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatTookGroupPicture": "{name} changed their picture in the group",
+    "@gruppechatTookGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatDroppedGroupPicture": "{name} removed their own picture in the group",
+    "@gruppechatDroppedGroupPicture": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    }
 }

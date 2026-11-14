@@ -76,6 +76,26 @@ void main() {
     );
   });
 
+  test('a picture in the group, for someone else or oneself', () {
+    expect(
+      text(bob, {'kind': 'avatar', 'user': carol}),
+      l10n.gruppechatGaveGroupPicture(nameOf(bob), nameOf(carol)),
+    );
+    expect(
+      text(bob, {'kind': 'avatar', 'user': carol, 'removed': true}),
+      l10n.gruppechatRemovedGroupPicture(nameOf(bob), nameOf(carol)),
+    );
+    expect(
+      text(carol, {'kind': 'avatar', 'user': carol}),
+      l10n.gruppechatTookGroupPicture(nameOf(carol)),
+    );
+    expect(
+      text(carol, {'kind': 'avatar', 'user': carol, 'removed': true}),
+      l10n.gruppechatDroppedGroupPicture(nameOf(carol)),
+    );
+    expect(text(bob, {'kind': 'avatar'}), isNull, reason: 'whose is missing');
+  });
+
   test('a line this version does not understand shows nothing of its own', () {
     expect(text(bob, {'kind': 'something_new'}), isNull);
     expect(text(bob, {'kind': 'nickname'}), isNull);

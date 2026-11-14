@@ -3,17 +3,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/file_selector.dart';
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -546,6 +549,26 @@ Future<void> showGroupBackgroundMenu({
   }
 }
 
+/// Says so and returns true when [user] has locked their nickname and
+/// picture against the current user.
+Future<bool> _showIfLockedForMe(
+  BuildContext context,
+  GruppechatGroup group,
+  User user,
+) async {
+  if (group.space.client.userID == user.id ||
+      !group.state.isNicknameLocked(user.id)) {
+    return false;
+  }
+  final l10n = L10n.of(context);
+  await showOkCancelAlertDialog(
+    context: context,
+    title: l10n.gruppechatNicknameLocked,
+    message: l10n.gruppechatNicknameLockedDescription(user.calcDisplayname()),
+  );
+  return true;
+}
+
 /// Lets anyone in the group set or clear [user]'s group-wide nickname.
 Future<void> showGroupNicknameDialog({
   required BuildContext context,
@@ -554,15 +577,8 @@ Future<void> showGroupNicknameDialog({
 }) async {
   final l10n = L10n.of(context);
   final state = group.state;
-  final isMe = group.space.client.userID == user.id;
-  if (!isMe && state.isNicknameLocked(user.id)) {
-    await showOkCancelAlertDialog(
-      context: context,
-      title: l10n.gruppechatNicknameLocked,
-      message: l10n.gruppechatNicknameLockedDescription(user.calcDisplayname()),
-    );
-    return;
-  }
+  if (await _showIfLockedForMe(context, group, user)) return;
+  if (!context.mounted) return;
   final current = state.nicknameOf(user.id);
   final setBy = current?.setBy;
   final name = await showTextInputDialog(
@@ -589,7 +605,81 @@ Future<void> showGroupNicknameDialog({
   );
 }
 
-/// Toggles whether other people may rename the current user.
+enum _GroupPictureAction { camera, gallery, remove }
+
+/// Lets anyone who may give [user] a picture in the group: one taken or
+/// picked and cropped, which everyone in the group sees instead of their
+/// own, without touching their profile. Or removes the one they have.
+Future<void> showGroupAvatarDialog({
+  required BuildContext context,
+  required GruppechatGroup group,
+  required User user,
+}) async {
+  if (await _showIfLockedForMe(context, group, user)) return;
+  if (!context.mounted) return;
+  final l10n = L10n.of(context);
+  final hasPicture = group.state.avatarOf(user.id) != null;
+  final picked = await showModalActionPopup<_GroupPictureAction>(
+    context: context,
+    title: l10n.gruppechatPictureFor(user.calcDisplayname()),
+    message: l10n.gruppechatPictureDescription(user.calcDisplayname()),
+    cancelLabel: l10n.cancel,
+    actions: [
+      if (PlatformInfos.isMobile)
+        AdaptiveModalAction(
+          value: _GroupPictureAction.camera,
+          label: l10n.openCamera,
+          icon: const Icon(Icons.camera_alt_outlined),
+        ),
+      AdaptiveModalAction(
+        value: _GroupPictureAction.gallery,
+        label: l10n.openGallery,
+        icon: const Icon(Icons.photo_outlined),
+      ),
+      if (hasPicture)
+        AdaptiveModalAction(
+          value: _GroupPictureAction.remove,
+          label: l10n.gruppechatRemovePicture,
+          isDestructive: true,
+          icon: const Icon(Icons.delete_outlined),
+        ),
+    ],
+  );
+  if (picked == null || !context.mounted) return;
+  if (picked == _GroupPictureAction.remove) {
+    await showFutureLoadingDialog(
+      context: context,
+      future: () => changeGroupAvatar(group, user.id, null, from: user.room),
+    );
+    return;
+  }
+  final Uint8List bytes;
+  if (picked == _GroupPictureAction.camera) {
+    final result = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (result == null) return;
+    bytes = await result.readAsBytes();
+  } else {
+    final files = await selectFiles(context, type: FileType.image);
+    if (files.isEmpty) return;
+    bytes = await files.first.readAsBytes();
+  }
+  if (!context.mounted) return;
+  final cropped = await cropAvatar(context, bytes);
+  if (cropped == null || !context.mounted) return;
+  await showFutureLoadingDialog(
+    context: context,
+    future: () async {
+      final url = await group.space.client.uploadContent(
+        cropped.bytes,
+        filename: cropped.name,
+      );
+      await changeGroupAvatar(group, user.id, url, from: user.room);
+    },
+  );
+}
+
+/// Toggles whether other people may rename the current user, or give them
+/// a picture.
 Future<void> toggleOwnNicknameLock({
   required BuildContext context,
   required GruppechatGroup group,

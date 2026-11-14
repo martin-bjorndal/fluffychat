@@ -64,7 +64,7 @@ class TypingIndicators extends StatelessWidget {
                       if (typingUsers.isNotEmpty)
                         Avatar(
                           size: avatarSize,
-                          mxContent: typingUsers.first.avatarUrl,
+                          mxContent: typingUsers.first.groupAvatarUrl,
                           name: typingUsers.first.groupDisplayname(),
                         ),
                       if (typingUsers.length == 2)
@@ -73,7 +73,7 @@ class TypingIndicators extends StatelessWidget {
                           child: Avatar(
                             size: avatarSize,
                             mxContent: typingUsers.length == 2
-                                ? typingUsers.last.avatarUrl
+                                ? typingUsers.last.groupAvatarUrl
                                 : null,
                             name: typingUsers.length == 2
                                 ? typingUsers.last.groupDisplayname()

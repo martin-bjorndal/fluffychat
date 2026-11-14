@@ -185,7 +185,7 @@ class InputBar extends StatelessWidget {
             'mxid': user.id,
             'mention': user.mention,
             'displayname': user.displayName,
-            'avatar_url': user.avatarUrl?.toString(),
+            'avatar_url': user.groupAvatarUrl?.toString(),
           });
         }
         if (ret.length > maxResults) {

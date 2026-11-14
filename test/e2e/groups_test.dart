@@ -18,6 +18,8 @@ import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/membership.dart';
+import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/new_chat_power_levels.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -213,6 +215,161 @@ void main() {
         'carol sees it',
         () => nameIn(carol, 'spill', alice.userID!) == 'Sjefen',
       );
+    });
+  });
+
+  group('Pictures in the group', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late Client carol;
+    late TestGroup group;
+    late L10n l10n;
+    late Timeline aliceTimeline;
+    late Uri ownPicture;
+    GruppechatGroup groupOf(Client client) =>
+        GruppechatGroup(client.getRoomById(group.spaceId)!);
+    Room channel(Client client, String name) =>
+        client.getRoomById(group.channels[name]!)!;
+    Uri? pictureIn(Client viewer, String name, String userId) => channel(
+      viewer,
+      name,
+    ).unsafeGetUserFromMemoryOrFallback(userId).groupAvatarUrl;
+    String nameOf(Client client) => channel(
+      alice,
+      'spill',
+    ).unsafeGetUserFromMemoryOrFallback(client.userID!).calcDisplayname();
+    Future<Uri> upload(Client client, int shade) => client.uploadContent(
+      Uint8List.fromList(List.filled(64, shade)),
+      filename: 'bilde.jpg',
+    );
+    Future<Event> lineFrom(Client sender, {required bool removed}) => arrives(
+      aliceTimeline,
+      'a picture line from ${sender.userID}',
+      (event) =>
+          event.type == gruppechatChangeType &&
+          event.senderId == sender.userID &&
+          event.content['kind'] == 'avatar' &&
+          (event.content['removed'] == true) == removed,
+    );
+
+    setUpAll(() async {
+      l10n = await lookupL10n(const Locale('nb'));
+      alice = await logIn('alice');
+      bob = await logIn('bob');
+      carol = await logIn('carol');
+      // Carol's own picture, which nobody else can change
+      ownPicture = await upload(carol, 10);
+      await carol.setProfileField(carol.userID!, 'avatar_url', {
+        'avatar_url': ownPicture.toString(),
+      });
+      group = await newGroup(
+        alice,
+        [bob, carol],
+        channels: ['general', 'spill'],
+      );
+      aliceTimeline = await channel(alice, 'spill').getTimeline();
+    });
+    tearDownAll(() async {
+      await carol.setAvatar(null);
+      await logOutEveryone();
+    });
+
+    test('bob gives carol a picture, everyone sees it everywhere', () async {
+      expect(groupOf(bob).canSetMemberAvatars, isTrue);
+      final picture = await upload(bob, 200);
+      // The member menu's "Picture in group", opened in spill
+      await changeGroupAvatar(
+        groupOf(bob),
+        carol.userID!,
+        picture,
+        from: channel(bob, 'spill'),
+      );
+      for (final name in ['general', 'spill']) {
+        await eventually(
+          'alice sees the picture in $name',
+          () => pictureIn(alice, name, carol.userID!) == picture,
+        );
+      }
+      await eventually(
+        'carol sees it too',
+        () => pictureIn(carol, 'general', carol.userID!) == picture,
+      );
+      final line = await lineFrom(bob, removed: false);
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatGaveGroupPicture(nameOf(bob), nameOf(carol)),
+      );
+      expect(
+        (await carol.getProfileFromUserId(carol.userID!)).avatarUrl,
+        ownPicture,
+        reason: 'her own profile is untouched',
+      );
+      expect(
+        await isForbidden(
+          () => bob.setProfileField(carol.userID!, 'avatar_url', {
+            'avatar_url': picture.toString(),
+          }),
+        ),
+        isTrue,
+        reason: 'only the group picture can be set by others',
+      );
+    });
+
+    test('carol removes it, and her own picture shows again', () async {
+      await changeGroupAvatar(
+        groupOf(carol),
+        carol.userID!,
+        null,
+        from: channel(carol, 'spill'),
+      );
+      await eventually(
+        'alice sees her own picture again',
+        () => pictureIn(alice, 'general', carol.userID!) == ownPicture,
+      );
+      final line = await lineFrom(carol, removed: true);
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatDroppedGroupPicture(nameOf(carol)),
+      );
+    });
+
+    test('the nickname lock keeps others from changing it', () async {
+      await groupOf(carol).setOwnNicknameLocked(true);
+      await eventually(
+        'bob sees the lock',
+        () => groupOf(bob).state.isNicknameLocked(carol.userID!),
+      );
+      final fromBob = await upload(bob, 120);
+      expect(
+        await changeGroupAvatar(groupOf(bob), carol.userID!, fromBob),
+        isFalse,
+        reason: 'the member menu refuses',
+      );
+      // An app without the lock could still write it, but it stays hidden
+      await groupOf(bob).setMemberAvatar(carol.userID!, fromBob);
+      await eventually(
+        'alice has the picture from bob in the group state',
+        () =>
+            groupOf(alice).space
+                .getState(
+                  GruppechatEventTypes.avatar,
+                  userStateKey(carol.userID!),
+                )
+                ?.content['url'] ==
+            fromBob.toString(),
+      );
+      expect(
+        pictureIn(alice, 'general', carol.userID!),
+        ownPicture,
+        reason: 'the lock hides the picture bob gave her',
+      );
+      final chosen = await upload(carol, 60);
+      await changeGroupAvatar(groupOf(carol), carol.userID!, chosen);
+      await eventually(
+        'alice sees the picture carol chose herself',
+        () => pictureIn(alice, 'spill', carol.userID!) == chosen,
+      );
+      await groupOf(carol).setOwnNicknameLocked(false);
     });
   });
 
@@ -971,6 +1128,113 @@ void main() {
     });
   });
 
+  group('Thrown out of a chat', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client carol;
+    late TestGroup group;
+
+    setUpAll(() async {
+      alice = await logIn('alice');
+      carol = await logIn('carol');
+      group = await newGroup(
+        alice,
+        [carol],
+        channels: ['general', 'other', 'kick', 'ban', 'stay'],
+      );
+    });
+    tearDownAll(logOutEveryone);
+
+    Future<void> throwOut(
+      String channel,
+      Future<void> Function(Room room) how,
+    ) async {
+      final roomId = group.channels[channel]!;
+      // The room carol's open chat page was opened on
+      final open = carol.getRoomById(roomId)!;
+      final before = gruppechatChatRoom(carol, open);
+      expect(before.canSendDefaultMessages, isTrue, reason: 'carol is in it');
+      expect(before.membership, Membership.join);
+      await how(alice.getRoomById(roomId)!);
+      await eventually(
+        'carol is out of $channel',
+        () => carol.getRoomById(roomId) == null,
+      );
+      // What the page shows now; the field for writing needs both
+      final shown = gruppechatChatRoom(carol, open);
+      expect(shown.membership, isNot(Membership.join));
+      expect(shown.canSendDefaultMessages, isFalse, reason: 'no field');
+      expect(shown.isArchived, isTrue, reason: 'no chat actions');
+      final message = Event(
+        type: EventTypes.Message,
+        content: {'msgtype': MessageTypes.Text, 'body': 'hei'},
+        eventId: '\$earlier',
+        senderId: alice.userID!,
+        originServerTs: DateTime.now(),
+        room: open,
+      );
+      expect(message.repliesOnHover, isFalse, reason: 'no reply button');
+    }
+
+    test('someone kicked out can no longer write in it', () async {
+      await throwOut('general', (room) => room.kick(carol.userID!));
+    });
+
+    test('someone banned can no longer write in it', () async {
+      await throwOut('other', (room) => room.ban(carol.userID!));
+      await alice.getRoomById(group.channels['other']!)!.unban(carol.userID!);
+    });
+
+    // "Leave" in the menu of a chat page she still has open after being
+    // thrown out, before the page has caught up
+    Future<void> leaveAfter(
+      String channel,
+      Future<void> Function(Room room) how,
+    ) async {
+      final roomId = group.channels[channel]!;
+      final open = carol.getRoomById(roomId)!;
+      await how(alice.getRoomById(roomId)!);
+      await eventually(
+        'carol is out of $channel',
+        () => carol.getRoomById(roomId) == null,
+      );
+      expect(
+        await isForbidden(() => carol.leaveRoom(roomId)),
+        isTrue,
+        reason: 'the server refuses a plain leave, the "no access" seen',
+      );
+      await gruppechatLeaveRoom(open);
+      await gruppechatLeaveRoom(gruppechatChatRoom(carol, open));
+      final archive = await carol.loadArchive();
+      expect(
+        archive.map((r) => r.id),
+        contains(roomId),
+        reason: 'it stays in her archive',
+      );
+    }
+
+    test('someone kicked out can still leave it', () async {
+      await leaveAfter('kick', (room) => room.kick(carol.userID!));
+    });
+
+    test('someone banned can still leave it', () async {
+      await leaveAfter('ban', (room) => room.ban(carol.userID!));
+    });
+
+    test('someone still in it leaves as before', () async {
+      final roomId = group.channels['stay']!;
+      await gruppechatLeaveRoom(carol.getRoomById(roomId)!);
+      await eventually(
+        'alice sees carol leave',
+        () =>
+            alice
+                .getRoomById(roomId)!
+                .unsafeGetUserFromMemoryOrFallback(carol.userID!)
+                .membership ==
+            Membership.leave,
+      );
+    });
+  });
+
   group('A new chat', skip: skipWithoutTestServer, () {
     late Client alice;
     late Client bob;
@@ -1035,10 +1299,8 @@ void main() {
       );
       expect(
         await isForbidden(
-          () => gruppechatSetMessageLifetime(
-            bobRoom(),
-            const Duration(hours: 1),
-          ),
+          () =>
+              gruppechatSetMessageLifetime(bobRoom(), const Duration(hours: 1)),
         ),
         isTrue,
       );

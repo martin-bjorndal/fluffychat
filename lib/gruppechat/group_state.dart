@@ -14,6 +14,10 @@ abstract final class GruppechatEventTypes {
   static const String memberRoles = 'im.gruppechat.member_roles';
   static const String nickname = 'im.gruppechat.nickname';
   static const String nicknameLock = 'im.gruppechat.nickname_lock';
+
+  /// A member's picture in the group, which others may set; see
+  /// [GroupState.avatarOf].
+  static const String avatar = 'im.gruppechat.avatar';
   static const String background = 'im.gruppechat.background';
 
   /// A chat's own colour for its bars and bubbles, kept where its background
@@ -25,6 +29,7 @@ abstract final class GruppechatEventTypes {
     memberRoles,
     nickname,
     nicknameLock,
+    avatar,
     background,
     chatColor,
   };
@@ -483,6 +488,20 @@ class GroupState {
     );
   }
 
+  /// The picture [userId] has in the group (an `mxc://` URI), which others
+  /// may set, or null when they show their own. As with the nickname, a
+  /// locked user keeps only a picture they set themselves.
+  Uri? avatarOf(String userId) {
+    final key = userStateKey(userId);
+    final url = _reader.content(GruppechatEventTypes.avatar, key)?['url'];
+    if (url is! String) return null;
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.scheme != 'mxc') return null;
+    final setBy = _reader.sender(GruppechatEventTypes.avatar, key);
+    if (setBy != userId && isNicknameLocked(userId)) return null;
+    return uri;
+  }
+
   GroupBackground? get background => GroupBackground.fromContent(
     _reader.content(GruppechatEventTypes.background),
   );
@@ -545,12 +564,13 @@ String roleIdFromName(String name, Iterable<String> existingIds) {
 }
 
 /// Who may send each custom event type: moderators manage roles, everyone
-/// can set nicknames, the background and chat colours.
+/// can set nicknames, pictures, the background and chat colours.
 const Map<String, int> groupEventPowerLevels = {
   GruppechatEventTypes.role: 50,
   GruppechatEventTypes.memberRoles: 50,
   GruppechatEventTypes.nickname: 0,
   GruppechatEventTypes.nicknameLock: 0,
+  GruppechatEventTypes.avatar: 0,
   GruppechatEventTypes.background: 0,
   GruppechatEventTypes.chatColor: 0,
 };

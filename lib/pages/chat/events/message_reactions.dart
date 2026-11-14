@@ -5,6 +5,7 @@
 
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:fluffychat/widgets/matrix.dart';
@@ -190,7 +191,7 @@ class _AdaptableReactorsDialog extends StatelessWidget {
           for (final reactor in reactionEntry!.reactors!)
             Chip(
               avatar: Avatar(
-                mxContent: reactor.avatarUrl,
+                mxContent: reactor.groupAvatarUrl,
                 name: reactor.displayName,
                 client: client,
                 presenceUserId: reactor.stateKey,

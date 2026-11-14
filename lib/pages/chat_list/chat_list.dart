@@ -10,6 +10,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/camera.dart';
+import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/update_check.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
@@ -791,7 +792,10 @@ class ChatListController extends State<ChatList>
         if (confirmed == OkCancelResult.cancel) return;
         if (!mounted) return;
 
-        await showFutureLoadingDialog(context: context, future: room.leave);
+        await showFutureLoadingDialog(
+          context: context,
+          future: () => gruppechatLeaveRoom(room),
+        );
 
         return;
       case ChatContextAction.addToSpace:

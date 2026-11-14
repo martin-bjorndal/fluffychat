@@ -110,8 +110,8 @@ class ParticipantListItem extends StatelessWidget {
       leading: Opacity(
         opacity: user.membership == Membership.join ? 1 : 0.5,
         child: Avatar(
-          mxContent: user.avatarUrl,
-          name: user.calcDisplayname(),
+          mxContent: user.groupAvatarUrl,
+          name: user.groupDisplayname(),
           presenceUserId: user.stateKey,
         ),
       ),

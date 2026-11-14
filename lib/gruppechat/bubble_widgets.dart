@@ -112,7 +112,7 @@ Future<AndroidNotificationDetails> _quietNotification(
   final client = room.client;
   final ownUser = room.unsafeGetUserFromMemoryOrFallback(client.userID!);
   final ownAvatar = await client.tryDownloadNotificationAvatar(
-    ownUser.avatarUrl,
+    ownUser.groupAvatarUrl,
   );
   final lastEvent = room.lastEvent;
   final messages = <Message>[

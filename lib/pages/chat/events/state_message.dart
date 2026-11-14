@@ -72,7 +72,7 @@ class StateMessage extends StatelessWidget {
                                     size: 14,
                                     mxContent: event
                                         .senderFromMemoryOrFallback
-                                        .avatarUrl,
+                                        .groupAvatarUrl,
                                   ),
                                 ),
                               ),
