@@ -13,6 +13,7 @@ import 'package:fluffychat/gruppechat/hover_reply.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/swipe_back.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
 import 'package:fluffychat/utils/date_time_extension.dart';
@@ -226,7 +227,7 @@ class Message extends StatelessWidget {
           ];
     final eventStateTextColor = theme.colorScheme.onSurface;
 
-    return Center(
+    final message = Center(
       child: Swipeable(
         key: ValueKey(event.transactionId ?? event.eventId),
         background: const Padding(
@@ -937,6 +938,8 @@ class Message extends StatelessWidget {
         ),
       ),
     );
+    // A swipe on a message replies; it never goes back to the chat list
+    return GruppechatSwipeBack.exempt(child: message);
   }
 }
 
