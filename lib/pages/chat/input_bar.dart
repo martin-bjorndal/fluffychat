@@ -14,7 +14,6 @@ import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
-import 'package:slugify/slugify.dart';
 
 import '../../widgets/avatar.dart';
 import '../../widgets/matrix.dart';
@@ -173,21 +172,8 @@ class InputBar extends StatelessWidget {
     if (userMatch != null) {
       final userSearch = userMatch[1]!.toLowerCase();
       ret.addAll(gruppechatRoleSuggestions(room, userSearch));
-      for (final user in room.getParticipants()) {
-        if ((user.displayName != null &&
-                (user.displayName!.toLowerCase().contains(userSearch) ||
-                    slugify(
-                      user.displayName!.toLowerCase(),
-                    ).contains(userSearch))) ||
-            user.id.localpart!.toLowerCase().contains(userSearch)) {
-          ret.add({
-            'type': 'user',
-            'mxid': user.id,
-            'mention': user.mention,
-            'displayname': user.displayName,
-            'avatar_url': user.groupAvatarUrl?.toString(),
-          });
-        }
+      for (final suggestion in gruppechatUserSuggestions(room, userSearch)) {
+        ret.add(suggestion);
         if (ret.length > maxResults) {
           break;
         }
