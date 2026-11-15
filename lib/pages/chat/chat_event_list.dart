@@ -7,6 +7,7 @@ import 'package:collection/collection.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -17,7 +18,7 @@ import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:matrix/matrix_api_lite/model/event_types.dart';
+import 'package:matrix/matrix.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 
 import '../../config/app_config.dart';
@@ -49,6 +50,9 @@ class ChatEventList extends StatelessWidget {
       (event) => event.eventId == controller.listEndsAtEventId,
     );
     if (endIndex > 0) events = events.sublist(endIndex);
+    // Gruppechat: photos sent together show as one stack
+    final photoStacks = <String, List<Event>>{};
+    events = stackPhotoSeries(events, photoStacks, timeline: timeline);
 
     // create a map of eventId --> index to greatly improve performance of
     // ListView's findChildIndexCallback
@@ -61,7 +65,7 @@ class ChatEventList extends StatelessWidget {
     final hasWallpaper =
         controller.room.client.applicationAccountConfig.wallpaperUrl != null;
 
-    return SelectionArea(
+    final list = SelectionArea(
       child: MediaQuery(
         data: MediaQuery.of(context).copyWith(
           textScaler: TextScaler.linear(AppSettings.fontSizeFactor.value),
@@ -161,6 +165,11 @@ class ChatEventList extends StatelessWidget {
                   previousEvent?.isCollapsedState == true &&
                   !controller.expandedEventIds.contains(event.eventId);
 
+              // Gruppechat: the photos of a stack count as the stack
+              final stack = GruppechatPhotoStacks.photosOf(photoStacks, event);
+              bool isHere(String? eventId) =>
+                  isInItem(photoStacks, event, eventId);
+
               final displayDate =
                   event.type == EventTypes.RoomCreate ||
                   nextEvent == null ||
@@ -211,8 +220,7 @@ class ChatEventList extends StatelessWidget {
                       onInfoTab: controller.showEventInfo,
                       onMention: () => controller.sendController.text +=
                           '${event.senderFromMemoryOrFallback.mention} ',
-                      highlightMarker:
-                          controller.scrollToEventIdMarker == event.eventId,
+                      highlightMarker: isHere(controller.scrollToEventIdMarker),
                       onSelect: controller.onSelectMessage,
                       scrollToEventId: controller.scrollToEventId,
                       longPressSelect: controller.selectedEvents.isNotEmpty,
@@ -226,8 +234,7 @@ class ChatEventList extends StatelessWidget {
                       onEdit: () => controller.editEventAction(event),
                       timeline: timeline,
                       displayReadMarker:
-                          i > 0 &&
-                          controller.readMarkerEventId == event.eventId,
+                          i > 0 && isHere(controller.readMarkerEventId),
                       nextEvent: nextEvent,
                       previousEvent: previousEvent,
                       wallpaperMode: hasWallpaper,
@@ -246,7 +253,9 @@ class ChatEventList extends StatelessWidget {
                             )
                           : null,
                     ),
-                    GruppechatReadByRow(event: event),
+                    // Gruppechat: who has read any photo of a stack
+                    for (final shown in stack.isEmpty ? [event] : stack)
+                      GruppechatReadByRow(event: shown),
                   ],
                 ),
               );
@@ -258,5 +267,6 @@ class ChatEventList extends StatelessWidget {
         ),
       ),
     );
+    return GruppechatPhotoStacks(stacks: photoStacks, child: list);
   }
 }

@@ -12,6 +12,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/file_series.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -119,10 +120,17 @@ class SendFileDialogState extends State<SendFileDialog> {
         throw OtherPartyCanNotReceiveMessages();
       }
       if (!mounted) return;
+      final caption = _labelTextController.text; // Gruppechat
       Navigator.of(context, rootNavigator: false).pop();
       final clientConfig = await Result.capture(widget.room.client.getConfig());
       final maxUploadSize =
           clientConfig.asValue?.value.mUploadSize ?? 100 * 1000 * 1000;
+      // Gruppechat: files picked together go as a series with one message
+      final extraContents = fileSeriesContents(
+        widget.room.client,
+        caption: caption,
+        count: _files.length,
+      );
 
       for (var i = 0; i < _files.length; i++) {
         final xfile = _files[i];
@@ -164,14 +172,14 @@ class SendFileDialogState extends State<SendFileDialog> {
           throw FileTooBigMatrixException(file.bytes.length, maxUploadSize);
         }
 
-        final label = _labelTextController.text.trim();
+        final extraContent = extraContents[i];
 
         try {
           await widget.room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: extraContent,
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
           );
@@ -190,7 +198,7 @@ class SendFileDialogState extends State<SendFileDialog> {
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: extraContent,
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
           );
@@ -256,7 +264,6 @@ class SendFileDialogState extends State<SendFileDialog> {
     // Gruppechat: on a computer, people type the message at once
     final focusMessage = gruppechatFocusMessageField(
       sendOnEnter: AppSettings.sendOnEnter.value,
-      hasField: _files.length == 1,
     );
 
     final dialog = FutureBuilder<String>(
@@ -411,20 +418,20 @@ class SendFileDialogState extends State<SendFileDialog> {
                         ],
                       ),
                     ),
-                  if (_files.length == 1)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: DialogTextField(
-                        controller: _labelTextController,
-                        autofocus: focusMessage, // Gruppechat
-                        labelText: L10n.of(context).optionalMessage,
-                        minLines: 1,
-                        maxLines: 1,
-                        maxLength: 255,
-                        counterText: '',
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
+                  // Gruppechat: also with several files, as a series
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: DialogTextField(
+                      controller: _labelTextController,
+                      autofocus: focusMessage, // Gruppechat
+                      labelText: L10n.of(context).optionalMessage,
+                      minLines: 1,
+                      maxLines: 1,
+                      maxLength: 255,
+                      counterText: '',
+                      textCapitalization: TextCapitalization.sentences,
                     ),
+                  ),
                   // Workaround for SwitchListTile.adaptive crashes in CupertinoDialog
                   if ({'image', 'video'}.contains(uniqueFileType))
                     Row(

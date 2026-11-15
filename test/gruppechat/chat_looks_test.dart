@@ -19,6 +19,7 @@ import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/send_file_dialog.dart';
+import 'package:fluffychat/widgets/adaptive_dialogs/dialog_text_field.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -284,11 +285,8 @@ void main() {
     }
 
     testWidgets('in the dialog for pasted files', (tester) async {
-      // Several files have no message field
       await paste(tester, sendOnEnter: true, files: 2);
       expect(find.byType(GruppechatSendOnEnter), findsOneWidget);
-      // The dialog has the focus as it opens, so Enter reaches it
-      expect(dialogTakesFocus(tester), isTrue);
     });
 
     // Bug from 1.1.30: after pasting a picture on a computer, people want to
@@ -321,6 +319,17 @@ void main() {
       await paste(tester, sendOnEnter: false);
       expect(focusedField(), isNull);
       expect(dialogTakesFocus(tester), isTrue);
+    });
+
+    // Wish from 1.1.36: several files go as a series with one message, so
+    // the dialog has the message field for them too
+    testWidgets('several files have a message field with the focus', (
+      tester,
+    ) async {
+      await paste(tester, sendOnEnter: true, files: 2);
+      expect(find.byType(DialogTextField), findsOneWidget);
+      expect(focusedField(), isNotNull);
+      expect(dialogTakesFocus(tester), isFalse);
     });
   });
 

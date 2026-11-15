@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/image_size.dart';
 import 'package:fluffychat/gruppechat/pending_attachments.dart';
 import 'package:fluffychat/gruppechat/stickers.dart';
 import 'package:fluffychat/gruppechat/video_opening.dart';
@@ -25,6 +26,7 @@ import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
+import 'package:material_ui/material_ui.dart' show BoxFit;
 import 'package:matrix/matrix.dart';
 import 'package:mime/mime.dart';
 
@@ -104,6 +106,50 @@ void main() {
       expect(thumbnail.width, lessThan(1600));
       expect(thumbnail.width / thumbnail.height, closeTo(4 / 3, 0.02));
     });
+
+    test(
+      'a portrait photo with a caption shows as wide as a landscape one',
+      () async {
+        // Tor Helge's photos from his phone: upright, with some words under
+        for (final (name, w, h) in [
+          ('liggande.png', 1600, 1200),
+          ('ståande.png', 1200, 1600),
+          ('skjermbilete.png', 600, 1300),
+        ]) {
+          await aliceChat.sendFileEvent(
+            MatrixFile(
+              bytes: photo(w, h),
+              name: name,
+              mimeType: 'image/png',
+            ).detectFileType,
+            extraContent: {'body': 'Sjå kor fint det var på tur i dag!'},
+            shrinkImageMaxDimension: 1600,
+          );
+        }
+        Future<Event> shown(String name) => arrives(
+          bobTimeline,
+          name,
+          (e) =>
+              e.messageType == MessageTypes.Image &&
+              e.content.tryGet<String>('filename') == name,
+        );
+        final landscape = imageBubbleSize(await shown('liggande.png'));
+        final portrait = imageBubbleSize(await shown('ståande.png'));
+        final screenshot = imageBubbleSize(await shown('skjermbilete.png'));
+
+        expect(landscape.width, photoWidth);
+        expect(landscape.height, closeTo(photoWidth * 3 / 4, 0.01));
+        expect(landscape.fit, BoxFit.contain);
+        // Upright: as wide as the landscape one, taller, not cut
+        expect(portrait.width, landscape.width);
+        expect(portrait.height, closeTo(photoWidth * 4 / 3, 0.01));
+        expect(portrait.fit, BoxFit.contain);
+        // A tall screenshot: as wide, cut top and bottom until it is opened
+        expect(screenshot.width, landscape.width);
+        expect(screenshot.height, photoMaxHeight);
+        expect(screenshot.fit, BoxFit.cover);
+      },
+    );
 
     test(
       'a photo and a video picked in the web app on an iPhone arrive',
