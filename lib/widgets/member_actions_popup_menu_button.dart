@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/permission_slider_dialog.dart';
 import 'package:material_ui/material_ui.dart';
@@ -330,13 +331,15 @@ Future<void> showMemberActionsPopupMenu({
             title: l10n.areYouSure,
             okLabel: l10n.yes,
             cancelLabel: l10n.no,
-            message: l10n.kickUserDescription,
+            message: user.room.isSpace
+                ? l10n.gruppechatKickFromGroupDescription
+                : l10n.kickUserDescription,
           ) ==
           OkCancelResult.ok) {
         if (!context.mounted) return;
         await showFutureLoadingDialog(
           context: context,
-          future: () => user.kick(),
+          future: () => gruppechatTellingNotDone(l10n, gruppechatKick(user)),
         );
       }
       return;
@@ -346,13 +349,15 @@ Future<void> showMemberActionsPopupMenu({
             title: l10n.areYouSure,
             okLabel: l10n.yes,
             cancelLabel: l10n.no,
-            message: l10n.banUserDescription,
+            message: user.room.isSpace
+                ? l10n.gruppechatBanFromGroupDescription
+                : l10n.banUserDescription,
           ) ==
           OkCancelResult.ok) {
         if (!context.mounted) return;
         await showFutureLoadingDialog(
           context: context,
-          future: () => user.ban(),
+          future: () => gruppechatTellingNotDone(l10n, gruppechatBan(user)),
         );
       }
       return;
@@ -393,13 +398,15 @@ Future<void> showMemberActionsPopupMenu({
             title: l10n.areYouSure,
             okLabel: l10n.yes,
             cancelLabel: l10n.no,
-            message: l10n.unbanUserDescription,
+            message: user.room.isSpace
+                ? l10n.gruppechatUnbanFromGroupDescription
+                : l10n.unbanUserDescription,
           ) ==
           OkCancelResult.ok) {
         if (!context.mounted) return;
         await showFutureLoadingDialog(
           context: context,
-          future: () => user.unban(),
+          future: () => gruppechatTellingNotDone(l10n, gruppechatUnban(user)),
         );
       }
     case _MemberActions.makeAdmin:

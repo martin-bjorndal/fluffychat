@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
+import 'package:fluffychat/gruppechat/web_notifications.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
@@ -18,7 +19,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
-import 'package:universal_html/html.dart' as html;
 
 extension LocalNotificationsExtension on MatrixState {
   Future<void> showLocalNotification(Event event) async {
@@ -96,11 +96,14 @@ extension LocalNotificationsExtension on MatrixState {
         GruppechatSounds.notification(event.room);
       }
 
-      html.Notification(
-        title,
-        body: body,
-        icon: thumbnailUri?.toString(),
-        tag: event.room.id,
+      // Gruppechat: through a service worker, for Safari on an iPhone
+      await showWebNotification(
+        WebNotification.forEvent(
+          event,
+          title: title,
+          body: body,
+          icon: thumbnailUri?.toString(),
+        ),
       );
       return;
     }

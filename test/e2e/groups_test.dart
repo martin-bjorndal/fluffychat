@@ -1235,6 +1235,124 @@ void main() {
     });
   });
 
+  // Kick or ban in the member list of the group itself, its details page
+  group('Thrown out of a group', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client bob;
+    late Client carol;
+    late TestGroup group;
+
+    // The channel alice has left, where she can do nothing
+    const away = 'away';
+    // Where carol ranks as high as alice, so alice may not put her out
+    const equal = 'equal';
+
+    setUpAll(() async {
+      final creator = await logIn('alice');
+      bob = await logIn('bob');
+      carol = await logIn('carol');
+      group = await newGroup(
+        creator,
+        [bob, carol],
+        channels: ['general', 'other', away, equal],
+      );
+      await creator.leaveRoom(group.channels[away]!);
+      await creator
+          .getRoomById(group.channels[equal]!)!
+          .setPower(carol.userID!, 100);
+      // On another phone, which hasn't opened the channels or loaded who
+      // is in them
+      alice = await logIn('alice');
+      await eventually(
+        'alice sees the group',
+        () => alice.getRoomById(group.spaceId) != null,
+      );
+    });
+    tearDownAll(logOutEveryone);
+
+    /// [who] as alice sees them in the group's member list.
+    User member(Client who) => alice
+        .getRoomById(group.spaceId)!
+        .unsafeGetUserFromMemoryOrFallback(who.userID!);
+
+    /// Does [action] as the member menu does, and checks that it leaves
+    /// out only the channel alice isn't in, and the [also] ones.
+    Future<void> leavesOutAway(
+      Future<void> action, {
+      List<String> also = const [],
+    }) async {
+      final notDone = await action.then<Object?>(
+        (_) => null,
+        onError: (Object e) => e,
+      );
+      expect(notDone, isA<GruppechatStillInChannels>());
+      expect(
+        (notDone as GruppechatStillInChannels).channels.map((r) => r.id),
+        unorderedEquals([away, ...also].map((name) => group.channels[name])),
+      );
+    }
+
+    Future<void> isOutOfEverything(
+      Client who, {
+      List<String> except = const [],
+    }) async {
+      final roomIds = [group.spaceId, ...group.channels.values]
+        ..removeWhere(
+          (id) => [away, ...except].any((name) => group.channels[name] == id),
+        );
+      for (final roomId in roomIds) {
+        await eventually(
+          '${who.userID} is out of $roomId',
+          () => who.getRoomById(roomId) == null,
+        );
+        expect(
+          await isForbidden(
+            () => who.sendMessage(
+              roomId,
+              'm.room.message',
+              who.generateUniqueTransactionId(),
+              {'msgtype': MessageTypes.Text, 'body': 'hei'},
+            ),
+          ),
+          isTrue,
+          reason: 'the server refuses what they write in $roomId',
+        );
+      }
+    }
+
+    test('someone kicked from the group is out of every channel', () async {
+      await leavesOutAway(gruppechatKick(member(carol)), also: [equal]);
+      await isOutOfEverything(carol, except: [equal]);
+      for (final name in [away, equal]) {
+        expect(
+          carol.getRoomById(group.channels[name]!),
+          isNotNull,
+          reason: 'alice could do nothing in $name, and was told',
+        );
+      }
+    });
+
+    test('someone banned from the group is out of every channel', () async {
+      await leavesOutAway(gruppechatBan(member(bob)));
+      await isOutOfEverything(bob);
+    });
+
+    test('unbanned, they can be invited back', () async {
+      await eventually(
+        'alice sees bob banned',
+        () => member(bob).membership == Membership.ban,
+      );
+      await leavesOutAway(gruppechatUnban(member(bob)));
+      // Back into the group and every channel alice is in
+      final roomIds = [group.spaceId, ...group.channels.values]
+        ..remove(group.channels[away]);
+      for (final roomId in roomIds) {
+        await alice.getRoomById(roomId)!.invite(bob.userID!);
+        await accept(bob, roomId);
+      }
+    });
+  });
+
   group('A new chat', skip: skipWithoutTestServer, () {
     late Client alice;
     late Client bob;

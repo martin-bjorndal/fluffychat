@@ -3704,5 +3704,19 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "gruppechatKickFromGroupDescription": "Brukeren blir kastet ut av gruppen og alle kanalene i den, men ikke utestengt.",
+    "@gruppechatKickFromGroupDescription": {},
+    "gruppechatBanFromGroupDescription": "Brukeren blir utestengt fra gruppen og alle kanalene i den, og kan ikke komme tilbake før utestengelsen er opphevet.",
+    "@gruppechatBanFromGroupDescription": {},
+    "gruppechatNotDoneInChannels": "Ikke gjort i {count, plural, =1{1 kanal} other{{count} kanaler}} du ikke er med i eller ikke har lov til å endre.",
+    "@gruppechatNotDoneInChannels": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatUnbanFromGroupDescription": "Brukeren slippes inn igjen i gruppen og alle kanalene i den, også de brukeren var utestengt fra hver for seg.",
+    "@gruppechatUnbanFromGroupDescription": {}
 }

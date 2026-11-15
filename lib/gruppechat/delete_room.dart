@@ -12,6 +12,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 import 'matrix_group.dart';
+import 'membership.dart';
 
 /// Thrown when this user may not delete a chat after all.
 class GruppechatCannotDeleteRoom implements Exception {
@@ -25,15 +26,8 @@ class GruppechatCannotDeleteRoom implements Exception {
 /// The rooms [space] lists as its channels, or null when this user isn't
 /// in one of them: what happens in that one is out of their reach.
 List<Room>? _channels(Room space) {
-  final channels = <Room>[];
-  for (final child in space.spaceChildren) {
-    final room = child.roomId == null
-        ? null
-        : space.client.getRoomById(child.roomId!);
-    if (room == null || room.membership != Membership.join) return null;
-    channels.add(room);
-  }
-  return channels;
+  final (:channels, :outOfReach) = gruppechatChannelsOf(space);
+  return outOfReach.isEmpty ? channels : null;
 }
 
 /// The group space [room] is a channel of, if any.
@@ -64,21 +58,12 @@ PowerLevel _levelOf(
 
 /// Whether [userId] is in [room], invited or knocking, asked of the
 /// server: this user's copy of the room doesn't always say who has left.
+/// A member event that doesn't say counts as in.
 Future<bool> _isIn(Room room, String userId) async {
-  try {
-    final member = await room.client.getRoomStateWithKey(
-      room.id,
-      EventTypes.RoomMember,
-      userId,
-    );
-    final membership = member.tryGet<String>('membership');
-    return membership != Membership.leave.name &&
-        membership != Membership.ban.name;
-  } on MatrixException catch (e) {
-    // Never been in it
-    if (e.error == MatrixError.M_NOT_FOUND) return false;
-    rethrow;
-  }
+  final membership = await gruppechatMembershipOnServer(room, userId);
+  return membership != null &&
+      membership != Membership.leave.name &&
+      membership != Membership.ban.name;
 }
 
 /// Whether this user outranks everyone else who is in [room] or may get a
@@ -165,7 +150,7 @@ Future<void> gruppechatDeleteRoom(Room room, {String? reason}) async {
     // A sync while the check waited on the server may have changed them
     final channels = _channels(room);
     if (channels == null) throw GruppechatCannotDeleteRoom(room.id);
-    await _eachThenRethrowFirst(channels, (channel) async {
+    await gruppechatEachThenRethrowFirst(channels, (channel) async {
       await _empty(channel, reason);
       await room.removeSpaceChild(channel.id);
       await _leave(channel);
@@ -209,30 +194,11 @@ Future<void> _empty(Room room, String? reason) async {
     null,
     true,
   );
-  await _eachThenRethrowFirst(
+  await gruppechatEachThenRethrowFirst(
     members.where((user) => user.id != room.client.userID),
     (user) => room.client.kick(room.id, user.id, reason: reason),
     (user) => 'Could not put ${user.id} out of ${room.id}',
   );
-}
-
-/// Runs [action] on each of [items] in turn, going on past those that fail,
-/// then throws the first error, if any.
-Future<void> _eachThenRethrowFirst<T>(
-  Iterable<T> items,
-  Future<void> Function(T) action,
-  String Function(T) describe,
-) async {
-  (Object, StackTrace)? failure;
-  for (final item in items) {
-    try {
-      await action(item);
-    } catch (e, s) {
-      Logs().w(describe(item), e, s);
-      failure ??= (e, s);
-    }
-  }
-  if (failure != null) Error.throwWithStackTrace(failure.$1, failure.$2);
 }
 
 Future<void> _leave(Room room) async {

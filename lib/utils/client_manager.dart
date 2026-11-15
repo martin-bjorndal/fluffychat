@@ -7,6 +7,7 @@ import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/web_notifications.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/custom_http_client.dart';
 import 'package:fluffychat/utils/custom_image_resizer.dart';
@@ -20,7 +21,6 @@ import 'package:flutter_vodozemac/flutter_vodozemac.dart' as vod;
 import 'package:matrix/encryption/utils/key_verification.dart';
 import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 
 import 'matrix_sdk_extensions/flutter_matrix_dart_sdk_database/builder.dart';
 
@@ -161,7 +161,8 @@ abstract class ClientManager {
 
   static Future<void> sendInitNotification(String title, String body) async {
     if (kIsWeb) {
-      html.Notification(title, body: body);
+      // Gruppechat: through a service worker, for Safari on an iPhone
+      await showWebNotification(WebNotification(title: title, body: body));
       return;
     }
 
