@@ -13,11 +13,13 @@ import 'dart:typed_data';
 import 'dart:ui' show Locale;
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as picker;
+import 'package:fluffychat/gruppechat/clock.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:matrix/matrix.dart';
 import 'package:swipe_to_action/swipe_to_action.dart';
 
@@ -73,6 +75,60 @@ void main() {
       expect(message.type, EventTypes.Message);
       expect(message.senderId, alice.userID);
       expect(await shownText(message), 'Hei Bob!');
+    });
+
+    test('the time under a message uses the 24-hour clock on a PC', () async {
+      await initializeDateFormatting();
+      await aliceChat.sendTextEvent('Kor mykje er klokka?');
+      final message = await arrives(
+        bobTimeline,
+        'the message',
+        (e) => e.body == 'Kor mykje er klokka?',
+      );
+      final sent = message.originServerTs;
+      String two(int n) => n.toString().padLeft(2, '0');
+
+      // Bob's PC or browser doesn't tell the app how he reads the clock,
+      // whether the app itself shows Norwegian or English.
+      final in24Hours = showsTimeIn24Hours(
+        platform: ClockPlatform.other,
+        deviceSays24Hours: false,
+      );
+      for (final app in ['nb', 'en']) {
+        expect(
+          timeOfDay(sent, in24Hours: in24Hours, languageCode: app),
+          '${two(sent.hour)}:${two(sent.minute)}',
+          reason: 'the app in $app',
+        );
+        expect(
+          timeOfDay(
+            sent,
+            in24Hours: in24Hours,
+            languageCode: app,
+            seconds: true,
+          ),
+          '${two(sent.hour)}:${two(sent.minute)}:${two(sent.second)}',
+        );
+      }
+
+      // An Android phone set to AM/PM keeps it.
+      for (final phoneSays24Hours in [true, false]) {
+        expect(
+          showsTimeIn24Hours(
+            platform: ClockPlatform.android,
+            deviceSays24Hours: phoneSays24Hours,
+          ),
+          phoneSays24Hours,
+        );
+      }
+      expect(
+        timeOfDay(
+          DateTime(2026, 11, 15, 14, 5),
+          in24Hours: false,
+          languageCode: 'en',
+        ),
+        '2:05 PM',
+      );
     });
 
     test('an edit replaces the text for the reader', () async {

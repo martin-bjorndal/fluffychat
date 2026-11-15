@@ -10,10 +10,8 @@ import 'package:material_ui/material_ui.dart';
 /// people can type at once after pasting a picture: where Enter sends, and
 /// not in the phone app, as with the chat's own input bar. Otherwise the
 /// [GruppechatSendOnEnter] around the dialog takes it.
-bool gruppechatFocusMessageField({
-  required bool sendOnEnter,
-  required bool hasField,
-}) => sendOnEnter && hasField && !PlatformInfos.isMobile;
+bool gruppechatFocusMessageField({required bool sendOnEnter}) =>
+    sendOnEnter && !PlatformInfos.isMobile;
 
 /// Lets Enter on a keyboard press "Send" in [child], such as the dialog for a
 /// picture pasted into the chat on a computer. Enter counts while nothing in

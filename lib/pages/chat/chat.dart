@@ -20,12 +20,14 @@ import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/effects.dart';
+import 'package:fluffychat/gruppechat/file_series.dart';
 import 'package:fluffychat/gruppechat/gif_picker.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/giphy.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
@@ -279,8 +281,11 @@ class ChatController extends State<ChatPageWithRoom>
     if (mostRecentEvent != null) {
       setReadMarker(eventId: mostRecentEvent.eventId);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final index = timeline.events.filterByVisibleInGui().indexOf(
-          mostRecentEvent,
+        // Gruppechat: as the list shows it, photo stacks and all
+        final index = stackedIndexOf(
+          timeline.events.filterByVisibleInGui(),
+          mostRecentEvent.eventId,
+          timeline: timeline,
         );
         if (index >= 0) {
           scrollController.scrollToIndex(
@@ -1356,7 +1361,7 @@ class ChatController extends State<ChatPageWithRoom>
       context: context,
       builder: (context) => ShareScaffoldDialog(
         items: forwardEvents
-            .map((event) => ContentShareItem(event.content.copy()))
+            .map((event) => ContentShareItem(event.forwardedContent))
             .toList(),
       ),
     );
@@ -1399,14 +1404,17 @@ class ChatController extends State<ChatPageWithRoom>
       setState(() => listEndsAtEventId = null);
       await WidgetsBinding.instance.endOfFrame;
     }
+    // Gruppechat: as the list shows it, photo stacks and all
     final eventIndex = foundEvent == null
         ? -1
-        : timeline!.events
-              .filterByVisibleInGui(
-                exceptionEventId: eventId,
-                threadId: activeThreadId,
-              )
-              .indexOf(foundEvent);
+        : stackedIndexOf(
+            timeline!.events.filterByVisibleInGui(
+              exceptionEventId: eventId,
+              threadId: activeThreadId,
+            ),
+            foundEvent.eventId,
+            timeline: timeline,
+          );
 
     if (eventIndex == -1) {
       setState(() {

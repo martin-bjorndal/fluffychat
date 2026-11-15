@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/viewer_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/image_viewer/pointers_listener.dart';
 import 'package:fluffychat/pages/image_viewer/video_player.dart';
@@ -25,7 +26,7 @@ class ImageViewerView extends StatelessWidget {
       backgroundColor: Colors.black.withAlpha(200),
       foregroundColor: Colors.white,
     );
-    return GestureDetector(
+    final viewer = GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Scaffold(
         backgroundColor: Colors.black.withAlpha(128),
@@ -162,6 +163,16 @@ class ImageViewerView extends StatelessWidget {
           ),
         ),
       ),
+    );
+    // Gruppechat: the arrow keys work on a computer
+    return GruppechatArrowKeys(
+      onPrevious: () {
+        if (controller.canGoBack) controller.prevImage();
+      },
+      onNext: () {
+        if (controller.canGoNext) controller.nextImage();
+      },
+      child: viewer,
     );
   }
 }

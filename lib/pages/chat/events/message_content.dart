@@ -3,11 +3,11 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:math';
-
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
+import 'package:fluffychat/gruppechat/image_size.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/events/poll.dart';
 import 'package:fluffychat/pages/chat/events/video_player.dart';
@@ -60,31 +60,9 @@ class MessageContent extends StatelessWidget {
           case MessageTypes.Image:
           case MessageTypes.Sticker:
             if (event.redacted) continue textmessage;
-            final maxSize = event.messageType == MessageTypes.Sticker
-                ? 128.0
-                : 256.0;
-            final w = event.content
-                .tryGetMap<String, Object?>('info')
-                ?.tryGet<int>('w');
-            final h = event.content
-                .tryGetMap<String, Object?>('info')
-                ?.tryGet<int>('h');
-            var width = maxSize;
-            var height = maxSize;
-            var fit = event.messageType == MessageTypes.Sticker
-                ? BoxFit.contain
-                : BoxFit.cover;
-            if (w != null && h != null) {
-              fit = BoxFit.contain;
-              if (w > h) {
-                width = maxSize;
-                height = max(32, maxSize * (h / w));
-              } else {
-                height = maxSize;
-                width = max(32, maxSize * (w / h));
-              }
-            }
-            return ImageBubble(
+            // Gruppechat: portrait photos as wide as landscape ones
+            final (:width, :height, :fit) = imageBubbleSize(event);
+            final image = ImageBubble(
               event,
               width: width,
               height: height,
@@ -100,6 +78,15 @@ class MessageContent extends StatelessWidget {
                   outerContext: context,
                 ),
               ),
+            );
+            // Gruppechat: photos sent together lie in a stack
+            final stack = GruppechatPhotoStacks.of(context, event);
+            if (stack.length < 2) return image;
+            return GruppechatPhotoStack(
+              photos: stack,
+              width: width,
+              height: height,
+              child: image,
             );
           case CuteEventContent.eventType:
             return CuteContent(event);

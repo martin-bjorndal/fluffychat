@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/clock.dart';
 import 'package:fluffychat/l10n/l10n.dart';
-import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -36,15 +36,11 @@ extension DateTimeExtension on DateTime {
       prevTime.year == year && prevTime.month == month && prevTime.day == day;
 
   /// Returns a simple time String.
-  String localizedTimeOfDay(BuildContext context) => use24HourFormat(context)
-      ? DateFormat(
-          'HH:mm',
-          Localizations.localeOf(context).languageCode,
-        ).format(this)
-      : DateFormat(
-          'h:mm a',
-          Localizations.localeOf(context).languageCode,
-        ).format(this);
+  String localizedTimeOfDay(BuildContext context) => timeOfDay(
+    this,
+    in24Hours: use24HourFormat(context),
+    languageCode: Localizations.localeOf(context).languageCode,
+  );
 
   /// Returns [localizedTimeOfDay()] if the ChatTime is today, the name of the week
   /// day if the ChatTime is this week and a date string else.
@@ -133,59 +129,14 @@ extension DateTimeExtension on DateTime {
         DateFormat.yMMMd(
           Localizations.localeOf(context).languageCode,
         ).format(this),
-        use24HourFormat(context)
-            ? DateFormat(
-                'HH:mm:ss',
-                Localizations.localeOf(context).languageCode,
-              ).format(this)
-            : DateFormat(
-                'h:mm:ss a',
-                Localizations.localeOf(context).languageCode,
-              ).format(this),
+        timeOfDay(
+          this,
+          in24Hours: use24HourFormat(context),
+          languageCode: Localizations.localeOf(context).languageCode,
+          seconds: true,
+        ),
       );
 
   /// Check if time needs to be in 24h format
-  bool use24HourFormat(BuildContext context) {
-    final mediaQuery24h = MediaQuery.alwaysUse24HourFormatOf(context);
-
-    // For Android this should always work.
-    if (PlatformInfos.isAndroid) return mediaQuery24h;
-
-    final locale = Localizations.localeOf(context).languageCode;
-    // Note: I don't like maintaining my own list but I haven't found a way to
-    // check this completely in Flutter side, as `alwaysUse24HourFormatOf()`
-    // doesn't seem to work on web or desktop.
-    const languages24Hour = {
-      'de',
-      'fr',
-      'es',
-      'it',
-      'nl',
-      'pt',
-      'ru',
-      'zh',
-      'ja',
-      'ko',
-      'ar',
-      'pl',
-      'cs',
-      'hu',
-      'sv',
-      'no',
-      'da',
-      'fi',
-      'el',
-      'he',
-      'tr',
-      'lt',
-    };
-    final l10n24h = languages24Hour.contains(locale);
-
-    // https://github.com/krille-chan/fluffychat/pull/1457#discussion_r1836817914
-    if (PlatformInfos.isIOS) {
-      return mediaQuery24h || l10n24h;
-    }
-
-    return l10n24h;
-  }
+  bool use24HourFormat(BuildContext context) => use24HourClock(context);
 }
