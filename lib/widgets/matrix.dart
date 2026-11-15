@@ -12,6 +12,7 @@ import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/web_notifications.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
 import 'package:fluffychat/utils/init_with_restore.dart';
@@ -31,7 +32,6 @@ import 'package:matrix/encryption.dart';
 import 'package:matrix/matrix.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../config/setting_keys.dart';
@@ -310,7 +310,17 @@ class MatrixState extends State<Matrix> {
         ),
       );
       c.onSync.stream.first.then((s) {
-        html.Notification.requestPermission();
+        // Gruppechat: asks in a tap too, and taps open the chat
+        setUpWebNotifications(
+          open: (payload) => notificationTap(
+            NotificationResponse(
+              notificationResponseType: .selectedNotification,
+              payload: payload,
+            ),
+            clients: widget.clients,
+            router: FluffyChatApp.router,
+          ),
+        );
         onNotification[name] ??= c.onNotification.stream.listen(
           showLocalNotification,
         );

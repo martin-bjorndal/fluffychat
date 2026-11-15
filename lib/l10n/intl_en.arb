@@ -3676,5 +3676,19 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "gruppechatKickFromGroupDescription": "They are kicked out of the group and all its channels, but not banned.",
+    "@gruppechatKickFromGroupDescription": {},
+    "gruppechatBanFromGroupDescription": "They are banned from the group and all its channels, and can't come back until they are unbanned.",
+    "@gruppechatBanFromGroupDescription": {},
+    "gruppechatNotDoneInChannels": "Not done in {count, plural, =1{1 channel} other{{count} channels}} you aren't in or may not change.",
+    "@gruppechatNotDoneInChannels": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatUnbanFromGroupDescription": "They are let back into the group and all its channels, also those they were banned from on their own.",
+    "@gruppechatUnbanFromGroupDescription": {}
 }
