@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:matrix/matrix.dart';
+import 'package:slugify/slugify.dart';
 
 import 'group_state.dart';
 
@@ -333,6 +334,41 @@ extension GruppechatClientExtension on Client {
     _preferencesType,
     {'show_group_backgrounds': show},
   );
+}
+
+/// Input bar suggestions for `@user` mentions matching [search]
+/// in the display name, the group-wide nickname or the username, so people
+/// find who they tag by the name they see. Lazy, so callers can stop early.
+Iterable<Map<String, String?>> gruppechatUserSuggestions(
+  Room room,
+  String search,
+) sync* {
+  search = search.toLowerCase();
+  final state = GruppechatGroup.of(room)?.state;
+  bool matches(String? name) =>
+      name != null &&
+      (name.toLowerCase().contains(search) ||
+          slugify(name.toLowerCase()).contains(search));
+  for (final user in room.getParticipants()) {
+    final nickname = state?.nicknameOf(user.id);
+    if (!matches(user.displayName) &&
+        !matches(nickname?.name) &&
+        !matches(user.id.localpart)) {
+      continue;
+    }
+    final name = user.calcDisplayname();
+    yield {
+      'type': 'user',
+      'mxid': user.id,
+      // The mention links by the Matrix name, so show it next to the
+      // nickname: that is the text picking the row puts in the message.
+      'mention': user.mention,
+      'displayname': nickname == null
+          ? name
+          : '${nickname.displayName} ($name)',
+      'avatar_url': (state?.avatarOf(user.id) ?? user.avatarUrl)?.toString(),
+    };
+  }
 }
 
 /// Input bar suggestions for `@role` mentions matching [search].

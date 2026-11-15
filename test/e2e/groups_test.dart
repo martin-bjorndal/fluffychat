@@ -125,6 +125,36 @@ void main() {
       expect(groupOf(alice).state.nicknameOf(carol.userID!)?.setBy, bob.userID);
     });
 
+    test('@-tagging finds people by their nickname', () async {
+      await groupOf(alice).setNickname(bob.userID!, 'Bamse');
+      addTearDown(() async {
+        await groupOf(alice).setNickname(bob.userID!, '');
+        await eventually(
+          'the nickname is gone again',
+          () => groupOf(carol).state.nicknameOf(bob.userID!) == null,
+        );
+      });
+      await eventually(
+        'carol sees the nickname',
+        () => nameIn(carol, 'general', bob.userID!) == 'Bamse',
+      );
+      final room = carol.getRoomById(group.channels['general']!)!;
+      final bobUser = room.unsafeGetUserFromMemoryOrFallback(bob.userID!);
+      final found = gruppechatUserSuggestions(room, 'Bams').toList();
+      expect(found.map((s) => s['mxid']), [bob.userID]);
+      expect(
+        found.single['displayname'],
+        'Bamse (${bobUser.calcDisplayname()})',
+        reason: 'the row shows the nickname and the name the tag will use',
+      );
+      expect(found.single['mention'], bobUser.mention);
+      expect(
+        gruppechatUserSuggestions(room, 'bob').map((s) => s['mxid']),
+        contains(bob.userID),
+        reason: 'the username still works',
+      );
+    });
+
     test('an empty nickname removes it', () async {
       await groupOf(alice).setNickname(carol.userID!, '');
       await eventually(
