@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/email_account.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
@@ -37,13 +38,12 @@ class Settings3PidController extends State<Settings3Pid> {
     );
     if (input == null) return;
     if (!mounted) return;
-    final clientSecret = DateTime.now().millisecondsSinceEpoch.toString();
     final response = await showFutureLoadingDialog(
       context: context,
-      future: () => matrix.client.requestTokenToRegisterEmail(
-        clientSecret,
+      future: () => sendAddEmailLink(
+        matrix.client,
         input,
-        Settings3Pid.sendAttempt++,
+        sendAttempt: Settings3Pid.sendAttempt++,
       ),
     );
     if (response.error != null) return;
@@ -60,13 +60,7 @@ class Settings3PidController extends State<Settings3Pid> {
     final success = await showFutureLoadingDialog(
       context: context,
       delay: false,
-      future: () => matrix.client.uiaRequestBackground(
-        (auth) => matrix.client.add3PID(
-          clientSecret,
-          response.result!.sid,
-          auth: auth,
-        ),
-      ),
+      future: () => addClickedEmail(matrix.client, response.result!),
     );
     if (success.error != null) return;
     setState(() => request = null);

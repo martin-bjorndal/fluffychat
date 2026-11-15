@@ -10,6 +10,7 @@
 @Timeout(Duration(minutes: 4))
 library;
 
+import 'package:fluffychat/gruppechat/chat_backup.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matrix/encryption.dart';
 import 'package:matrix/matrix.dart';
@@ -92,8 +93,9 @@ void main() {
       );
 
       // As the app's unlock()
-      await newPhone.restoreCryptoIdentity(recoveryKey, selfSign: false);
+      await unlockChatBackup(newPhone, recoveryKey);
       expect((await newPhone.getCryptoIdentityState()).connected, isTrue);
+      expect(newPhone.isUnknownSession, isFalse);
 
       final chat = await joined(newPhone, daveChat.id);
       final timeline = await chat.getTimeline();
@@ -125,6 +127,49 @@ void main() {
         bobTimeline,
         'the message from the new phone',
         (e) => e.eventId == eventId && e.body == 'Fra den nye telefonen',
+      );
+    });
+
+    // What happened to a friend's phone: the SDK signs the device while
+    // unlocking only if it already knows the account's master key, which it
+    // often doesn't right after logging in. The backup was unlocked, the
+    // phone stayed unsigned, and an unsigned phone never asks the backup
+    // for keys, so every earlier message stayed locked.
+    test('a phone left unsigned after unlocking gets the earlier messages '
+        'once the app starts', () async {
+      final phone = await logIn(
+        dave.userID!.localpart!,
+        password: davePassword,
+      );
+      final secrets = phone.encryption!.ssss.open(
+        EventTypes.CrossSigningMasterKey,
+      );
+      await secrets.unlock(keyOrPassphrase: recoveryKey, postUnlock: false);
+      await secrets.maybeCacheAll();
+      expect((await phone.getCryptoIdentityState()).connected, isTrue);
+      expect(phone.isUnknownSession, isTrue);
+
+      // As the app does once it has synced (lib/widgets/matrix.dart)
+      expect(await signThisDevice(phone), isTrue);
+      await eventually('the phone is signed', () => !phone.isUnknownSession);
+      expect(await signThisDevice(phone), isFalse, reason: 'only once');
+
+      // Opening the chat, as chat.dart does
+      final chat = await joined(phone, daveChat.id);
+      final timeline = await chat.getTimeline();
+      final event = await inHistory(
+        timeline,
+        'the earlier message',
+        (e) => e.eventId == earlierMessages.first,
+      );
+      timeline.requestKeys(onlineKeyBackupOnly: false);
+      await eventually(
+        'the phone decrypts the earlier message',
+        () =>
+            textOf(
+              timeline.events.firstWhere((e) => e.eventId == event.eventId),
+            ) ==
+            'Før den nye telefonen',
       );
     });
   });

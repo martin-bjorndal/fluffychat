@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/chat_backup.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
@@ -295,6 +296,15 @@ class MatrixState extends State<Matrix> {
     gruppechatExpiringMedia
         .putIfAbsent(name, () => GruppechatExpiringMedia(c))
         .start();
+    // Gruppechat: a device that unlocked chat backup but never got signed
+    // can't fetch earlier messages from it, so sign it once synced
+    c.onSync.stream.first.then((_) => signThisDevice(c)).then(
+      (signed) {
+        if (signed) Logs().i('Signed this device for chat backup');
+      },
+      onError: (Object e, StackTrace s) =>
+          Logs().w('Could not sign this device', e, s),
+    );
     if (PlatformInfos.isWeb || PlatformInfos.isLinux) {
       FlutterLocalNotificationsPlugin().initialize(
         settings: InitializationSettings(

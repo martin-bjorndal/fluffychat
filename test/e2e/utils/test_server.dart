@@ -48,8 +48,8 @@ class TestServer {
   final String? rootCertificate;
   final String serverName;
 
-  /// The stand-ins for the push gateway and Giphy (tests/testserver/
-  /// fake_services.py).
+  /// The stand-ins for the push gateway, Giphy and the mail container
+  /// (tests/testserver/fake_services.py).
   final Uri fakeServices;
 
   /// What pushers send to: Caddy's push route, as on the server.
@@ -114,7 +114,7 @@ class TestServer {
     return IOClient(HttpClient(context: context));
   }
 
-  /// What the stand-in services recorded: `pushes` or `giphy`.
+  /// What the stand-in services recorded: `pushes`, `giphy` or `emails`.
   Future<List<Map<String, Object?>>> recorded(String what) async {
     final response = await http.get(fakeServices.resolve('/_test/$what'));
     return (jsonDecode(response.body) as List).cast<Map<String, Object?>>();
