@@ -9,6 +9,13 @@ plugins {
 
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+} else if (gradle.startParameter.taskNames.any { it.contains("Release") }) {
+    // Gruppechat: without it a release build leaves Firebase out without a
+    // word, and phones only hear of new messages while the app is open
+    throw GradleException(
+        "android/app/google-services.json is missing. Release builds need " +
+            "it for push notifications; copy it from the main checkout.",
+    )
 }
 
 dependencies {
