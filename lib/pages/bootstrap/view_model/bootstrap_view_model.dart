@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fluffychat/gruppechat/chat_backup.dart';
 import 'package:fluffychat/gruppechat/recovery_key.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
@@ -207,7 +208,8 @@ class BootstrapViewModel extends ValueNotifier<BootstrapViewModelState> {
     value.isLoading = true;
     notifyListeners();
     try {
-      await client.restoreCryptoIdentity(key, selfSign: false);
+      // Gruppechat: also signs this device, which the SDK may skip
+      await unlockChatBackup(client, key);
       value.isLoading = false;
       value.cryptoIdentityState = await client.getCryptoIdentityState();
       notifyListeners();

@@ -5,6 +5,7 @@
 
 import 'dart:async';
 
+import 'package:fluffychat/gruppechat/email_account.dart';
 import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
@@ -193,13 +194,12 @@ class LoginController extends State<Login> {
     );
     if (input == null) return;
     if (!mounted) return;
-    final clientSecret = DateTime.now().millisecondsSinceEpoch.toString();
     final response = await showFutureLoadingDialog(
       context: context,
-      future: () => widget.client.requestTokenToResetPasswordEmail(
-        clientSecret,
+      future: () => sendPasswordResetLink(
+        widget.client,
         input,
-        sendAttempt++,
+        sendAttempt: sendAttempt++,
       ),
     );
     if (response.error != null) return;
@@ -227,24 +227,10 @@ class LoginController extends State<Login> {
     );
     if (ok != OkCancelResult.ok) return;
     if (!mounted) return;
-    final data = <String, dynamic>{
-      'new_password': password,
-      'logout_devices': false,
-      'auth': AuthenticationThreePidCreds(
-        type: AuthenticationTypes.emailIdentity,
-        threepidCreds: ThreepidCreds(
-          sid: response.result!.sid,
-          clientSecret: clientSecret,
-        ),
-      ).toJson(),
-    };
     final success = await showFutureLoadingDialog(
       context: context,
-      future: () => widget.client.request(
-        RequestType.POST,
-        '/client/v3/account/password',
-        data: data,
-      ),
+      future: () =>
+          setPasswordFromEmailLink(widget.client, response.result!, password),
     );
     if (!mounted) return;
     if (success.error == null) {
