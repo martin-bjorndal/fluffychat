@@ -124,20 +124,25 @@ Future<bool> pushIsAlreadyRead(
 }
 
 /// Clears the notifications of [client]'s chats that have nothing unread
-/// any more: read in the app, on another device, or by answering.
+/// any more: read in the app, on another device, or by answering. With
+/// [roomIds], only those chats' notifications.
 Future<void> clearReadChatNotifications(
   Client client, {
   L10n? l10n,
   FlutterLocalNotificationsPlugin? plugin,
+  Set<String>? roomIds,
 }) async {
   if (kIsWeb) return;
   plugin ??= FlutterLocalNotificationsPlugin();
   try {
     final shown = await plugin.getActiveNotifications();
+    final rooms = roomIds == null
+        ? client.rooms
+        : roomIds.map(client.getRoomById).nonNulls.toList();
     var cleared = false;
     for (final notification in shown) {
       if (notification.groupKey != client.clientName) continue;
-      final room = client.rooms.firstWhereOrNull(
+      final room = rooms.firstWhereOrNull(
         (room) => chatNotificationId(client, room.id) == notification.id,
       );
       if (room == null || room.isUnreadOrInvited) continue;
@@ -153,6 +158,94 @@ Future<void> clearReadChatNotifications(
     }
   } catch (e, s) {
     Logs().w('Could not clear the notifications of read chats', e, s);
+  }
+}
+
+/// While the app is on screen, clears a chat's notification as soon as
+/// [client] learns the chat is read: on another device, in a bubble, or in
+/// the app just after the push had come. Only chats in the sync are looked at,
+/// so a notification for a message the app hasn't synced yet stays.
+///
+/// Before 1.1.38 such notifications stayed in the shade until the app left
+/// the screen and came back.
+class ReadChatNotificationsWatcher {
+  final Client client;
+  final L10n? l10n;
+  final FlutterLocalNotificationsPlugin? plugin;
+  StreamSubscription<SyncUpdate>? _subscription;
+  final _pending = <String>{};
+  bool _running = false;
+
+  ReadChatNotificationsWatcher(this.client, {this.l10n, this.plugin});
+
+  void start() {
+    _subscription ??= client.onSync.stream.listen(_synced);
+  }
+
+  void cancel() {
+    _subscription?.cancel();
+    _subscription = null;
+    _pending.clear();
+  }
+
+  void _synced(SyncUpdate update) {
+    // Off the screen, the push helper looks after the shade
+    if (!clientIsSyncing(client)) return;
+    final joined = update.rooms?.join;
+    if (joined == null) return;
+    // Chats still unread are skipped here, without asking the shade
+    final read = [
+      for (final MapEntry(key: roomId, value: room) in joined.entries)
+        if (_mayBeRead(room) &&
+            client.getRoomById(roomId)?.isUnreadOrInvited == false)
+          roomId,
+    ];
+    if (read.isEmpty) return;
+    _pending.addAll(read);
+    _clear();
+  }
+
+  /// Whether [update] can make its chat read: a read receipt or message of
+  /// the person's own, a change to the chat's account data (marked unread
+  /// or not), or the server counting nothing unread (a message deleted or
+  /// gone). Someone else typing doesn't, and must not clear a notification
+  /// for a message the app hasn't synced yet.
+  bool _mayBeRead(JoinedRoomUpdate update) {
+    final ownId = client.userID;
+    if (update.unreadNotifications?.notificationCount == 0) return true;
+    if (update.accountData?.isNotEmpty ?? false) return true;
+    if (update.timeline?.events?.any((e) => e.senderId == ownId) ?? false) {
+      return true;
+    }
+    return update.ephemeral?.any(
+          (e) =>
+              e.type == 'm.receipt' &&
+              ReceiptEventContent.fromJson(e.content).receipts.values.any(
+                (byType) =>
+                    byType.values.any((users) => users.containsKey(ownId)),
+              ),
+        ) ??
+        false;
+  }
+
+  /// One pass at a time; rooms synced meanwhile get the next one.
+  Future<void> _clear() async {
+    if (_running) return;
+    _running = true;
+    try {
+      while (_pending.isNotEmpty && _subscription != null) {
+        final roomIds = {..._pending};
+        _pending.clear();
+        await clearReadChatNotifications(
+          client,
+          l10n: l10n,
+          plugin: plugin,
+          roomIds: roomIds,
+        );
+      }
+    } finally {
+      _running = false;
+    }
   }
 }
 

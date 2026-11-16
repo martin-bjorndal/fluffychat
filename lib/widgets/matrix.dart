@@ -186,6 +186,7 @@ class MatrixState extends State<Matrix> {
   final onRoleMention = <String, StreamSubscription>{};
   final gruppechatWakeRules = <String, GruppechatWakeRules>{};
   final gruppechatExpiringMedia = <String, GruppechatExpiringMedia>{};
+  final gruppechatReadNotifications = <String, ReadChatNotificationsWatcher>{};
   final onLogoutSub = <String, StreamSubscription<LoginState>>{};
   final onUiaRequest = <String, StreamSubscription<UiaRequest>>{};
 
@@ -296,6 +297,13 @@ class MatrixState extends State<Matrix> {
     gruppechatExpiringMedia
         .putIfAbsent(name, () => GruppechatExpiringMedia(c))
         .start();
+    // Gruppechat: notifications of chats read while the app is open go
+    // (lib/gruppechat/chat_notifications.dart)
+    if (PlatformInfos.isAndroid) {
+      gruppechatReadNotifications
+          .putIfAbsent(name, () => ReadChatNotificationsWatcher(c))
+          .start();
+    }
     // Gruppechat: a device that unlocked chat backup but never got signed
     // can't fetch earlier messages from it, so sign it once synced
     c.onSync.stream.first.then((_) => signThisDevice(c)).then(
@@ -360,6 +368,7 @@ class MatrixState extends State<Matrix> {
     onRoleMention.remove(name);
     gruppechatWakeRules.remove(name)?.cancel();
     gruppechatExpiringMedia.remove(name)?.cancel();
+    gruppechatReadNotifications.remove(name)?.cancel();
   }
 
   void initMatrix() {

@@ -425,6 +425,16 @@ Future<void> _tryPushHelper(
     icon: roomIcon,
     bubble: bubble,
   );
+  // Gruppechat: read while the push was fetched, after which the app only
+  // clears it on resume (lib/gruppechat/chat_notifications.dart)
+  if (await pushIsAlreadyRead(
+    event,
+    sync: false,
+    l10n: l10n,
+    plugin: flutterLocalNotificationsPlugin,
+  )) {
+    return;
+  }
 
   if (channel.soundInApp) unawaited(GruppechatSounds.notification(event.room));
 
