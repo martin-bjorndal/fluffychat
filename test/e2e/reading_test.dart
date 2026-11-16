@@ -333,4 +333,95 @@ void main() {
       },
     );
   });
+
+  // Reported again for 1.1.38: notifications of chats read while the app
+  // was open stayed in the shade, until the app left the screen and came
+  // back. The app clears a chat's notification as soon as it knows the
+  // chat is read, however it was read.
+  group('A chat read while the app is open', skip: skipWithoutTestServer, () {
+    late Client alice;
+    late Client carol;
+    late TestGroup group;
+    late String pushkey;
+    late L10n l10n;
+    late NotificationShade shade;
+    late ReadChatNotificationsWatcher watcher;
+    Room channel(Client client, String name) =>
+        client.getRoomById(group.channels[name]!)!;
+
+    /// Alice writes in [name], and carol's phone shows it from the push.
+    Future<int> notified(String name, String text) async {
+      final eventId = await channel(alice, name).sendTextEvent(text);
+      final push = await waitForPush(pushkey, eventId!);
+      final room = channel(carol, name);
+      await eventually(
+        'carol gets the message',
+        () => room.lastEvent?.eventId == eventId,
+      );
+      // The push came in the background, as it does on a phone
+      await pushHelper(
+        PushNotification.fromJson(push['notification'] as Map<String, Object?>),
+        l10n: l10n,
+        clients: [carol],
+        appOnScreen: false,
+        flutterLocalNotificationsPlugin: FlutterLocalNotificationsPlugin(),
+      );
+      final id = chatNotificationId(carol, room.id);
+      expect(shade.notifications.keys, contains(id));
+      return id;
+    }
+
+    /// Carol opens [name] in the web app, once it has the latest message.
+    Future<void> readOnWeb(String name) async {
+      final web = await logIn('carol');
+      final webRoom = web.getRoomById(group.channels[name]!)!;
+      await eventually(
+        'the web app has the message',
+        () =>
+            webRoom.lastEvent?.eventId ==
+            channel(carol, name).lastEvent?.eventId,
+      );
+      await openChat(webRoom, l10n);
+    }
+
+    setUpAll(() async {
+      SharedPreferences.setMockInitialValues({});
+      l10n = await lookupL10n(const Locale('nb'));
+      shade = NotificationShade.install();
+      alice = await logIn('alice');
+      carol = await logIn('carol');
+      group = await newGroup(alice, [carol], channels: ['general', 'spill']);
+      pushkey = await addPusher(carol);
+      // Carol's app is on screen
+      watcher = ReadChatNotificationsWatcher(carol, l10n: l10n)..start();
+    });
+    tearDownAll(() async {
+      watcher.cancel();
+      await logOutEveryone();
+    });
+
+    test('clears its notification when read on another device', () async {
+      final id = await notified('general', 'Ser du dette?');
+
+      // Carol reads the channel in the web app, with her phone open
+      await readOnWeb('general');
+
+      await eventually(
+        'the notification leaves the shade',
+        () => !shade.notifications.containsKey(id),
+      );
+    });
+
+    test('leaves the notification of a chat still unread', () async {
+      final id = await notified('general', 'Kjem du?');
+      // Carol reads another channel in the web app meanwhile
+      final spillId = await notified('spill', 'Eg tek med kortstokken');
+      await readOnWeb('spill');
+      await eventually(
+        'the read channel leaves the shade',
+        () => !shade.notifications.containsKey(spillId),
+      );
+      expect(shade.notifications.keys, contains(id));
+    });
+  });
 }

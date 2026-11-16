@@ -9,10 +9,14 @@
 import 'package:fluffychat/gruppechat/file_series.dart';
 import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/gruppechat/viewer_keys.dart';
+import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/pages/image_viewer/image_viewer.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
+// ignore: implementation_imports
+import 'package:matrix/src/models/timeline_chunk.dart';
 
 import '../utils/test_client.dart';
 
@@ -173,6 +177,77 @@ void main() {
       final stackRect = tester.getRect(find.byType(GruppechatPhotoStack));
       expect(stackRect.top, lessThan(top.top));
       expect(stackRect.right, greaterThan(top.right));
+    });
+  });
+
+  group('the image viewer', () {
+    testWidgets('the arrow keys page through the chat\'s photos', (
+      tester,
+    ) async {
+      // Newest first, as the timeline has them
+      final photos = [
+        photo('v3', series: 'v', index: 2),
+        photo('v2', series: 'v', index: 1),
+        photo('v1', series: 'v', index: 0),
+      ];
+      final timeline = Timeline(
+        room: room,
+        chunk: TimelineChunk(events: photos),
+      );
+      addTearDown(timeline.cancelSubscriptions);
+      // One frame to start the page animation, then let it finish
+      Future<void> turnPage() async {
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: L10n.localizationsDelegates,
+          supportedLocales: L10n.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Column(
+                children: [
+                  // The message field has the keys before the viewer opens
+                  const TextField(autofocus: true),
+                  TextButton(
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (_) => ImageViewer(
+                        photos.last,
+                        timeline: timeline,
+                        outerContext: context,
+                      ),
+                    ),
+                    child: const Text('open'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      // The translations load before the first real frame
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('open'));
+      await turnPage();
+      final viewer = tester.state<ImageViewerController>(
+        find.byType(ImageViewer),
+      );
+      expect(viewer.currentEvent.eventId, '\$v1');
+      Future<void> press(LogicalKeyboardKey key, String shows) async {
+        await tester.sendKeyEvent(key);
+        await turnPage();
+        expect(viewer.currentEvent.eventId, shows);
+      }
+
+      await press(LogicalKeyboardKey.arrowRight, '\$v2');
+      await press(LogicalKeyboardKey.arrowRight, '\$v3');
+      // No further than the last photo
+      await press(LogicalKeyboardKey.arrowRight, '\$v3');
+      await press(LogicalKeyboardKey.arrowLeft, '\$v2');
     });
   });
 
