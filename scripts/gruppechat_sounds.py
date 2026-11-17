@@ -96,6 +96,9 @@ def sparkles(count, seconds, seed):
 # food, cut from a recording on Wikimedia Commons (see recordings/README.md,
 # CC BY 4.0). Where each meow starts and ends in the excerpt, in seconds.
 RECORDING = Path(__file__).resolve().parent / "recordings" / "kortharkatt.wav"
+# Meows 3 and 4 are no longer used since 1.1.40: 4 is by far the brightest,
+# and sped up for the kitten it was shrill, "litt skummel"; 3 went with the
+# fourth cat of the effect, so the others don't overlap.
 MEOWS = [(0.0, 1.2), (1.45, 3.2), (3.45, 4.8), (5.05, 6.65), (6.9, 8.2)]
 
 
@@ -106,13 +109,17 @@ def recording() -> list[float]:
     return [s / 32768 for (s,) in struct.iter_unpack("<h", frames)]
 
 
-def faded(samples, seconds=0.015):
-    """Fades both ends in and out, so a cut doesn't click."""
-    n = min(int(RATE * seconds), len(samples) // 2)
+def faded(samples, rise=0.05, release=0.4):
+    """Fades in and out on a raised cosine. The recorded meows swell towards
+    their end, and some were cut while at their loudest, so they stopped like
+    a shout; the long fade-out lets each die away instead (1.1.40)."""
     out = list(samples)
-    for i in range(n):
-        out[i] *= i / n
-        out[-1 - i] *= i / n
+    n_in = min(int(RATE * rise), len(out) // 2)
+    n_out = min(int(RATE * release), len(out) // 2)
+    for k in range(n_in):
+        out[k] *= 0.5 - 0.5 * math.cos(math.pi * k / n_in)
+    for k in range(n_out):
+        out[-1 - k] *= 0.5 - 0.5 * math.cos(math.pi * k / n_out)
     return out
 
 
@@ -132,14 +139,20 @@ def lowpass(samples, cutoff):
     return [sum(k * padded[i + j] for j, k in enumerate(kernel)) for i in range(len(samples))]
 
 
+# From here up the meows are filtered away, so they are warm rather than
+# shrill (1.1.40). With lowpass's 63 taps it is a slope, not a cut: about
+# 1 kHz wide, more so for a meow that is sped up.
+MEOW_CUTOFF = 1800
+
+
 def meow(index, pitch=1.0, loudness=1.0):
     """Meow number index of the recording; pitch above 1 plays it faster,
     so higher and shorter, like a kitten."""
     start, end = MEOWS[index]
-    samples = CAT[int(start * RATE) : int(end * RATE)]
+    # Filtered before it is sped up, so the filter lands at MEOW_CUTOFF
+    # after, and nothing goes above half the rate and folds back
+    samples = lowpass(CAT[int(start * RATE) : int(end * RATE)], MEOW_CUTOFF / pitch)
     if pitch != 1.0:
-        # Filtered first, so what goes above half the rate doesn't fold back
-        samples = lowpass(samples, 0.45 * RATE / pitch)
         n = int(len(samples) / pitch)
         out = []
         for i in range(n):
@@ -166,7 +179,7 @@ SOUNDS = {
     "gc_floyte": tone(700, 0.55, 3, ((1, 1.0), (2, 0.12)), attack=0.06, glide=1050, vibrato=0.01),
     "gc_dobbeltpip": mix(*[(i * 0.16, tone(1000, 0.1, 10, ((1, 1.0), (3, 0.2), (5, 0.07)), attack=0.008)) for i in range(2)]),
     "gc_mjau": meow(0),
-    "gc_kattunge": mix((0, meow(2, 1.5)), (0.7, meow(4, 1.6))),
+    "gc_kattunge": mix((0, meow(2, 1.5)), (0.65, meow(1, 1.5))),
     # Message effects
     "gc_effect_konfetti": mix((0, noise(0.25, 18, 3, 0.9)), (0.05, tone(180, 0.12, 25, SOFT)), (0.1, sparkles(22, 1.4, 4))),
     "gc_effect_hjerter": mix(
@@ -182,11 +195,12 @@ SOUNDS = {
         (0.62, [s * 0.5 for s in tone(70, 0.5, 6, SOFT)]),
         (0.8, sparkles(30, 1.0, 8)),
     ),
+    # Each cat starts as the one before fades out, rather than up to three
+    # wailing over each other (1.1.40)
     "gc_effect_katter": mix(
         (0, meow(1, 1.0, 0.8)),
-        (0.5, meow(2, 1.5, 0.6)),
-        (1.0, meow(3, 1.0, 0.7)),
-        (1.4, meow(4, 1.6, 0.5)),
+        (1.4, meow(2, 1.5, 0.6)),
+        (2.1, meow(0, 1.5, 0.7)),
     ),
 }
 
@@ -207,9 +221,13 @@ NOTIFICATION_SOUNDS = {
 # tones' 0.8 the cats were "helt ekstremt høyt" (1.1.39): A-weighted, over
 # their loudest 0.37 s, 21-22 dB against 15.6 for the app's usual
 # notification sound (notification.mp3) and 16.7 for the bell. At half of
-# that they measure 15.2-15.9.
+# that they measure 15.2-15.9, as loud as the usual sound, and still "kan
+# gjerne være lågare" (1.1.40): since then about 4 dB below it. Low-passed
+# and faded (MEOW_CUTOFF, faded), their peak is lower against their
+# loudness, so 0.22 rather than 0.25 keeps them as loud, A-weighted, within
+# 1 dB.
 LEVEL = 0.8
-CAT_LEVEL = 0.4
+CAT_LEVEL = 0.22
 CATS = {"gc_mjau", "gc_kattunge", "gc_effect_katter"}
 
 

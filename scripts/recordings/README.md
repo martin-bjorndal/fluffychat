@@ -14,7 +14,8 @@ normalised.
 
 `scripts/gruppechat_sounds.py` makes the notification sounds "Mjau" and
 "Kattunge" and the "Katter" effect from it (`MEOWS` there gives where each
-meow is in this file); "Kattunge" and two meows of the effect are played
+meow is in this file). Since 1.1.40 each meow is low-pass filtered and
+faded in and out; "Kattunge" and two meows of the effect are played
 faster, which makes them higher. The app credits the recording on its
 licences page (`gruppechatRegisterSoundLicenses` in
 `lib/gruppechat/sounds.dart`).

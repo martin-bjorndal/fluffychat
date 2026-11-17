@@ -353,8 +353,9 @@ const gruppechatSoundLicenseText =
     'by PantheraLeo1359531, '
     'https://commons.wikimedia.org/wiki/File:Weibliche_Britisch_Kurzhaar_will_Futter_C1277_MIAUEN.wav, '
     'licensed under CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. '
-    'Changes: single meows cut out, mixed down to mono, resampled, and some '
-    'played faster, which makes them higher.';
+    'Changes: single meows cut out, mixed down to mono, resampled, low-pass '
+    'filtered, faded in and out, and some played faster, which makes them '
+    'higher.';
 
 /// Lets someone choose [room]'s notification sound, playing each one they
 /// tap, and saves the choice.
