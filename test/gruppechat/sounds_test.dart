@@ -8,6 +8,7 @@
 // (lib/gruppechat/sounds.dart). How they sound can only be heard on a phone.
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
@@ -25,6 +26,35 @@ import 'package:shared_preferences/shared_preferences.dart';
   final bits = data.getUint16(34, Endian.little);
   final size = data.getUint32(40, Endian.little);
   return (channels, rate, size / (rate * channels * bits ~/ 8));
+}
+
+/// The 16-bit samples of a mono WAV file written by
+/// scripts/gruppechat_sounds.py, from -1 to 1.
+List<double> wavSamples(File file) {
+  final data = ByteData.sublistView(file.readAsBytesSync());
+  final size = data.getUint32(40, Endian.little);
+  return [
+    for (var i = 44; i < 44 + size; i += 2)
+      data.getInt16(i, Endian.little) / 32768,
+  ];
+}
+
+/// The root mean square of the loudest 0.3 seconds of a sound (all of it,
+/// if it is shorter).
+double loudestRms(File file) {
+  final samples = wavSamples(file);
+  final (_, rate, _) = wavFormat(file.readAsBytesSync());
+  final window = min(rate * 3 ~/ 10, samples.length);
+  var loudest = 0.0;
+  for (var start = 0; start + window <= samples.length; start += 1600) {
+    var sum = 0.0;
+    for (var i = start; i < start + window; i++) {
+      sum += samples[i] * samples[i];
+    }
+    final rms = sqrt(sum / window);
+    if (rms > loudest) loudest = rms;
+  }
+  return loudest;
 }
 
 void main() {
@@ -50,6 +80,20 @@ void main() {
         ).readAsBytesSync(),
         File(sound.asset).readAsBytesSync(),
       );
+    }
+  });
+
+  // "Volumet er også helt ekstremt høyt" (1.1.39): normalised to the same
+  // peak as the tones, the meows were about 6 dB louder (A-weighted) than
+  // the usual notification sound, and are written at half the level since.
+  // Measured A-weighted, the bell is within 1 dB of the usual sound
+  // (notification.mp3, which can't be read here), so it stands in for it.
+  // Plain RMS undersells the meows, so they must stay well below the bell.
+  test('the cat sounds are no louder than the bell', () {
+    final bell = loudestRms(File('assets/sounds/gc_bjelle.wav'));
+    for (final file in ['gc_mjau', 'gc_kattunge', 'gc_effect_katter']) {
+      final cat = loudestRms(File('assets/sounds/$file.wav'));
+      expect(cat, lessThan(bell * 0.75), reason: file);
     }
   });
 

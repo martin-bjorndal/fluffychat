@@ -11,6 +11,10 @@ class NotificationShade extends AndroidFlutterLocalNotificationsPlugin {
   /// The notifications in the shade, by id.
   final notifications = <int, ActiveNotification>{};
 
+  /// The messages a notification in the shade shows, by id: what Android
+  /// gives back to the app when it adds a new message.
+  final messages = <int, MessagingStyleInformation>{};
+
   /// Puts a new shade in place of the phone's.
   static NotificationShade install() {
     final shade = NotificationShade();
@@ -34,15 +38,43 @@ class NotificationShade extends AndroidFlutterLocalNotificationsPlugin {
       body: body,
       payload: payload,
     );
+    final style = notificationDetails?.styleInformation;
+    if (style is MessagingStyleInformation) {
+      // Android keeps a copy, not the app's own list
+      messages[id] = _copy(style);
+    } else {
+      messages.remove(id);
+    }
   }
+
+  @override
+  Future<MessagingStyleInformation?> getActiveNotificationMessagingStyle({
+    required int id,
+    String? tag,
+  }) async {
+    final style = messages[id];
+    return style == null ? null : _copy(style);
+  }
+
+  static MessagingStyleInformation _copy(MessagingStyleInformation style) =>
+      MessagingStyleInformation(
+        style.person,
+        conversationTitle: style.conversationTitle,
+        groupConversation: style.groupConversation,
+        messages: [...?style.messages],
+      );
 
   @override
   Future<void> cancel({required int id, String? tag}) async {
     notifications.remove(id);
+    messages.remove(id);
   }
 
   @override
-  Future<void> cancelAll() async => notifications.clear();
+  Future<void> cancelAll() async {
+    notifications.clear();
+    messages.clear();
+  }
 
   @override
   Future<List<ActiveNotification>> getActiveNotifications() async =>

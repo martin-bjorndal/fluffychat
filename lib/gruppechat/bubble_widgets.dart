@@ -5,6 +5,7 @@
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/bubbles.dart';
+import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
@@ -88,8 +89,7 @@ Future<void> showRoomAsBubble(BuildContext context, Room room) async {
   await setRoomShortcut(room, title, icon);
   final lastEvent = room.lastEvent;
   await GruppechatBubbles.openBubble(
-    // As push_helper.dart numbers a room's notification
-    id: '${client.clientName}_${room.id}'.hashCode,
+    id: chatNotificationId(client, room.id),
     roomId: room.id,
     icon: icon,
     payload: FluffyChatPushPayload(
