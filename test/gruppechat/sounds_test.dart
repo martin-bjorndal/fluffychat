@@ -47,15 +47,22 @@ double loudestRms(File file) {
   final window = min(rate * 3 ~/ 10, samples.length);
   var loudest = 0.0;
   for (var start = 0; start + window <= samples.length; start += 1600) {
-    var sum = 0.0;
-    for (var i = start; i < start + window; i++) {
-      sum += samples[i] * samples[i];
-    }
-    final rms = sqrt(sum / window);
-    if (rms > loudest) loudest = rms;
+    loudest = max(loudest, rms(samples.sublist(start, start + window)));
   }
   return loudest;
 }
+
+double rms(List<double> samples) =>
+    sqrt(samples.fold(0.0, (sum, s) => sum + s * s) / samples.length);
+
+/// How bright a sound is: the RMS of how much it changes from one sample to
+/// the next, over its RMS. For a pure tone about 2π times its frequency over
+/// the sample rate, so higher for sounds with more of their energy high up.
+double brightness(List<double> samples) =>
+    rms([
+      for (var i = 1; i < samples.length; i++) samples[i] - samples[i - 1],
+    ]) /
+    rms(samples);
 
 void main() {
   test('the cat sounds are cut from the recording', () {
@@ -85,15 +92,49 @@ void main() {
 
   // "Volumet er også helt ekstremt høyt" (1.1.39): normalised to the same
   // peak as the tones, the meows were about 6 dB louder (A-weighted) than
-  // the usual notification sound, and are written at half the level since.
+  // the usual notification sound, and were written at half the level.
   // Measured A-weighted, the bell is within 1 dB of the usual sound
   // (notification.mp3, which can't be read here), so it stands in for it.
   // Plain RMS undersells the meows, so they must stay well below the bell.
-  test('the cat sounds are no louder than the bell', () {
+  // At half the level they still measured as loud as the usual sound, and
+  // were "gjerne lågare" (1.1.40): since then a further 4 dB lower
+  // (CAT_LEVEL in scripts/gruppechat_sounds.py), 0.35-0.38 of the bell in
+  // plain RMS, where half the level measured 0.56-0.61. Below 0.42, so
+  // going even 1 dB back up fails. Low-passed and faded since (also 1.1.40),
+  // they are as loud A-weighted, and 0.33-0.38 in plain RMS.
+  test('the cat sounds are quieter than the bell', () {
     final bell = loudestRms(File('assets/sounds/gc_bjelle.wav'));
     for (final file in ['gc_mjau', 'gc_kattunge', 'gc_effect_katter']) {
       final cat = loudestRms(File('assets/sounds/$file.wav'));
-      expect(cat, lessThan(bell * 0.75), reason: file);
+      expect(cat, lessThan(bell * 0.42), reason: file);
+    }
+  });
+
+  // "Litt mindre skummel" (1.1.40): the recorded meows swell towards their
+  // end, and the kitten stopped while at its loudest (its last 0.2 s at 1.02
+  // of its loudest 0.3 s), like a shout; the effect 0.30, the meow 0.20.
+  // Since then each meow fades out: 0.08-0.18.
+  test('the cat sounds die away instead of stopping loud', () {
+    for (final file in ['gc_mjau', 'gc_kattunge', 'gc_effect_katter']) {
+      final asset = File('assets/sounds/$file.wav');
+      final samples = wavSamples(asset);
+      final (_, rate, _) = wavFormat(asset.readAsBytesSync());
+      final tail = samples.sublist(samples.length - rate ~/ 5);
+      expect(rms(tail), lessThan(loudestRms(asset) * 0.25), reason: file);
+    }
+  });
+
+  // The kitten was its brightest meow sped up 1.6 times, and shrill: 0.67
+  // in [brightness], where the bell is 0.36 and the other cats were 0.36-0.39.
+  // Since then the meows are low-passed, and that meow is no longer used:
+  // 0.30-0.40, the kitten highest, as it is played faster.
+  test('the cat sounds are not much shriller than the bell', () {
+    for (final file in ['gc_mjau', 'gc_kattunge', 'gc_effect_katter']) {
+      expect(
+        brightness(wavSamples(File('assets/sounds/$file.wav'))),
+        lessThan(0.45),
+        reason: file,
+      );
     }
   });
 
@@ -111,6 +152,7 @@ void main() {
       'CC BY 4.0',
       'https://creativecommons.org/licenses/by/4.0/',
       'Changes:',
+      'low-pass filtered',
     ]) {
       expect(text, contains(part));
     }
