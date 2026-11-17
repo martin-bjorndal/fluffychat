@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
@@ -230,6 +231,8 @@ class _SpaceViewState extends State<SpaceView> {
       ),
       Offset.zero & overlay.size,
     );
+    // Gruppechat: lib/gruppechat/chat_reading.dart
+    final markRead = room != null && offersMarkRead(room);
 
     final action = await showMenu<SpaceChildAction>(
       context: posContext,
@@ -257,21 +260,22 @@ class _SpaceViewState extends State<SpaceView> {
               ],
             ),
           ),
+          // Gruppechat: "Mark as read" reads the chat (chat_reading.dart)
           PopupMenuItem(
-            value: room.markedUnread
+            value: markRead
                 ? SpaceChildAction.markAsRead
                 : SpaceChildAction.markAsUnread,
             child: Row(
               mainAxisSize: .min,
               children: [
                 Icon(
-                  room.markedUnread
+                  markRead
                       ? Icons.mark_as_unread
                       : Icons.mark_as_unread_outlined,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  room.isUnread
+                  markRead
                       ? L10n.of(context).markAsRead
                       : L10n.of(context).markAsUnread,
                 ),
@@ -355,9 +359,10 @@ class _SpaceViewState extends State<SpaceView> {
           future: () => room!.markUnread(true),
         );
       case SpaceChildAction.markAsRead:
+        final l10n = L10n.of(context);
         await showFutureLoadingDialog(
           context: context,
-          future: () => room!.markUnread(false),
+          future: () => markChatRead(room!, l10n: l10n),
         );
       case SpaceChildAction.leave:
         await showFutureLoadingDialog(

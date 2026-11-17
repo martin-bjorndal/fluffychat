@@ -49,10 +49,13 @@ Future<void> pushHelper(
   required FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
 }) async {
   l10n ??= await lookupL10n(PlatformDispatcher.instance.locale);
+  // Gruppechat: the account that fetched the push, for the fallback's id
+  Client? fetchedBy;
 
   try {
     await _tryPushHelper(
       notification,
+      onClient: (client) => fetchedBy = client,
       clients: clients,
       l10n: l10n,
       activeRoomId: activeRoomId,
@@ -72,15 +75,19 @@ Future<void> pushHelper(
       ]);
     }
 
-    if (notification.roomId != null) {
+    final roomId = notification.roomId;
+    if (roomId != null) {
+      final client = fetchedBy;
+      final clientName = client?.clientName ?? notification.clientName;
       await flutterLocalNotificationsPlugin.show(
-        id: notification.notificationId,
+        id: client == null
+            ? notification.notificationId
+            : chatNotificationId(client, roomId),
         title: l10n.newMessageInFluffyChat,
         body: l10n.openAppToReadMessages,
         notificationDetails: NotificationDetails(
           iOS: DarwinNotificationDetails(
-            threadIdentifier:
-                '${notification.clientName}_${notification.roomId}',
+            threadIdentifier: '${clientName}_$roomId',
           ),
           android: AndroidNotificationDetails(
             AppConfig.pushNotificationsChannelId,
@@ -94,7 +101,7 @@ Future<void> pushHelper(
             priority: Priority.max,
             shortcutId: notification.roomId,
             category: AndroidNotificationCategory.message,
-            groupKey: notification.clientName,
+            groupKey: clientName,
           ),
         ),
       );
@@ -107,6 +114,7 @@ Future<void> pushHelper(
 
 Future<void> _tryPushHelper(
   PushNotification notification, {
+  required void Function(Client) onClient,
   List<Client>? clients,
   L10n? l10n,
   String? activeRoomId,
@@ -133,6 +141,7 @@ Future<void> _tryPushHelper(
             ) ??
             await ClientManager.createClient(clientName, store));
 
+  onClient(client);
   lastReceivedPushNotification[client.clientName] = DateTime.now();
 
   l10n ??= await L10n.delegate.load(PlatformDispatcher.instance.locale);
@@ -240,7 +249,9 @@ Future<void> _tryPushHelper(
     senderAvatar,
   );
 
-  final id = '${client.clientName}_${notification.roomId}'.hashCode;
+  // Gruppechat: the id the app clears, whatever the push says
+  // (lib/gruppechat/chat_notifications.dart)
+  final id = chatNotificationId(client, event.room.id);
 
   final senderName = event.senderFromMemoryOrFallback.groupDisplayname();
   // Show notification
@@ -258,10 +269,10 @@ Future<void> _tryPushHelper(
     ),
   );
 
-  final messagingStyleInformation = PlatformInfos.isAndroid
-      ? await AndroidFlutterLocalNotificationsPlugin()
-            .getActiveNotificationMessagingStyle(id: id)
-      : null;
+  final messagingStyleInformation = await shownChatMessages(
+    flutterLocalNotificationsPlugin,
+    id,
+  );
   messagingStyleInformation?.messages?.add(newMessage);
 
   final roomName = event.room.getLocalizedDisplayname(MatrixLocals(l10n));
@@ -382,7 +393,7 @@ Future<void> _tryPushHelper(
       ? await client.getIosNotificationAvatar(event.room.avatar)
       : null;
   final iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-    threadIdentifier: '${notification.clientName}_${notification.roomId}',
+    threadIdentifier: '${client.clientName}_${event.room.id}',
     attachments: iOSAttachmentPath == null
         ? null
         : [
@@ -412,7 +423,7 @@ Future<void> _tryPushHelper(
 
   await GruppechatBubbles.showNotification(
     flutterLocalNotificationsPlugin,
-    id: notification.notificationId,
+    id: id,
     title: needsTitleAndBody ? title : null,
     body: needsTitleAndBody ? body : null,
     details: platformChannelSpecifics,

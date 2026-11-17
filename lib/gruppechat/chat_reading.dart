@@ -3,8 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:collection/collection.dart';
+import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/chat_notifications.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:matrix/matrix.dart';
 
 // Reading a chat: where the chat page shows what is new, and marking what it
@@ -81,12 +85,8 @@ String? readMarkerTarget(
 
   if (timeline.events.isEmpty) return null;
 
-  // Not on the notice of a call that is going on, which would stop the
-  // phone ringing
-  if (room.hasActiveMatrixRtcCall &&
-      timeline.events.first.type == RtcNotificationContent.eventType) {
-    return null;
-  }
+  // Not on the notice of a call that is going on
+  if (_ringsIn(room, timeline.events.first)) return null;
 
   final latest = eventId == null;
   eventId ??= timeline.events
@@ -110,3 +110,44 @@ String? readMarkerTarget(
   }
   return eventId;
 }
+
+/// Whether the menus of the chat list and a group's channel list offer
+/// "Mark as read" for [room], and not "Mark as unread": the list shows it
+/// unread, with new messages or marked unread.
+bool offersMarkRead(Room room) => room.isUnread || room.hasNewMessages;
+
+/// "Mark as read" in the chat list or a group's channel list: puts the read
+/// marker on [room]'s newest message, takes away its unread mark, and clears
+/// its notification. Not while a call rings in it, as for opening the chat
+/// ([readMarkerTarget]): the call's notification stays.
+///
+/// Before 1.1.39 a group's channel list marked a channel with new messages
+/// unread instead, and the chat list only took the mark away, so the
+/// messages and the notification stayed unread.
+Future<void> markChatRead(
+  Room room, {
+  required L10n l10n,
+  FlutterLocalNotificationsPlugin? plugin,
+}) async {
+  final last = room.lastEvent;
+  final ringing = _ringsIn(room, last);
+  final eventId = last?.eventId;
+  await Future.wait([
+    // Nothing to mark, or a message of hers still being sent
+    if (!ringing && eventId != null && eventId.isValidMatrixIdStrict())
+      room.setReadMarker(
+        eventId,
+        mRead: eventId,
+        public: AppSettings.sendPublicReadReceipts.value,
+      ),
+    room.markUnread(false),
+    // At once, not on the next sync (ReadChatNotificationsWatcher)
+    if (!ringing) clearChatNotification(room, l10n: l10n, plugin: plugin),
+  ]);
+}
+
+/// Whether [event] is the notice of a call going on in [room]: marking it
+/// read would stop the phone ringing.
+bool _ringsIn(Room room, Event? event) =>
+    room.hasActiveMatrixRtcCall &&
+    event?.type == RtcNotificationContent.eventType;

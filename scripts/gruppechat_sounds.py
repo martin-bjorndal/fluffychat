@@ -202,14 +202,25 @@ NOTIFICATION_SOUNDS = {
 }
 
 
-def write(path: Path, samples: list[float]) -> None:
+# How loud each sound is written, as a part of full scale. A meow holds its
+# loudness over a second, in the 0.5-4 kHz the ear hears best, so at the
+# tones' 0.8 the cats were "helt ekstremt høyt" (1.1.39): A-weighted, over
+# their loudest 0.37 s, 21-22 dB against 15.6 for the app's usual
+# notification sound (notification.mp3) and 16.7 for the bell. At half of
+# that they measure 15.2-15.9.
+LEVEL = 0.8
+CAT_LEVEL = 0.4
+CATS = {"gc_mjau", "gc_kattunge", "gc_effect_katter"}
+
+
+def write(path: Path, samples: list[float], level: float) -> None:
     peak = max(abs(s) for s in samples) or 1.0
     # Normalised, then a short fade-out so nothing clicks at the end
     fade = int(RATE * 0.02)
     frames = bytearray()
     for i, s in enumerate(samples):
         gain = min(1.0, (len(samples) - i) / fade)
-        frames += struct.pack("<h", int(32767 * 0.8 * gain * s / peak))
+        frames += struct.pack("<h", int(32767 * level * gain * s / peak))
     path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(path), "wb") as file:
         file.setnchannels(1)
@@ -220,9 +231,10 @@ def write(path: Path, samples: list[float]) -> None:
 
 def main() -> None:
     for name, samples in SOUNDS.items():
-        write(CLIENT / "assets" / "sounds" / f"{name}.wav", samples)
+        level = CAT_LEVEL if name in CATS else LEVEL
+        write(CLIENT / "assets" / "sounds" / f"{name}.wav", samples, level)
         if name in NOTIFICATION_SOUNDS:
-            write(CLIENT / "android" / "app" / "src" / "main" / "res" / "raw" / f"{name}.wav", samples)
+            write(CLIENT / "android" / "app" / "src" / "main" / "res" / "raw" / f"{name}.wav", samples, level)
     print(f"Wrote {len(SOUNDS)} sounds")
 
 

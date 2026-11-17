@@ -10,6 +10,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/camera.dart';
+import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/update_check.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -540,6 +541,8 @@ class ChatListController extends State<ChatList>
               !space.spaceChildren.any((c) => c.roomId == room.id),
         )
         .toList();
+    // Gruppechat: lib/gruppechat/chat_reading.dart
+    final markRead = offersMarkRead(room);
 
     var action = await showMenu<ChatContextAction>(
       context: posContext,
@@ -583,19 +586,22 @@ class ChatListController extends State<ChatList>
               ],
             ),
           ),
+          // Gruppechat: "Mark as read" reads the chat (chat_reading.dart)
           PopupMenuItem(
-            value: ChatContextAction.markUnread,
+            value: markRead
+                ? ChatContextAction.markRead
+                : ChatContextAction.markUnread,
             child: Row(
               mainAxisSize: .min,
               children: [
                 Icon(
-                  room.markedUnread
+                  markRead
                       ? Icons.mark_as_unread
                       : Icons.mark_as_unread_outlined,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  room.markedUnread
+                  markRead
                       ? L10n.of(context).markAsRead
                       : L10n.of(context).markAsUnread,
                 ),
@@ -758,7 +764,14 @@ class ChatListController extends State<ChatList>
       case ChatContextAction.markUnread:
         await showFutureLoadingDialog(
           context: context,
-          future: () => room.markUnread(!room.markedUnread),
+          future: () => room.markUnread(true),
+        );
+        return;
+      case ChatContextAction.markRead:
+        final l10n = L10n.of(context);
+        await showFutureLoadingDialog(
+          context: context,
+          future: () => markChatRead(room, l10n: l10n),
         );
         return;
       case ChatContextAction.mute:
@@ -1096,6 +1109,7 @@ enum ChatContextAction {
   addTag,
   removeTag,
   markUnread,
+  markRead,
   mute,
   leave,
   addToSpace,

@@ -489,6 +489,21 @@ Future<String> addPusher(Client client) async {
 String? eventIdOfPush(Map<String, Object?> push) =>
     (push['notification'] as Map<String, Object?>?)?['event_id'] as String?;
 
+/// A recorded push as it reaches the phone through Firebase: Sygnal sends
+/// the notification's fields as a flat data message, without the devices
+/// list, so the push doesn't say which of the app's accounts it is for.
+Map<String, Object?> asFirebaseDelivers(Map<String, Object?> push) {
+  final notification = push['notification'] as Map<String, Object?>;
+  final counts = notification['counts'] as Map<String, Object?>?;
+  return {
+    for (final MapEntry(:key, :value) in notification.entries)
+      if (key != 'devices' && key != 'counts' && value != null)
+        key: value is String ? value : jsonEncode(value),
+    for (final count in ['unread', 'missed_calls'])
+      if (counts?[count] != null) count: '${counts![count]}',
+  };
+}
+
 /// The push for [eventId] to the device with [pushkey], once Synapse has
 /// sent it to the stand-in push gateway.
 Future<Map<String, Object?>> waitForPush(String pushkey, String eventId) async {

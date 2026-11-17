@@ -15,8 +15,33 @@ import 'package:matrix/matrix.dart';
 
 /// The id of the notification for messages in [roomId] on this phone, as
 /// lib/utils/push_helper.dart shows it.
+///
+/// The push helper uses it for every push, from the client that fetched it.
+/// Before 1.1.39 it took the account from the push itself, which a push
+/// through Firebase or UnifiedPush doesn't name: each message then replaced
+/// the last in a notification of another id, which the app didn't clear.
 int chatNotificationId(Client client, String roomId) =>
     '${client.clientName}_$roomId'.hashCode;
+
+/// The messages the chat notification [id] shows now on Android, which the
+/// push helper adds the new message to, or null without one.
+Future<MessagingStyleInformation?> shownChatMessages(
+  FlutterLocalNotificationsPlugin plugin,
+  int id,
+) async {
+  final android = plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  if (android == null) return null;
+  try {
+    return await android.getActiveNotificationMessagingStyle(id: id);
+  } catch (e, s) {
+    // The new message is still shown, on its own
+    Logs().w('Could not get the messages of notification $id', e, s);
+    return null;
+  }
+}
 
 /// Clears the notification of a chat the person has on screen, so it goes
 /// away however they got to the chat, not only by tapping it. A bubble's
