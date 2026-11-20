@@ -47,11 +47,12 @@ void main() {
     tearDownAll(logOutEveryone);
 
     /// Sends [names] the way the send dialog does when they are picked
-    /// together with [message].
+    /// together with [message], as a reply to [inReplyTo] if given.
     Future<List<String?>> sendTogether(
       List<String> names,
-      String message,
-    ) async {
+      String message, {
+      Event? inReplyTo,
+    }) async {
       final contents = fileSeriesContents(
         alice,
         caption: message,
@@ -66,6 +67,7 @@ void main() {
               mimeType: 'image/png',
             ).detectFileType,
             extraContent: contents[i],
+            inReplyTo: fileReplyTarget(inReplyTo, i),
           ),
       ];
     }
@@ -267,6 +269,54 @@ void main() {
       expect(one.fileDescription, 'Berre denne');
       expect(one.fileSeries, isNull);
       expect(one.content.containsKey(gruppechatSeriesKey), isFalse);
+    });
+
+    test('Alice answers Bob with two photos: the first is the reply', () async {
+      final question = await bob
+          .getRoomById(aliceChat.id)!
+          .sendTextEvent('Korleis var utsikta?');
+      final bobsMessage = await arrives(
+        await aliceChat.getTimeline(),
+        "Bob's question",
+        (e) => e.eventId == question,
+      );
+
+      await sendTogether(
+        ['svar1.png', 'svar2.png'],
+        'Sjå sjølv',
+        inReplyTo: bobsMessage,
+      );
+      final first = await bobSees('svar1.png');
+      final second = await bobSees('svar2.png');
+
+      expect(first.inReplyToEventId(includingFallback: false), question);
+      expect(second.inReplyToEventId(includingFallback: false), isNull);
+      // The quote of Bob's message doesn't show up as the photo's message
+      expect(first.fileDescription, 'Sjå sjølv');
+      expect(second.fileDescription, isNull);
+      expect(second.fileSeries?.id, first.fileSeries?.id);
+      // The two photos show as one stack, the reply on top
+      final (shown, stacks) = bobsList();
+      expect(names(shown.take(1)), ['svar1.png']);
+      expect(names(GruppechatPhotoStacks.photosOf(stacks, shown.first)), [
+        'svar1.png',
+        'svar2.png',
+      ]);
+    });
+
+    test('one photo as a reply, without a message, has no caption', () async {
+      final question = await bob
+          .getRoomById(aliceChat.id)!
+          .sendTextEvent('Har du eit bilete?');
+      final bobsMessage = await arrives(
+        await aliceChat.getTimeline(),
+        "Bob's question",
+        (e) => e.eventId == question,
+      );
+      await sendTogether(['berre.png'], '', inReplyTo: bobsMessage);
+      final photo = await bobSees('berre.png');
+      expect(photo.inReplyToEventId(includingFallback: false), question);
+      expect(photo.fileDescription, isNull);
     });
   });
 }

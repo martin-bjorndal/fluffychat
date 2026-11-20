@@ -37,12 +37,16 @@ class SendFileDialog extends StatefulWidget {
   final BuildContext outerContext;
   final String? threadLastEventId, threadRootEventId;
 
+  /// Gruppechat: the message these files reply to
+  final Event? inReplyTo;
+
   const SendFileDialog({
     required this.room,
     required this.files,
     required this.outerContext,
     required this.threadLastEventId,
     required this.threadRootEventId,
+    this.inReplyTo,
     super.key,
   });
 
@@ -121,7 +125,9 @@ class SendFileDialogState extends State<SendFileDialog> {
       }
       if (!mounted) return;
       final caption = _labelTextController.text; // Gruppechat
-      Navigator.of(context, rootNavigator: false).pop();
+      // Gruppechat: true tells the chat the files are on their way, so it
+      // closes the reply
+      Navigator.of(context, rootNavigator: false).pop(true);
       final clientConfig = await Result.capture(widget.room.client.getConfig());
       final maxUploadSize =
           clientConfig.asValue?.value.mUploadSize ?? 100 * 1000 * 1000;
@@ -182,6 +188,7 @@ class SendFileDialogState extends State<SendFileDialog> {
             extraContent: extraContent,
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
+            inReplyTo: fileReplyTarget(widget.inReplyTo, i), // Gruppechat
           );
         } on MatrixException catch (e) {
           final retryAfterMs = e.retryAfterMs;
@@ -201,6 +208,7 @@ class SendFileDialogState extends State<SendFileDialog> {
             extraContent: extraContent,
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
+            inReplyTo: fileReplyTarget(widget.inReplyTo, i), // Gruppechat
           );
         }
       }

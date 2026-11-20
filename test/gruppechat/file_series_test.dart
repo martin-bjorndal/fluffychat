@@ -82,4 +82,19 @@ void main() {
       expect(event.fileSeries, isNotNull);
     });
   });
+
+  test('fileReplyTarget: only the first file is the reply', () {
+    final question = Event(
+      type: EventTypes.Message,
+      content: {'msgtype': MessageTypes.Text, 'body': 'Kvar er du?'},
+      eventId: '\$q',
+      senderId: '@bob:test',
+      originServerTs: DateTime(2026),
+      room: Room(id: '!r:test', client: client),
+    );
+    expect(fileReplyTarget(question, 0), question);
+    expect(fileReplyTarget(question, 1), isNull);
+    expect(fileReplyTarget(question, 2), isNull);
+    expect(fileReplyTarget(null, 0), isNull);
+  });
 }

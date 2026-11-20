@@ -4,6 +4,7 @@
 
 import 'package:audio_session/audio_session.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/web_audio_session.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:flutter/foundation.dart';
@@ -186,18 +187,27 @@ bool gruppechatPlaysReceivedSound(Event event, DateTime openedAt) =>
     }.contains(event.type) &&
     !event.originServerTs.isBefore(openedAt);
 
+/// The app's usual notification sound, for a chat without one of its own.
+const gruppechatUsualSoundAsset = 'assets/sounds/notification.mp3';
+
 /// Plays the app's short sounds, at [AppSettings.gruppechatSoundVolume]. The
-/// sounds of sending and getting a message in the open chat follow
+/// sound of getting a message in the open chat follows
 /// [AppSettings.gruppechatChatSounds]; a notification's sound while the app
-/// is open does not, as it stands in for the notification's own.
+/// is open does not, as it stands in for the notification's own. Sending a
+/// message makes no sound: until 1.1.41 it did, and people took it for a
+/// notification of their own message.
 ///
 /// On Android they play as notification sounds: at the phone's notification
 /// volume, quiet in silent mode and Do Not Disturb, and without taking audio
 /// focus, so music or a call goes on. Before 1.1.30 they played as media, at
 /// the media volume, which people found far too loud.
-/// The app's usual notification sound, for a chat without one of its own.
-const gruppechatUsualSoundAsset = 'assets/sounds/notification.mp3';
-
+///
+/// None of them, previews in the settings included, play while an Android
+/// phone is on silent or vibrate: the app checks ([phoneQuiet]). In Safari
+/// 17+ on an iPhone they follow the silent switch
+/// ([gruppechatAmbientSession]), except during a call or a voice message
+/// ([otherAudioPlaying]), which would follow it too. Other browsers can't
+/// tell the phone's sound mode.
 abstract final class GruppechatSounds {
   static Future<AudioPlayer>? _player;
   static String? _asset;
@@ -207,6 +217,40 @@ abstract final class GruppechatSounds {
   /// its volume, instead of the player.
   @visibleForTesting
   static void Function(String asset, double volume)? onPlay;
+
+  /// For tests, which have no phone: whether it is on silent or vibrate
+  /// (see [phoneQuiet]).
+  @visibleForTesting
+  static Future<bool> Function()? onPhoneQuiet;
+
+  /// Whether the phone is set to make no sounds: on silent or vibrate, or
+  /// with the notification volume all the way down. Only Android tells;
+  /// elsewhere, and if it can't be read, false. Reported in 1.1.40: the
+  /// sounds of the open chat played on a phone on silent, although they
+  /// play as notification sounds, so the app checks for itself.
+  static Future<bool> phoneQuiet() async {
+    if (onPhoneQuiet case final onPhoneQuiet?) return onPhoneQuiet();
+    if (!PlatformInfos.isAndroid) return false;
+    try {
+      final audio = AndroidAudioManager();
+      final (mode, volume) = await (
+        audio.getRingerMode(),
+        audio.getStreamVolume(AndroidStreamType.notification),
+      ).wait;
+      return mode != AndroidRingerMode.normal || volume <= 0;
+    } catch (e, s) {
+      if (!kDebugMode) {
+        Logs().w('Could not read whether the phone is on silent', e, s);
+      }
+      return false;
+    }
+  }
+
+  /// Whether other audio of the app plays, a call or a voice message; set
+  /// by MatrixState ([gruppechatAudioInUse]). Then a sound doesn't change the
+  /// web page's audio session, which would make that audio follow the
+  /// silent switch too. Null, before MatrixState, counts as nothing.
+  static bool Function()? otherAudioPlaying;
 
   /// For tests: forgets when a notification's sound last played.
   @visibleForTesting
@@ -228,6 +272,13 @@ abstract final class GruppechatSounds {
   }
 
   static Future<void> play(String asset) async {
+    // The setting first: it costs no call to the phone
+    if (AppSettings.gruppechatSoundVolume.value <= 0) return;
+    if (await phoneQuiet()) return;
+    await _playNow(asset);
+  }
+
+  static Future<void> _playNow(String asset) async {
     final volume = AppSettings.gruppechatSoundVolume.value;
     if (volume <= 0) return;
     if (onPlay case final onPlay?) return onPlay(asset, volume);
@@ -243,18 +294,21 @@ abstract final class GruppechatSounds {
         await player.setAsset(asset);
         _asset = asset;
       }
+      // Before the seek, which is what starts the sound again on a player
+      // that still counts as playing
+      if (kIsWeb && otherAudioPlaying?.call() != true) {
+        gruppechatAmbientSession.hold(
+          (player.duration ?? const Duration(seconds: 3)) +
+              const Duration(seconds: 1),
+        );
+      }
       await player.seek(Duration.zero);
-      // Not awaited: it completes only when the sound has played
+      // Not awaited: the one player plays every sound, and play() returns
+      // only when it is paused, or at once while it counts as playing
       player.play();
     } catch (e, s) {
       // A sound is never worth an error; tests have no audio at all
       if (!kDebugMode) Logs().w('Could not play $asset', e, s);
-    }
-  }
-
-  static void sent() {
-    if (AppSettings.gruppechatChatSounds.value) {
-      play('assets/sounds/gc_sent.wav');
     }
   }
 
@@ -267,17 +321,32 @@ abstract final class GruppechatSounds {
   /// The sound of a message's notification in [room], which the app plays
   /// while it is open (see [gruppechatNotificationChannel]): the chat's own
   /// sound, or the app's usual one. At most one every two seconds, so a
-  /// burst of messages doesn't rattle.
+  /// burst of messages doesn't rattle. One kept quiet by the phone's
+  /// silent mode doesn't count.
   static Future<void> notification(Room room) async {
+    if (AppSettings.gruppechatSoundVolume.value <= 0) return;
+    if (await phoneQuiet()) return;
     final now = DateTime.now();
     final last = _lastNotification;
     if (last != null && now.difference(last) < const Duration(seconds: 2)) {
       return;
     }
     _lastNotification = now;
-    await play(gruppechatChatSound(room)?.asset ?? gruppechatUsualSoundAsset);
+    await _playNow(
+      gruppechatChatSound(room)?.asset ?? gruppechatUsualSoundAsset,
+    );
   }
 }
+
+/// Whether a call is on ([inCall]), or the [voiceMessage] player plays: a
+/// player that has played to the end still counts as playing, but isn't.
+/// Safari doesn't say when a call uses the page's audio: its audio session
+/// still reads 'auto'.
+bool gruppechatAudioInUse(AudioPlayer? voiceMessage, {required bool inCall}) =>
+    inCall ||
+    (voiceMessage != null &&
+        voiceMessage.playing &&
+        voiceMessage.processingState != ProcessingState.completed);
 
 /// Sets how loud the app's own sounds are, from 0 to 1, in steps of a tenth.
 Future<void> gruppechatSetSoundVolume(double volume) => AppSettings

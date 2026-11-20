@@ -3473,7 +3473,7 @@
     "@gruppechatReadersHint": {},
     "gruppechatChatSounds": "Lyder i chatter",
     "@gruppechatChatSounds": {},
-    "gruppechatChatSoundsDescription": "En kort lyd når du sender en melding, og når det kommer en i chatten du har åpen.",
+    "gruppechatChatSoundsDescription": "En kort lyd når det kommer en melding i chatten du har åpen.",
     "@gruppechatChatSoundsDescription": {},
     "gruppechatSoundVolume": "Lydvolum",
     "@gruppechatSoundVolume": {},

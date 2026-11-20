@@ -31,9 +31,10 @@ class ChatInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Gruppechat: + and the gallery stay while replying, so a picture or a
+    // GIF can be the answer
     final textMessageOnly =
         controller.sendController.text.isNotEmpty ||
-        controller.replyEvent != null ||
         controller.editEvent != null;
 
     if (!controller.room.otherPartyCanReceiveMessages) {
@@ -148,7 +149,9 @@ class ChatInputRow extends StatelessWidget {
                       iconColor: theme.colorScheme.onPrimaryContainer,
                       onSelected: controller.onAddPopupMenuButtonSelected,
                       itemBuilder: (BuildContext context) => [
-                        if (PlatformInfos.isMobile)
+                        // Gruppechat: a location or a poll can't be an answer
+                        if (PlatformInfos.isMobile &&
+                            controller.replyEvent == null)
                           PopupMenuItem(
                             value: AddPopupMenuActions.location,
                             child: ListTile(
@@ -163,21 +166,22 @@ class ChatInputRow extends StatelessWidget {
                               contentPadding: const EdgeInsets.all(0),
                             ),
                           ),
-                        PopupMenuItem(
-                          value: AddPopupMenuActions.poll,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: const Icon(Icons.poll_outlined),
+                        if (controller.replyEvent == null)
+                          PopupMenuItem(
+                            value: AddPopupMenuActions.poll,
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                    theme.colorScheme.onPrimaryContainer,
+                                foregroundColor:
+                                    theme.colorScheme.primaryContainer,
+                                child: const Icon(Icons.poll_outlined),
+                              ),
+                              title: Text(L10n.of(context).startPoll),
+                              contentPadding: const EdgeInsets.all(0),
                             ),
-                            title: Text(L10n.of(context).startPoll),
-                            contentPadding: const EdgeInsets.all(0),
                           ),
-                        ),
-                        PopupMenuDivider(),
+                        if (controller.replyEvent == null) PopupMenuDivider(),
                         if (PlatformInfos.isMobile) ...[
                           PopupMenuItem(
                             value: AddPopupMenuActions.videoCamera,
