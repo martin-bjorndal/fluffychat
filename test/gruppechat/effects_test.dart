@@ -26,9 +26,7 @@ void main() {
     for (final effect in GruppechatEffect.values) {
       expect(File(effect.asset).existsSync(), isTrue, reason: effect.asset);
     }
-    for (final asset in ['gc_sent', 'gc_received']) {
-      expect(File('assets/sounds/$asset.wav').existsSync(), isTrue);
-    }
+    expect(File('assets/sounds/gc_received.wav').existsSync(), isTrue);
   });
 
   testWidgets('an effect plays over the chat, then goes', (tester) async {

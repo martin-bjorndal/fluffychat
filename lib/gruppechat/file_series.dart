@@ -41,6 +41,12 @@ List<Map<String, Object?>?> fileSeriesContents(
   ];
 }
 
+/// What file [index] of those sent together replies to: only the first, the
+/// one with the message and on top of the stack, is the reply to
+/// [inReplyTo]; the others just belong to its series.
+Event? fileReplyTarget(Event? inReplyTo, int index) =>
+    index == 0 ? inReplyTo : null;
+
 extension GruppechatFileSeriesExtension on Event {
   /// The series this file was sent in, or null for a file sent on its own.
   ///

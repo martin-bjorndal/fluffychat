@@ -259,6 +259,35 @@ void main() {
       expect(event.relationshipEventId, rootId);
     });
 
+    test('Alice answers Bob with a GIF, and it still moves', () async {
+      final question = await bob
+          .getRoomById(aliceChat.id)!
+          .sendTextEvent('Korleis gjekk det?');
+      final bobsMessage = await arrives(
+        await aliceChat.getTimeline(),
+        "Bob's question",
+        (e) => e.eventId == question,
+      );
+      final bytes = movingGif(30, 30);
+      await aliceChat.sendFileEvent(
+        GifFile(bytes: bytes, name: 'jubel.gif'),
+        inReplyTo: bobsMessage,
+      );
+
+      // With a reply the body starts with a quote, so look at the file name
+      final event = await arrives(
+        bobTimeline,
+        'the GIF answer',
+        (e) => e.content.tryGet<String>('filename') == 'jubel.gif',
+      );
+      expect(event.inReplyToEventId(includingFallback: false), question);
+      expect(event.isGif, isTrue);
+      expect(event.hasThumbnail, isFalse);
+      expect(event.fileDescription, isNull);
+      final received = await event.downloadAndDecryptAttachment();
+      expect(img.decodeGif(received.bytes)!.numFrames, 2);
+    });
+
     test('a sticker shows while it is being sent, and arrives', () async {
       final bytes = photo(64, 64);
       final url = await alice.uploadContent(

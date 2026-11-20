@@ -11,7 +11,8 @@
 // volume chosen in the chat settings. The phone's notification shade and
 // the app's audio are stand-ins (utils/notification_shade.dart and
 // GruppechatSounds.onPlay); what it sounds like, and whether OnePlus now
-// sounds, can only be checked on a phone.
+// sounds, can only be checked on a phone. So can whether the phone's silent
+// mode is read right: here GruppechatSounds.onPhoneQuiet stands in for it.
 
 @Timeout(Duration(minutes: 3))
 library;
@@ -59,6 +60,8 @@ void main() {
         appOnScreen: onScreen,
         flutterLocalNotificationsPlugin: FlutterLocalNotificationsPlugin(),
       );
+      // The sound isn't awaited: first the app asks if the phone is on silent
+      await pumpEventQueue();
       return '${carol.clientName}_${group.channels[name]}'.hashCode;
     }
 
@@ -118,6 +121,7 @@ void main() {
     test('a burst of messages sounds once', () async {
       await writes('general', 'En', onScreen: true);
       await GruppechatSounds.notification(channel(carol, 'general'));
+      await pumpEventQueue();
       expect(played, hasLength(1));
     });
 
@@ -153,6 +157,86 @@ void main() {
       // Other chats still sound
       await writes('general', 'Hallo', onScreen: true);
       expect(played, hasLength(1));
+    });
+
+    test('no sound when carol sends a message herself', () async {
+      // Reported in 1.1.40: a sound played when you sent a message yourself
+      GruppechatSounds.onPhoneQuiet = () async => false;
+      addTearDown(() => GruppechatSounds.onPhoneQuiet = null);
+      final room = channel(carol, 'general');
+      final timeline = await room.getTimeline();
+      addTearDown(timeline.cancelSubscriptions);
+      final openedAt = DateTime.now().subtract(const Duration(minutes: 1));
+      // What the running app notifies of, with a sound (MatrixState)
+      final notified = <String?>[];
+      final sub = carol.onNotification.stream.listen(
+        (event) => notified.add(event.eventId),
+      );
+      addTearDown(sub.cancel);
+
+      // She writes in the open chat, as the chat's send button does, which
+      // plays no sound of its own since 1.1.41 (lib/pages/chat/chat.dart,
+      // send; the widget itself isn't run here)
+      final sent = await room.sendTextEvent('Hei alle sammen!');
+      await eventually(
+        'carol has her message in the open chat',
+        () => timeline.events.any((e) => e.eventId == sent),
+      );
+      final message = timeline.events.firstWhere((e) => e.eventId == sent);
+      // Her own message doesn't get the sound of one coming in, nor a
+      // notification
+      expect(gruppechatPlaysReceivedSound(message, openedAt), isFalse);
+      // alice's answer does, so the notifications are listened to
+      final answer = await channel(alice, 'general').sendTextEvent('Hei!');
+      await eventually(
+        'carol is notified of alice\'s answer',
+        () => notified.contains(answer),
+      );
+      expect(notified, isNot(contains(sent)));
+      await pumpEventQueue();
+      expect(played, isEmpty);
+    });
+
+    test('nothing sounds while carol\'s phone is on silent', () async {
+      // Reported in 1.1.40: sounds in the open chat on a phone on silent
+      GruppechatSounds.onPhoneQuiet = () async => true;
+      addTearDown(() => GruppechatSounds.onPhoneQuiet = null);
+      final room = channel(carol, 'general');
+      final timeline = await room.getTimeline();
+      addTearDown(timeline.cancelSubscriptions);
+      final openedAt = DateTime.now().subtract(const Duration(minutes: 1));
+
+      // A message comes in while she has the chat and the app open
+      final id = await writes('general', 'Er du stille?', onScreen: true);
+      expect(played, isEmpty);
+      // The quiet one doesn't start the 2 seconds between notification
+      // sounds: taken off silent at once, the next one sounds
+      GruppechatSounds.onPhoneQuiet = () async => false;
+      await GruppechatSounds.notification(room);
+      expect(played, [('assets/sounds/notification.mp3', 1.0)]);
+      played.clear();
+      GruppechatSounds.onPhoneQuiet = () async => true;
+
+      await eventually(
+        'carol has the message in the open chat',
+        () => timeline.events.any((e) => e.body == 'Er du stille?'),
+      );
+      final message = timeline.events.firstWhere(
+        (e) => e.body == 'Er du stille?',
+      );
+      // The open chat would give it the sound of a message coming in
+      expect(gruppechatPlaysReceivedSound(message, openedAt), isTrue);
+      GruppechatSounds.received();
+      await pumpEventQueue();
+      expect(played, isEmpty);
+      // The notification is still shown, quietly
+      expect(shade.notifications[id]?.body, 'Er du stille?');
+
+      // Off silent again, messages sound
+      GruppechatSounds.onPhoneQuiet = () async => false;
+      GruppechatSounds.resetNotificationPause();
+      await writes('general', 'Og no?', onScreen: true);
+      expect(played, [('assets/sounds/notification.mp3', 1.0)]);
     });
 
     test('with the app closed, the notification sounds as before', () async {

@@ -168,8 +168,7 @@ CAT = recording()
 
 
 SOUNDS = {
-    # In a chat that is open: what you send, and what comes in
-    "gc_sent": tone(520, 0.12, 22, SOFT, glide=1100),
+    # In a chat that is open: what comes in (sending makes no sound)
     "gc_received": mix((0, tone(note("E6"), 0.18, 16, SOFT)), (0.08, tone(note("A6"), 0.25, 14, SOFT))),
     # Notification sounds a chat can have
     "gc_bjelle": tone(880, 1.2, 3.5, BELL),

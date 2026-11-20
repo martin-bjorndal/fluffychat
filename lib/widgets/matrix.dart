@@ -13,6 +13,7 @@ import 'package:fluffychat/gruppechat/chat_backup.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/gruppechat/web_notifications.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_manager.dart';
@@ -214,11 +215,17 @@ class MatrixState extends State<Matrix> {
   @override
   void initState() {
     super.initState();
+    // Gruppechat: a short sound leaves a call's or a voice message's audio
+    // as it is
+    GruppechatSounds.otherAudioPlaying = _otherAudioPlaying;
     _listener = AppLifecycleListener(onStateChange: didChangeAppLifecycleState);
     initMatrix();
   }
 
   AppLifecycleListener? _listener;
+
+  bool _otherAudioPlaying() =>
+      gruppechatAudioInUse(audioPlayer, inCall: activeCallRoomId.value != null);
 
   void _registerSubs(String name) {
     final c = getClientByName(name);
@@ -455,6 +462,9 @@ class MatrixState extends State<Matrix> {
     onUiaRequest.clear();
 
     voiceMessageEventId.dispose();
+    if (GruppechatSounds.otherAudioPlaying == _otherAudioPlaying) {
+      GruppechatSounds.otherAudioPlaying = null;
+    }
 
     super.dispose();
   }

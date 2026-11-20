@@ -3445,7 +3445,7 @@
     "@gruppechatReadersHint": {},
     "gruppechatChatSounds": "Sounds in chats",
     "@gruppechatChatSounds": {},
-    "gruppechatChatSoundsDescription": "A short sound when you send a message, and when one comes in to the chat you have open.",
+    "gruppechatChatSoundsDescription": "A short sound when a message comes in to the chat you have open.",
     "@gruppechatChatSoundsDescription": {},
     "gruppechatSoundVolume": "Sound volume",
     "@gruppechatSoundVolume": {},
