@@ -8,6 +8,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/photo_stacks.dart';
+import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
@@ -42,14 +43,16 @@ class ChatEventList extends StatelessWidget {
 
     final horizontalPadding = FluffyThemes.isColumnMode(context) ? 8.0 : 0.0;
 
-    var events = timeline.events.filterByVisibleInGui(
-      threadId: controller.activeThreadId,
+    // Gruppechat: no new messages at the bottom while reading further up,
+    // and a poll shows where its newest vote is (lib/gruppechat/polls.dart)
+    final movedPolls = <String, Event>{};
+    var events = controller.shownEvents(moved: movedPolls);
+    final readMarkerEventId = readMarkerShownAt(
+      events,
+      timeline,
+      movedPolls,
+      controller.readMarkerEventId,
     );
-    // Gruppechat: no new messages at the bottom while reading further up
-    final endIndex = events.indexWhere(
-      (event) => event.eventId == controller.listEndsAtEventId,
-    );
-    if (endIndex > 0) events = events.sublist(endIndex);
     // Gruppechat: photos sent together show as one stack
     final photoStacks = <String, List<Event>>{};
     events = stackPhotoSeries(events, photoStacks, timeline: timeline);
@@ -173,7 +176,10 @@ class ChatEventList extends StatelessWidget {
               final displayDate =
                   event.type == EventTypes.RoomCreate ||
                   nextEvent == null ||
-                  !event.originServerTs.sameDay(nextEvent.originServerTs);
+                  !shownTime(
+                    event,
+                    movedPolls,
+                  ).sameDay(shownTime(nextEvent, movedPolls));
 
               return AutoScrollTag(
                 key: ValueKey(event.transactionId ?? event.eventId),
@@ -201,7 +207,10 @@ class ChatEventList extends StatelessWidget {
                                   vertical: 2.0,
                                 ),
                                 child: Text(
-                                  event.originServerTs.localizedDate(context),
+                                  shownTime(
+                                    event,
+                                    movedPolls,
+                                  ).localizedDate(context),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.onInverseSurface,
@@ -233,8 +242,7 @@ class ChatEventList extends StatelessWidget {
                       // Gruppechat: edits this message (on double tap)
                       onEdit: () => controller.editEventAction(event),
                       timeline: timeline,
-                      displayReadMarker:
-                          i > 0 && isHere(controller.readMarkerEventId),
+                      displayReadMarker: i > 0 && isHere(readMarkerEventId),
                       nextEvent: nextEvent,
                       previousEvent: previousEvent,
                       wallpaperMode: hasWallpaper,

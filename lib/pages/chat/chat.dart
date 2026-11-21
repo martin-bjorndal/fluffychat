@@ -28,6 +28,7 @@ import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/photo_stacks.dart';
+import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
@@ -274,7 +275,7 @@ class ChatController extends State<ChatPageWithRoom>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Gruppechat: as the list shows it, photo stacks and all
         final index = stackedIndexOf(
-          timeline.events.filterByVisibleInGui(),
+          shownEvents(),
           mostRecentEvent.eventId,
           timeline: timeline,
         );
@@ -479,10 +480,21 @@ class ChatController extends State<ChatPageWithRoom>
 
   final Set<String> expandedEventIds = {};
 
+  /// Gruppechat: the events as the chat list shows them, newest first, with
+  /// newer ones held back and polls at their newest vote
+  /// (lib/gruppechat/polls.dart). Indices into the list are indices here.
+  List<Event> shownEvents({String? exceptionEventId, MovedPolls? moved}) =>
+      shownInChat(
+        timeline!,
+        threadId: activeThreadId,
+        endsAtEventId: listEndsAtEventId,
+        exceptionEventId: exceptionEventId,
+        moved: moved,
+      );
+
   void expandEventsFrom(Event event, bool expand) {
-    final events = timeline!.events.filterByVisibleInGui(
-      threadId: activeThreadId,
-    );
+    // Gruppechat: as the list shows it
+    final events = shownEvents();
     final start = events.indexOf(event);
     setState(() {
       for (var i = start; i < events.length; i++) {
@@ -1352,10 +1364,7 @@ class ChatController extends State<ChatPageWithRoom>
     final eventIndex = foundEvent == null
         ? -1
         : stackedIndexOf(
-            timeline!.events.filterByVisibleInGui(
-              exceptionEventId: eventId,
-              threadId: activeThreadId,
-            ),
+            shownEvents(exceptionEventId: eventId),
             foundEvent.eventId,
             timeline: timeline,
           );

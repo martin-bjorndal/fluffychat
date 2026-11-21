@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Two people writing to each other in an encrypted direct chat: messages,
-// edits, replies, reactions, typing, emojis, locations, polls, profiles and
-// deleting.
+// edits, replies, reactions, typing, emojis, locations, polls (which move
+// down to their newest vote), profiles and deleting.
 
 @Timeout(Duration(minutes: 3))
 library;
@@ -13,9 +13,12 @@ import 'dart:typed_data';
 import 'dart:ui' show Locale;
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as picker;
+import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/clock.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
+import 'package:fluffychat/gruppechat/polls.dart';
+import 'package:fluffychat/gruppechat/read_positions.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -190,40 +193,43 @@ void main() {
       );
     });
 
-    test('a double tap reacts quickly, and a second one takes it back', () async {
-      final eventId = await aliceChat.sendTextEvent('Kino på fredag?');
-      final question = await arrives(
-        bobTimeline,
-        'the question',
-        (e) => e.eventId == eventId,
-      );
-      bool aliceSeesHeart() {
-        final message = aliceTimeline.events.firstWhere(
+    test(
+      'a double tap reacts quickly, and a second one takes it back',
+      () async {
+        final eventId = await aliceChat.sendTextEvent('Kino på fredag?');
+        final question = await arrives(
+          bobTimeline,
+          'the question',
           (e) => e.eventId == eventId,
         );
-        return message
-            .aggregatedEvents(aliceTimeline, RelationshipTypes.reaction)
-            .any(
-              (r) =>
-                  r.senderId == bob.userID &&
-                  r.content
-                          .tryGetMap<String, Object?>('m.relates_to')
-                          ?.tryGet<String>('key') ==
-                      '❤️',
-            );
-      }
+        bool aliceSeesHeart() {
+          final message = aliceTimeline.events.firstWhere(
+            (e) => e.eventId == eventId,
+          );
+          return message
+              .aggregatedEvents(aliceTimeline, RelationshipTypes.reaction)
+              .any(
+                (r) =>
+                    r.senderId == bob.userID &&
+                    r.content
+                            .tryGetMap<String, Object?>('m.relates_to')
+                            ?.tryGet<String>('key') ==
+                        '❤️',
+              );
+        }
 
-      await gruppechatQuickReact(question, bobTimeline, '❤️');
-      await eventually('alice sees the heart', aliceSeesHeart);
-      await eventually(
-        "bob's app knows he reacted",
-        () => question
-            .aggregatedEvents(bobTimeline, RelationshipTypes.reaction)
-            .any((r) => r.senderId == bob.userID && !r.redacted),
-      );
-      await gruppechatQuickReact(question, bobTimeline, '❤️');
-      await eventually('the heart is gone', () => !aliceSeesHeart());
-    });
+        await gruppechatQuickReact(question, bobTimeline, '❤️');
+        await eventually('alice sees the heart', aliceSeesHeart);
+        await eventually(
+          "bob's app knows he reacted",
+          () => question
+              .aggregatedEvents(bobTimeline, RelationshipTypes.reaction)
+              .any((r) => r.senderId == bob.userID && !r.redacted),
+        );
+        await gruppechatQuickReact(question, bobTimeline, '❤️');
+        await eventually('the heart is gone', () => !aliceSeesHeart());
+      },
+    );
 
     test('typing shows for the other person', () async {
       await bobChat.setTyping(true, timeout: 30000);
@@ -438,6 +444,80 @@ void main() {
         'bob sees the poll ended',
         () => bobsPoll().getPollHasBeenEnded(bobTimeline),
       );
+    });
+
+    test('a poll moves down to the bottom when someone votes', () async {
+      // Tor Helge: nobody should have to scroll far up to find the poll
+      final pollId = await aliceChat.startPoll(
+        question: 'Kven tek med kaker?',
+        answers: [
+          PollAnswer(id: '1', mText: 'Eg'),
+          PollAnswer(id: '2', mText: 'Ikkje eg'),
+        ],
+        kind: PollKind.disclosed,
+      );
+      await aliceChat.sendTextEvent('Svar på spørjeundersøkinga!');
+      final poll = await arrives(
+        bobTimeline,
+        'the poll',
+        (e) => e.eventId == pollId,
+      );
+      await arrives(
+        bobTimeline,
+        'the message',
+        (e) => e.body == 'Svar på spørjeundersøkinga!',
+      );
+      // As the chat list draws it (lib/pages/chat/chat_event_list.dart)
+      List<String> alicesList() =>
+          shownInChat(aliceTimeline).take(2).map((e) => e.eventId).toList();
+      await arrives(aliceTimeline, 'the poll', (e) => e.eventId == pollId);
+      final message = await arrives(
+        aliceTimeline,
+        'the message',
+        (e) => e.body == 'Svar på spørjeundersøkinga!',
+      );
+      expect(alicesList(), [message.eventId, pollId]);
+
+      // Bob votes: Alice sees the poll at the bottom, the day of the vote
+      await poll.answerPoll(['1']);
+      await eventually(
+        'the poll is at the bottom for alice',
+        () => alicesList().first == pollId,
+      );
+      final moved = <String, Event>{};
+      shownInChat(aliceTimeline, moved: moved);
+      expect(moved.keys, contains(pollId));
+
+      // Bob's chat marks what he has read, as the chat page does: the newest
+      // message that notifies, which is now above the poll. Having voted, his
+      // face shows under the poll at the bottom, and he counts among those
+      // who have read the poll and the message.
+      final target = readMarkerTarget(bobChat, bobTimeline, scrolledUp: false);
+      expect(target, isNot(moved[pollId]!.eventId));
+      await bobTimeline.setReadMarker(eventId: target, public: true);
+      await eventually(
+        'alice sees bob under the poll',
+        () =>
+            gruppechatReadPositions(
+              timeline: aliceTimeline,
+            )[pollId]?.contains(bob.userID) ??
+            false,
+      );
+      for (final event in [poll, message]) {
+        expect(
+          gruppechatReadersOf(timeline: aliceTimeline, event: event),
+          contains(bob.userID),
+        );
+      }
+
+      // A message written after the vote comes below the poll
+      await bobChat.sendTextEvent('Eg tek med kake.');
+      final cake = await arrives(
+        aliceTimeline,
+        'bob\'s message',
+        (e) => e.body == 'Eg tek med kake.',
+      );
+      expect(alicesList(), [cake.eventId, pollId]);
     });
 
     test('a new name and profile picture show for the other person', () async {

@@ -211,7 +211,10 @@ Future<void> showGruppechatReaders({
       : positions != null
       ? readersOf(
           event.eventId,
-          timeline: [for (final event in timeline.events) event.eventId],
+          timeline: gruppechatTimelineOrder(
+            timeline,
+            threadId: controller.activeThreadId,
+          ),
           positions: positions,
           senderId: event.senderId,
         )
