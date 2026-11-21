@@ -18,6 +18,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // with a bubble is built exactly like the ones the plugin shows itself.
 // ignore: implementation_imports
 import 'package:flutter_local_notifications/src/platform_specifics/android/method_channel_mappers.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gruppechat_bubbles/gruppechat_bubbles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -70,33 +71,24 @@ abstract final class GruppechatBubbles {
 
   static void _windowChanged(Map<String, Object?> window) {
     final roomId = window['roomId'] as String?;
-    final location = _location();
-    final target = _routes.windowChanged(
+    showWindow(
+      FluffyChatApp.router,
+      _routes,
       roomId,
-      location: location,
       restoreRoute: window['restoreRoute'] != false,
     );
     room.value = roomId;
-    if (target != null && target != location) {
-      FluffyChatApp.router.go(target);
-    }
     // A new window has no locus yet
     _locus = null;
     _updateLocus(force: true);
   }
 
-  static String _location() {
-    final router = FluffyChatApp.router;
-    final matches = router.routerDelegate.currentConfiguration;
-    return matches.isNotEmpty
-        ? matches.uri.toString()
-        : router.routeInformationProvider.value.uri.toString();
-  }
-
   /// Tells Android which chat the main window shows, so it hides that chat's
   /// bubble meanwhile.
   static void _updateLocus({bool force = false}) {
-    final roomId = active ? null : roomIdOfChatLocation(_location());
+    final roomId = active
+        ? null
+        : roomIdOfChatLocation(routerLocation(FluffyChatApp.router));
     if (roomId == _locus && !force) return;
     _locus = roomId;
     _invoke('setLocus', {'roomId': roomId});
@@ -398,6 +390,10 @@ class BubbleRouteMemory {
         // A bubble that started the app has no main window to go back to
         _mainLocation = _mainWindowSeen ? location : null;
       }
+      // The same bubble gets the engine back, as from the photo picker: it
+      // stays where it is. Going again would build the page anew, and a send
+      // dialog open over the chat could no longer send.
+      if (_bubbleRoom == roomId) return null;
       _bubbleRoom = roomId;
       return chatLocation(roomId);
     }
@@ -410,6 +406,32 @@ class BubbleRouteMemory {
     // where to go, such as a notification tap
     return restoreRoute ? back : null;
   }
+}
+
+/// Takes [router] to what the window that got the engine is for: the chat of
+/// the bubble for [roomId], or back to where the main window was when
+/// [roomId] is null (see [BubbleRouteMemory.windowChanged]).
+void showWindow(
+  GoRouter router,
+  BubbleRouteMemory routes,
+  String? roomId, {
+  required bool restoreRoute,
+}) {
+  final location = routerLocation(router);
+  final target = routes.windowChanged(
+    roomId,
+    location: location,
+    restoreRoute: restoreRoute,
+  );
+  if (target != null && target != location) router.go(target);
+}
+
+/// Where [router] is.
+String routerLocation(GoRouter router) {
+  final matches = router.routerDelegate.currentConfiguration;
+  return matches.isNotEmpty
+      ? matches.uri.toString()
+      : router.routeInformationProvider.value.uri.toString();
 }
 
 /// Where the app shows the chat of [roomId].

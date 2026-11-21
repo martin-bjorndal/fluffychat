@@ -14,6 +14,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/file_series.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/send_dialog_context.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
@@ -104,12 +105,11 @@ class SendFileDialogState extends State<SendFileDialog> {
 
   Future<void> _sendOnce(String? uniqueFileType) async {
     final l10n = L10n.of(context);
-    final scaffoldMessenger = ScaffoldMessenger.of(widget.outerContext);
+    // Gruppechat: the chat behind the dialog may have been built anew
+    final outerContext = gruppechatLivingContext(widget.outerContext, context);
+    final scaffoldMessenger = ScaffoldMessenger.of(outerContext);
 
-    final proceed = await showTrustUserInRoomDialog(
-      widget.outerContext,
-      widget.room,
-    );
+    final proceed = await showTrustUserInRoomDialog(outerContext, widget.room);
     if (!context.mounted || !proceed) return;
 
     if (ForegroundServices.platformSupported) {

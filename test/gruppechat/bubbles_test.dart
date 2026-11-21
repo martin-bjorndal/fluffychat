@@ -63,6 +63,33 @@ void main() {
       );
     });
 
+    test('a bubble that gets the app back stays where it is', () {
+      final memory = BubbleRouteMemory()
+        ..windowChanged('!a:x', location: '/rooms', restoreRoute: true);
+      // Back from the photo picker, with the chat open on a message
+      expect(
+        memory.windowChanged(
+          '!a:x',
+          location: '/rooms/!a:x?event=e',
+          restoreRoute: true,
+        ),
+        isNull,
+      );
+      expect(
+        memory.windowChanged(
+          '!a:x',
+          location: '/rooms/!a:x/details',
+          restoreRoute: true,
+        ),
+        isNull,
+      );
+      // Where the main window was is kept
+      expect(
+        memory.windowChanged(null, location: '/rooms/!a:x', restoreRoute: true),
+        '/rooms',
+      );
+    });
+
     test('switching bubbles keeps where the main window was', () {
       final memory = BubbleRouteMemory()
         ..windowChanged(null, location: '/rooms/settings', restoreRoute: true);

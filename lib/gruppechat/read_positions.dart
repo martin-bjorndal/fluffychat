@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:matrix/matrix.dart';
 
@@ -26,6 +27,7 @@ Map<String, List<String>> readPositions({
   required List<String> timeline,
   required Map<String, String> shown,
   required Iterable<(String, String)> receipts,
+  Iterable<(String, String)> wrote = const [],
   String? ownUserId,
 }) {
   final indexOf = <String, int>{};
@@ -50,6 +52,10 @@ Map<String, List<String>> readPositions({
     final sender = shown[timeline[i]];
     if (sender != null && readers.contains(sender)) readTo(sender, i);
   }
+  for (final (userId, eventId) in wrote) {
+    final index = indexOf[eventId];
+    if (index != null && readers.contains(userId)) readTo(userId, index);
+  }
 
   final positions = <String, List<String>>{};
   for (final MapEntry(key: userId, value: start) in readUpTo.entries) {
@@ -73,12 +79,20 @@ Map<String, List<String>> gruppechatReadPositions({
   required Timeline timeline,
   String? threadId,
   Set<String> expandedEventIds = const {},
-}) {
-  final room = timeline.room;
-  final events = timeline.events;
+}) => _readPositions(timeline, threadId, expandedEventIds).positions;
 
-  // The same messages, collapsed state events aside, that the chat list shows.
-  final visible = events.filterByVisibleInGui(threadId: threadId);
+/// [gruppechatReadPositions], with the order of the event IDs they were
+/// worked out in ([gruppechatTimelineOrder]).
+({List<String> order, Map<String, List<String>> positions}) _readPositions(
+  Timeline timeline,
+  String? threadId,
+  Set<String> expandedEventIds,
+) {
+  final room = timeline.room;
+
+  // The same messages, collapsed state events aside, that the chat list
+  // shows, in its order: polls at their newest vote (polls.dart)
+  final (:visible, :moved, :order) = _chatOrder(timeline, threadId);
   final shown = <String, String>{};
   for (var i = 0; i < visible.length; i++) {
     final event = visible[i];
@@ -88,6 +102,20 @@ Map<String, List<String>> gruppechatReadPositions({
         newer?.isCollapsedState == true &&
         !expandedEventIds.contains(event.eventId);
     if (!collapsed) shown[event.eventId] = event.senderId;
+  }
+  // Starting a poll is having read up to where it was started, and voting
+  // in it is having read up to where it now is
+  final wrote = <(String, String)>[];
+  for (final MapEntry(key: pollId, value: poll) in moved.entries) {
+    if (shown.containsKey(pollId)) shown[pollId] = '';
+    wrote.add((poll.senderId, _wasHere(pollId)));
+  }
+  for (final event in timeline.events) {
+    if (event.type == PollEventContent.responseType &&
+        !event.redacted &&
+        moved.containsKey(event.relationshipEventId)) {
+      wrote.add((event.senderId, event.eventId));
+    }
   }
 
   final receiptState = room.receiptState;
@@ -101,17 +129,25 @@ Map<String, List<String>> gruppechatReadPositions({
   bool present(String userId) =>
       !hasLeft.putIfAbsent(userId, () => _hasLeft(room, userId));
 
-  return readPositions(
-    timeline: [for (final event in events) event.eventId],
+  final positions = readPositions(
+    timeline: order,
     shown: shown,
     receipts: [
       for (final source in sources)
         for (final MapEntry(key: userId, value: receipt)
             in source.otherUsers.entries)
-          if (present(userId)) (userId, receipt.eventId),
+          if (present(userId))
+            (
+              userId,
+              moved.containsKey(receipt.eventId)
+                  ? _wasHere(receipt.eventId)
+                  : receipt.eventId,
+            ),
     ],
+    wrote: wrote,
     ownUserId: room.client.userID,
   );
+  return (order: order, positions: positions);
 }
 
 /// Everyone who has read [eventId]: whose read position, from
@@ -124,7 +160,9 @@ List<String> readersOf(
   required Map<String, List<String>> positions,
   String? senderId,
 }) {
-  final index = timeline.indexOf(eventId);
+  // A poll that moved down has been read by those who read past its place
+  var index = timeline.indexOf(_wasHere(eventId));
+  if (index < 0) index = timeline.indexOf(eventId);
   if (index < 0) return [];
   return [
     for (var i = 0; i <= index; i++) ...?positions[timeline[i]],
@@ -139,16 +177,19 @@ List<String> gruppechatReadersOf({
   required Event event,
   String? threadId,
   Set<String> expandedEventIds = const {},
-}) => readersOf(
-  event.eventId,
-  timeline: [for (final event in timeline.events) event.eventId],
-  positions: gruppechatReadPositions(
-    timeline: timeline,
-    threadId: threadId,
-    expandedEventIds: expandedEventIds,
-  ),
-  senderId: event.senderId,
-);
+}) {
+  final (:order, :positions) = _readPositions(
+    timeline,
+    threadId,
+    expandedEventIds,
+  );
+  return readersOf(
+    event.eventId,
+    timeline: order,
+    positions: positions,
+    senderId: event.senderId,
+  );
+}
 
 bool _hasLeft(Room room, String userId) {
   final membership = room
@@ -157,4 +198,50 @@ bool _hasLeft(Room room, String userId) {
       .tryGet<String>('membership');
   return membership == Membership.leave.name ||
       membership == Membership.ban.name;
+}
+
+/// Stands in for a poll that moved down in the chat, where it was started.
+String _wasHere(String pollId) => '$pollId~';
+
+/// The IDs of [events] (newest first) in the order the chat list shows
+/// them: each poll in [moved] right after the vote it now stands at, and in
+/// its old place a stand-in ([_wasHere]) that a receipt on the poll goes to,
+/// as it was read where it was.
+List<String> _inShownOrder(List<Event> events, MovedPolls moved) {
+  final atVote = <String, List<String>>{};
+  for (final MapEntry(key: pollId, value: vote) in moved.entries) {
+    (atVote[vote.eventId] ??= []).add(pollId);
+  }
+  return [
+    for (final event in events) ...[
+      moved.containsKey(event.eventId)
+          ? _wasHere(event.eventId)
+          : event.eventId,
+      ...?atVote[event.eventId],
+    ],
+  ];
+}
+
+/// The loaded event IDs of [timeline] in the order the read positions are
+/// worked out in, for [readersOf].
+List<String> gruppechatTimelineOrder(Timeline timeline, {String? threadId}) =>
+    _chatOrder(timeline, threadId).order;
+
+/// What the chat list shows of [timeline], the polls in it that moved down,
+/// and all loaded event IDs in that order ([_inShownOrder]).
+({List<Event> visible, MovedPolls moved, List<String> order}) _chatOrder(
+  Timeline timeline,
+  String? threadId,
+) {
+  final moved = <String, Event>{};
+  final visible = pollsAtNewestVote(
+    timeline.events.filterByVisibleInGui(threadId: threadId),
+    timeline,
+    moved: moved,
+  );
+  return (
+    visible: visible,
+    moved: moved,
+    order: _inShownOrder(timeline.events, moved),
+  );
 }
