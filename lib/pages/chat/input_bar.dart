@@ -39,6 +39,10 @@ class InputBar extends StatelessWidget {
   final bool readOnly;
   final List<Emoji> suggestionEmojis;
 
+  /// Gruppechat: turns `:)` into 🙂 and the like as people type
+  /// (lib/gruppechat/text_replacements.dart).
+  final TextInputFormatter? textReplacer;
+
   const InputBar({
     required this.room,
     this.minLines,
@@ -55,6 +59,7 @@ class InputBar extends StatelessWidget {
     this.textInputAction,
     this.readOnly = false,
     required this.suggestionEmojis,
+    this.textReplacer,
     super.key,
   });
 
@@ -461,6 +466,8 @@ class InputBar extends StatelessWidget {
           textInputAction: textInputAction,
           autofocus: autofocus!,
           inputFormatters: [
+            // Gruppechat: replacements are limited too
+            ?textReplacer,
             LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
           ],
           onSubmitted: (text) {

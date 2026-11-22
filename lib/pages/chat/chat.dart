@@ -31,6 +31,7 @@ import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
+import 'package:fluffychat/gruppechat/text_replacements.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
@@ -765,6 +766,12 @@ class ChatController extends State<ChatPageWithRoom>
 
   TextEditingController sendController = TextEditingController();
 
+  /// Gruppechat: `:)` becomes 🙂 as people type, and on sending
+  /// (lib/gruppechat/text_replacements.dart)
+  late final textReplacer = GruppechatTextReplacer(
+    () => room.gruppechatTextReplacements,
+  );
+
   void setSendingClient(Client c) {
     // first cancel typing with the old sending client
     if (currentlyTyping) {
@@ -805,7 +812,7 @@ class ChatController extends State<ChatPageWithRoom>
         captioned.hasCaptionInsteadOfText &&
         timeline != null) {
       // ignore: unawaited_futures
-      captioned.editCaption(sendController.text, timeline);
+      captioned.editCaption(textReplacer.onSend(sendController.text), timeline);
       setState(() {
         sendController.text = pendingText;
         _inputTextIsEmpty = pendingText.isEmpty;
@@ -815,11 +822,17 @@ class ChatController extends State<ChatPageWithRoom>
       return;
     }
     if (sendController.text.trim().isEmpty) return;
+    // Gruppechat: a list word at the very end is replaced too
+    final text = textReplacer.onSend(sendController.text);
     // Gruppechat: show what was sent, and what came in meanwhile
     if (listEndsAtEventId != null) scrollDown();
-    var parseCommands = true;
+    // Gruppechat: only what people typed themselves runs as a command, never
+    // a replacement (lib/gruppechat/text_replacements.dart)
+    var parseCommands = gruppechatMayRunCommand(sendController.text, text);
 
-    final commandMatch = RegExp(r'^\/(\w+)').firstMatch(sendController.text);
+    final commandMatch = parseCommands
+        ? RegExp(r'^\/(\w+)').firstMatch(text)
+        : null;
     if (commandMatch != null &&
         !sendingClient.commands.keys.contains(commandMatch[1]!.toLowerCase())) {
       final l10n = L10n.of(context);
@@ -844,7 +857,7 @@ class ChatController extends State<ChatPageWithRoom>
       // ignore: unawaited_futures
       gruppechatSendWithEffect(
         room,
-        sendController.text,
+        text,
         effect,
         inReplyTo: replyEvent,
         threadRootEventId: activeThreadId,
@@ -852,7 +865,7 @@ class ChatController extends State<ChatPageWithRoom>
     } else {
       // ignore: unawaited_futures
       room.sendTextEvent(
-        sendController.text,
+        text,
         inReplyTo: replyEvent,
         editEventId: editEvent?.eventId,
         parseCommands: parseCommands,

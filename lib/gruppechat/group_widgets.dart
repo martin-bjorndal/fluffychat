@@ -26,6 +26,7 @@ import 'chat_colors.dart';
 import 'group_state.dart';
 import 'matrix_group.dart';
 import 'picture_crop.dart';
+import 'text_replacements_menu.dart';
 
 /// Draws a shared group background behind the chat.
 class GroupBackgroundLayer extends StatelessWidget {
@@ -90,7 +91,8 @@ class GroupBackgroundLayer extends StatelessWidget {
 }
 
 /// Group settings shown on the details page of a space or one of its
-/// channels: one-time setup, roles, backgrounds and inviting a role.
+/// channels: one-time setup, roles, backgrounds, text replacements and
+/// inviting a role.
 class GruppechatSettingsTiles extends StatelessWidget {
   final Room room;
 
@@ -156,6 +158,7 @@ class GruppechatSettingsTiles extends StatelessWidget {
               channel: room,
             ),
           ),
+        GruppechatTextReplacementsTile(group: group),
         if (isChannel && room.canInvite && roles.isNotEmpty)
           ListTile(
             leading: const Icon(Icons.group_add_outlined),

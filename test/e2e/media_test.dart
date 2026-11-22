@@ -15,6 +15,7 @@ import 'dart:typed_data';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:fluffychat/gruppechat/captions.dart';
+import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
 import 'package:fluffychat/gruppechat/image_size.dart';
 import 'package:fluffychat/gruppechat/pending_attachments.dart';
@@ -492,6 +493,21 @@ void main() {
             ? true
             : null,
       );
+
+      // Tapping "(edited)" lists the captions, never the file's name
+      final history = await valueOf('bob has both edits', () {
+        final versions = gruppechatEditHistory(
+          bobTimeline.events.firstWhere((e) => e.eventId == eventId),
+          bobTimeline,
+          i18n,
+        );
+        return versions.length == 3 ? versions : null;
+      });
+      expect(history.map((v) => v.text), [
+        'Fra stranda',
+        'Fra stranda i Lofoten',
+        '',
+      ]);
     });
 
     test('a video closed while it loads stays closed and silent', () async {

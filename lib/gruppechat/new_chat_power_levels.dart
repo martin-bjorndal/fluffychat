@@ -8,6 +8,7 @@ import 'package:matrix/matrix.dart';
 import 'group_state.dart';
 import 'message_lifetime.dart';
 import 'screenshot_block.dart';
+import 'text_replacements.dart';
 
 /// Power levels for a chat made in the app, public or private. Every member
 /// may change the general chat settings (`state_default` 0): name, picture,
@@ -40,6 +41,8 @@ Map<String, Object?> newChatPowerLevels() => withGroupPowerLevels({
     gruppechatLifetimeType: 50,
     // Blocks screenshots for everyone, and only its sender can lift it
     gruppechatScreenshotsType: 50,
+    // Changes what everyone's typing turns into
+    gruppechatTextReplacementsType: textReplacementsPowerLevel,
     MatrixRtcCallMember.eventType: 0,
   },
 });
