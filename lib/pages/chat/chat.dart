@@ -103,13 +103,17 @@ class ChatPage extends StatelessWidget {
       );
     }
 
-    return ChatPageWithRoom(
-      key: Key('chat_page_${roomId}_${eventId}_$action'),
+    // Gruppechat: lib/gruppechat/screenshot_block.dart
+    return GruppechatScreenshotGuard(
       room: room,
-      shareItems: shareItems,
-      eventId: eventId,
-      timeline: timeline,
-      action: action,
+      child: ChatPageWithRoom(
+        key: Key('chat_page_${roomId}_${eventId}_$action'),
+        room: room,
+        shareItems: shareItems,
+        eventId: eventId,
+        timeline: timeline,
+        action: action,
+      ),
     );
   }
 }

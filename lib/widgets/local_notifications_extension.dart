@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/gruppechat/web_notifications.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -51,16 +52,20 @@ extension LocalNotificationsExtension on MatrixState {
     final title = event.room.getLocalizedDisplayname(
       MatrixLocals(L10n.of(context)),
     );
-    final body = await event.calcLocalizedBody(
-      MatrixLocals(L10n.of(context)),
-      withSenderNamePrefix:
-          !event.room.isDirectChat ||
-          event.room.lastEvent?.senderId == client.userID,
-      plaintextBody: true,
-      hideReply: true,
-      hideEdit: true,
-      removeMarkdown: true,
-    );
+    // Gruppechat: not what a chat that blocks screenshots says, where the
+    // app can't block them (lib/gruppechat/screenshot_block.dart)
+    final body = gruppechatHiddenHere(event.room)
+        ? l10n.newMessageInFluffyChat
+        : await event.calcLocalizedBody(
+            MatrixLocals(L10n.of(context)),
+            withSenderNamePrefix:
+                !event.room.isDirectChat ||
+                event.room.lastEvent?.senderId == client.userID,
+            plaintextBody: true,
+            hideReply: true,
+            hideEdit: true,
+            removeMarkdown: true,
+          );
     final avatarUrl = event.room.avatar;
 
     const size = 128;

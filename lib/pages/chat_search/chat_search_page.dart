@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/pages/chat_search/chat_search_view.dart';
 import 'package:fluffychat/widgets/matrix.dart';
 import 'package:material_ui/material_ui.dart';
@@ -150,5 +151,10 @@ class ChatSearchController extends State<ChatSearchPage>
   }
 
   @override
-  Widget build(BuildContext context) => ChatSearchView(this);
+  Widget build(BuildContext context) {
+    // Gruppechat: lib/gruppechat/screenshot_block.dart
+    final room = Matrix.of(context).client.getRoomById(widget.roomId);
+    if (room == null) return ChatSearchView(this);
+    return GruppechatScreenshotGuard(room: room, child: ChatSearchView(this));
+  }
 }

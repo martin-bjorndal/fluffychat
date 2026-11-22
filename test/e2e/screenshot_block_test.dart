@@ -110,6 +110,10 @@ void main() {
         () => GruppechatSecureWindow.secure,
       );
       expect(gruppechatWindowSecure([bobChat]), isTrue);
+      // In a browser, which can't keep screenshots out, bob doesn't see the
+      // chat at all; in the Android app he does, behind the secure window
+      expect(gruppechatHiddenHere(bobChat, canSecureWindow: false), isTrue);
+      expect(gruppechatHiddenHere(bobChat, canSecureWindow: true), isFalse);
       // Downloading the conversation isn't offered
       expect(gruppechatCanDownloadTranscript(bobChat), isFalse);
       expect(gruppechatCanDownloadTranscript(aliceChat), isFalse);
@@ -238,6 +242,8 @@ void main() {
         () => !GruppechatSecureWindow.secure,
       );
       expect(gruppechatScreenshotsBlocked(bobChat), isFalse);
+      // A browser shows the chat again
+      expect(gruppechatHiddenHere(bobChat, canSecureWindow: false), isFalse);
       final bobSwitch = gruppechatScreenshotSwitch(bobChat, l10n);
       expect((bobSwitch.on, bobSwitch.enabled), (false, true));
       // Bob closes the chat

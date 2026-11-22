@@ -3789,6 +3789,8 @@
     "@gruppechatPreviewHidden": {},
     "gruppechatConversationBlocked": "Samtalen kan ikke lastes ned fordi chatten blokkerer skjermbilder.",
     "@gruppechatConversationBlocked": {},
+    "gruppechatChatOnlyInApp": "Denne chatten blokkerer skjermbilder, så den kan bare leses i Android-appen.",
+    "@gruppechatChatOnlyInApp": {},
     "gruppechatAnswerPoll": "Svar på avstemningen: {question}",
     "@gruppechatAnswerPoll": {
         "type": "String",

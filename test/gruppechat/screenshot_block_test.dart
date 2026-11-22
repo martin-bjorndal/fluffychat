@@ -176,6 +176,18 @@ void main() {
     expect(gruppechatWindowSecure([open, blocked]), isTrue);
   });
 
+  test('a browser hides a chat that blocks, the Android app shows it', () {
+    final open = chat();
+    final blocked = chat();
+    block(blocked, bob);
+    expect(gruppechatHiddenHere(open, canSecureWindow: false), isFalse);
+    expect(gruppechatHiddenHere(blocked, canSecureWindow: false), isTrue);
+    expect(gruppechatHiddenHere(blocked, canSecureWindow: true), isFalse);
+    // The tests run outside Android, where the window can't be secured
+    expect(gruppechatCanSecureWindow, isFalse);
+    expect(gruppechatHiddenHere(blocked), isTrue);
+  });
+
   test('open chat pages keep the window secure as their chats change', () {
     final first = chat();
     final second = chat();

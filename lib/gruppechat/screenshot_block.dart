@@ -10,13 +10,15 @@ import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gruppechat_bubbles/gruppechat_bubbles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
 /// A chat that blocks screenshots: while it is on screen, the Android app
 /// keeps its window secure (FLAG_SECURE), so neither screenshots nor screen
-/// recordings show it, for everyone in the chat. A browser can't do that.
+/// recordings show it, for everyone in the chat. A browser can't do that,
+/// so there the chat isn't shown at all ([GruppechatScreenshotGuard]).
 ///
 /// Each person's block is their own room state, with their user ID as the
 /// state key: `{"blocked": true}`, or empty when it is off. Matrix refuses a
@@ -87,6 +89,75 @@ Future<String> gruppechatSetScreenshotBlock(Room room, bool blocked) =>
       room.client.userID!,
       blocked ? {'blocked': true} : <String, Object?>{},
     );
+
+/// Whether this app keeps a chat that blocks screenshots out of them: the
+/// Android app does ([GruppechatSecureWindow]). A browser can't, so there
+/// such a chat isn't shown at all ([GruppechatScreenshotGuard]).
+bool get gruppechatCanSecureWindow => PlatformInfos.isAndroid;
+
+/// Whether [room]'s messages stay hidden in this app: the chat blocks
+/// screenshots and the app can't keep them out of one, as in a browser.
+/// Its list preview (chat_list_item.dart) is hidden everywhere already;
+/// here the chat, its search, gallery and files, and what a notification
+/// says are hidden too.
+bool gruppechatHiddenHere(Room room, {bool? canSecureWindow}) =>
+    !(canSecureWindow ?? gruppechatCanSecureWindow) &&
+    gruppechatScreenshotsBlocked(room);
+
+/// Shows [child], a page with a chat's messages, unless the chat is hidden
+/// in this app ([gruppechatHiddenHere]); then a page that says it can only
+/// be read in the Android app. It follows the chat's block as it changes.
+class GruppechatScreenshotGuard extends StatelessWidget {
+  final Room room;
+  final Widget child;
+
+  const GruppechatScreenshotGuard({
+    required this.room,
+    required this.child,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<Object?>(
+    stream: room.client.onRoomState.stream.where(
+      (update) =>
+          update.roomId == room.id &&
+          {
+            gruppechatScreenshotsType,
+            EventTypes.RoomMember,
+          }.contains(update.state.type),
+    ),
+    builder: (context, _) {
+      if (!gruppechatHiddenHere(room)) return child;
+      final l10n = L10n.of(context);
+      return Scaffold(
+        key: const Key('chat_hidden_here'),
+        appBar: AppBar(
+          title: Text(room.getLocalizedDisplayname(MatrixLocals(l10n))),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.screenshot_outlined, size: 48),
+                const SizedBox(height: 16),
+                Text(l10n.gruppechatChatOnlyInApp, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                // Where the one who turned it on can turn it off
+                TextButton(
+                  onPressed: () => context.go('/rooms/${room.id}/details'),
+                  child: Text(l10n.chatDetails),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
 
 /// Whether the app's window has to be secure while it shows [shown]: any of
 /// them blocks screenshots.
