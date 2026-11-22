@@ -520,6 +520,68 @@ void main() {
       expect(alicesList(), [cake.eventId, pollId]);
     });
 
+    test('a banner at the top shows a poll not yet answered', () async {
+      // Martin: a banner at the top of the chat when there is a poll one
+      // hasn't answered yet. As the chat page asks (lib/gruppechat/
+      // poll_banner.dart), with what bob has closed in this chat.
+      final closed = <String>{};
+      Event? bobsBanner() =>
+          unansweredPoll(bobTimeline, bob.userID!, dismissed: closed);
+
+      final pollId = await aliceChat.startPoll(
+        question: 'Pizza eller taco?',
+        answers: [
+          PollAnswer(id: '1', mText: 'Pizza'),
+          PollAnswer(id: '2', mText: 'Taco'),
+        ],
+        kind: PollKind.disclosed,
+      );
+      final poll = await arrives(
+        bobTimeline,
+        'the poll',
+        (e) => e.eventId == pollId,
+      );
+      await arrives(aliceTimeline, 'the poll', (e) => e.eventId == pollId);
+      expect(bobsBanner()?.eventId, pollId);
+      // Alice's own poll doesn't ask her to answer it
+      expect(unansweredPoll(aliceTimeline, alice.userID!), isNull);
+
+      // Closing the banner hides it for that poll
+      closed.add(poll.eventId);
+      expect(bobsBanner(), isNull);
+      closed.clear();
+
+      // Voting takes it away
+      await poll.answerPoll(['2']);
+      await eventually('bob\'s banner is gone', () => bobsBanner() == null);
+
+      // So does the poll being ended before bob has answered
+      final secondId = await aliceChat.startPoll(
+        question: 'Kino på laurdag?',
+        answers: [
+          PollAnswer(id: '1', mText: 'Ja'),
+          PollAnswer(id: '2', mText: 'Nei'),
+        ],
+        kind: PollKind.disclosed,
+      );
+      await arrives(
+        bobTimeline,
+        'the second poll',
+        (e) => e.eventId == secondId,
+      );
+      expect(bobsBanner()?.eventId, secondId);
+      final second = await arrives(
+        aliceTimeline,
+        'the second poll',
+        (e) => e.eventId == secondId,
+      );
+      await second.endPoll();
+      await eventually(
+        'the ended poll has no banner',
+        () => bobsBanner() == null,
+      );
+    });
+
     test('a new name and profile picture show for the other person', () async {
       // As the settings page does
       await alice.setProfileField(alice.userID!, 'displayname', {

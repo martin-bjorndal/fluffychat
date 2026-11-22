@@ -41,6 +41,7 @@ void main() {
   Event text(String id) =>
       event(id, EventTypes.Message, {'msgtype': 'm.text', 'body': id});
   Event poll(String id) => event(id, PollEventContent.startType, {
+    PollEventContent.mTextJsonKey: 'Når?',
     PollEventContent.startType: {
       'question': {'org.matrix.msc1767.text': 'Når?'},
       'kind': 'org.matrix.msc3381.poll.disclosed',
@@ -92,6 +93,68 @@ void main() {
       endsAtEventId: endsAt == null ? null : '\$$endsAt',
     ),
   );
+
+  group('the banner for a poll not yet answered', () {
+    String? banner(List<Event> oldestFirst) => unansweredPoll(
+      timelineOf(oldestFirst),
+      '@bob:test',
+    )?.eventId.substring(1);
+
+    test('shows the newest poll bob hasn\'t answered', () {
+      expect(banner([poll('p'), poll('q'), vote('v', 'q')]), 'p');
+      expect(banner([poll('p'), poll('q')]), 'q');
+    });
+
+    test('a vote that failed to send is no answer', () {
+      expect(
+        banner([poll('p'), vote('v', 'p', status: EventStatus.error)]),
+        'p',
+      );
+    });
+
+    test('not for an ended poll or bob\'s own poll', () {
+      expect(banner([poll('p'), end('e', 'p')]), isNull);
+      expect(
+        banner([
+          event('p', poll('x').type, poll('x').content, sender: '@bob:test'),
+        ]),
+        isNull,
+      );
+    });
+
+    test('an end that failed to send doesn\'t end it', () {
+      final failed = end('e', 'p')..status = EventStatus.error;
+      expect(banner([poll('p'), failed]), 'p');
+    });
+
+    test('not for a poll the app can\'t read', () {
+      expect(
+        banner([
+          event('p', PollEventContent.startType, {
+            PollEventContent.startType: {'kind': 7},
+          }),
+        ]),
+        isNull,
+      );
+    });
+
+    test('closing it hides every poll bob hasn\'t answered', () {
+      final timeline = timelineOf([poll('p'), poll('q'), poll('r')]);
+      final closed = <String>{};
+      dismissUnansweredPolls(timeline, '@bob:test', closed);
+      expect(closed, {r'$p', r'$q', r'$r'});
+      expect(unansweredPoll(timeline, '@bob:test', dismissed: closed), isNull);
+    });
+
+    test('not for a poll started in a thread', () {
+      final inThread = poll('p');
+      inThread.content['m.relates_to'] = {
+        'rel_type': RelationshipTypes.thread,
+        'event_id': r'$root',
+      };
+      expect(banner([text('root'), inThread]), isNull);
+    });
+  });
 
   test('a poll without votes stays where it was started', () {
     expect(shown([text('a'), poll('p'), text('b')]), ['b', 'p', 'a']);

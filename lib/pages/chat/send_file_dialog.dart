@@ -14,6 +14,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/file_series.dart';
 import 'package:fluffychat/gruppechat/gifs.dart';
+import 'package:fluffychat/gruppechat/photo_looks.dart';
 import 'package:fluffychat/gruppechat/send_dialog_context.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -85,6 +86,9 @@ class SendFileDialogState extends State<SendFileDialog> {
         result,
         mimeType: 'image/png',
         name: '$baseName.png',
+        // Gruppechat: on phones XFile.fromData takes the name from the path
+        // and ignores name, which sent edited photos without a name
+        path: '$baseName.png',
         length: result.length,
       );
     });
@@ -522,7 +526,7 @@ class SendFileDialogState extends State<SendFileDialog> {
   }
 }
 
-enum _EditMode { crop, draw }
+enum _EditMode { crop, draw, filter }
 
 /// The crop (a normalized rectangle held by [CropController]), the rotation
 /// (quarter turns) and the drawn strokes are only composited into a single
@@ -581,6 +585,11 @@ class _ImageEditPageState extends State<_ImageEditPage> {
   /// Horizontal mirror (flip), applied together with rotation at save time.
   bool _mirror = false;
 
+  /// Gruppechat: the filter and adjustments, applied to the photo but not
+  /// to the drawing, and a small copy of the photo for the presets
+  PhotoLook _look = PhotoLook.neutral;
+  ui.Image? _thumbnail;
+
   @override
   void initState() {
     super.initState();
@@ -591,6 +600,7 @@ class _ImageEditPageState extends State<_ImageEditPage> {
   void dispose() {
     _cropController.dispose();
     _drawTransform.dispose();
+    _thumbnail?.dispose();
     // Note: [_image] is intentionally not disposed here. A save may still be
     // rasterizing from it asynchronously when this page is popped; the engine's
     // finalizer reclaims the decoded image once it is no longer referenced.
@@ -606,6 +616,16 @@ class _ImageEditPageState extends State<_ImageEditPage> {
         return;
       }
       setState(() => _image = frame.image);
+      // Gruppechat: a small copy for the filters' previews, which they can
+      // do without
+      final thumbnail = await photoLookThumbnail(
+        frame.image,
+      ).then<ui.Image?>((t) => t, onError: (_) => null);
+      if (!mounted) {
+        thumbnail?.dispose();
+        return;
+      }
+      setState(() => _thumbnail = thumbnail);
     } catch (e, s) {
       Logs().w('Unable to decode image for editing', e, s);
       if (mounted) setState(() => _decodeError = e);
@@ -624,6 +644,7 @@ class _ImageEditPageState extends State<_ImageEditPage> {
 
   bool get _hasEdits =>
       _strokes.isNotEmpty ||
+      !_look.isNeutral ||
       _quarterTurns % 4 != 0 ||
       _mirror ||
       _cropController.crop != _fullCrop;
@@ -650,20 +671,17 @@ class _ImageEditPageState extends State<_ImageEditPage> {
 
   /// Composites the current edits into a single full-resolution PNG.
   Future<Uint8List?> _compose(ui.Image image) async {
-    // 1. Bake strokes onto the full-resolution image (only if there are any).
+    // 1. Bake the filter and the strokes onto the full-resolution image, in
+    //    one pass (only if there are any).
     var painted = image;
-    if (_strokes.isNotEmpty) {
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      final size = Size(image.width.toDouble(), image.height.toDouble());
-      canvas.drawImage(image, Offset.zero, Paint());
-      _StrokePainter(
-        strokes: _strokes,
-        sourceRect: Offset.zero & size,
-      ).paint(canvas, size);
-      painted = await recorder.endRecording().toImage(
-        image.width,
-        image.height,
+    if (_strokes.isNotEmpty || !_look.isNeutral) {
+      painted = await paintEditedPhoto(
+        image,
+        look: _look,
+        drawOnTop: (canvas, size) => _StrokePainter(
+          strokes: _strokes,
+          sourceRect: Offset.zero & size,
+        ).paint(canvas, size),
       );
     }
 
@@ -768,6 +786,11 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                         icon: const Icon(Icons.brush_outlined),
                         label: Text(l10n.draw),
                       ),
+                      ButtonSegment(
+                        value: _EditMode.filter,
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: Text(l10n.gruppechatPhotoFilter),
+                      ),
                     ],
                     selected: {_mode},
                     onSelectionChanged: _saving
@@ -816,46 +839,65 @@ class _ImageEditPageState extends State<_ImageEditPage> {
                       quarterTurns: _quarterTurns,
                       child: Transform.flip(
                         flipX: _mirror,
-                        child: _mode == _EditMode.crop
-                            ? CropImage(
-                                controller: _cropController,
-                                // Decode a separate image from the original
-                                // bytes for the crop widget. Sharing our
-                                // [_image] via UiImageProvider is unsafe: when
-                                // CropImage is unmounted (switching to draw),
-                                // its Image widget disposes the underlying
-                                // ui.Image — which would be our [_image],
-                                // breaking draw mode and save.
-                                image: Image.memory(widget.bytes),
-                                overlayPainter: _strokes.isEmpty
-                                    ? null
-                                    : _StrokePainter(
-                                        strokes: _strokes,
-                                        sourceRect:
-                                            Offset.zero &
-                                            Size(
-                                              image.width.toDouble(),
-                                              image.height.toDouble(),
-                                            ),
-                                      ),
-                              )
-                            : _DrawSurface(
-                                image: image,
-                                cropPx: _cropRectPx(image),
-                                strokes: _strokes,
-                                color: _color,
-                                strokeWidth: _strokeWidth,
-                                eraser: _eraser,
-                                transformController: _drawTransform,
-                                onStrokesChanged: () => setState(() {}),
-                              ),
+                        child: switch (_mode) {
+                          // Gruppechat: without the filter, which would also
+                          // tint the frame and the drawing (CropImage only
+                          // takes an Image)
+                          _EditMode.crop => CropImage(
+                            controller: _cropController,
+                            // Decode a separate image from the original
+                            // bytes for the crop widget. Sharing our
+                            // [_image] via UiImageProvider is unsafe: when
+                            // CropImage is unmounted (switching to draw),
+                            // its Image widget disposes the underlying
+                            // ui.Image — which would be our [_image],
+                            // breaking draw mode and save.
+                            image: Image.memory(widget.bytes),
+                            overlayPainter: _strokes.isEmpty
+                                ? null
+                                : _StrokePainter(
+                                    strokes: _strokes,
+                                    sourceRect:
+                                        Offset.zero &
+                                        Size(
+                                          image.width.toDouble(),
+                                          image.height.toDouble(),
+                                        ),
+                                  ),
+                          ),
+                          _EditMode.draw => _DrawSurface(
+                            image: image,
+                            cropPx: _cropRectPx(image),
+                            strokes: _strokes,
+                            color: _color,
+                            strokeWidth: _strokeWidth,
+                            eraser: _eraser,
+                            look: _look,
+                            transformController: _drawTransform,
+                            onStrokesChanged: () => setState(() {}),
+                          ),
+                          _EditMode.filter => _LookPreview(
+                            image: image,
+                            cropPx: _cropRectPx(image),
+                            strokes: _strokes,
+                            look: _look,
+                          ),
+                        },
                       ),
                     ),
                   ),
                 ),
                 SafeArea(
                   top: false,
-                  child: _mode == _EditMode.crop
+                  child: _mode == _EditMode.filter
+                      ? PhotoLookControls(
+                          look: _look,
+                          thumbnail: _thumbnail,
+                          onChanged: _saving
+                              ? null
+                              : (look) => setState(() => _look = look),
+                        )
+                      : _mode == _EditMode.crop
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: Row(
@@ -1022,6 +1064,7 @@ class _DrawSurface extends StatefulWidget {
   final Color color;
   final double strokeWidth;
   final bool eraser;
+  final PhotoLook look;
   final TransformationController transformController;
   final VoidCallback onStrokesChanged;
 
@@ -1032,6 +1075,7 @@ class _DrawSurface extends StatefulWidget {
     required this.color,
     required this.strokeWidth,
     required this.eraser,
+    required this.look,
     required this.transformController,
     required this.onStrokesChanged,
   });
@@ -1135,6 +1179,7 @@ class _DrawSurfaceState extends State<_DrawSurface> {
                       painter: _CroppedImagePainter(
                         image: widget.image,
                         sourceRect: cropPx,
+                        look: widget.look,
                       ),
                     ),
                     CustomPaint(
@@ -1178,22 +1223,64 @@ class _Stroke {
 class _CroppedImagePainter extends CustomPainter {
   final ui.Image image;
   final Rect sourceRect;
+  final PhotoLook look;
 
-  const _CroppedImagePainter({required this.image, required this.sourceRect});
+  const _CroppedImagePainter({
+    required this.image,
+    required this.sourceRect,
+    this.look = PhotoLook.neutral,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawImageRect(
-      image,
-      sourceRect,
-      Offset.zero & size,
-      Paint()..filterQuality = FilterQuality.high,
-    );
+    final paint = Paint()..filterQuality = FilterQuality.high;
+    if (!look.isNeutral) paint.colorFilter = look.colorFilter;
+    canvas.drawImageRect(image, sourceRect, Offset.zero & size, paint);
   }
 
   @override
   bool shouldRepaint(covariant _CroppedImagePainter oldDelegate) =>
-      oldDelegate.image != image || oldDelegate.sourceRect != sourceRect;
+      oldDelegate.image != image ||
+      oldDelegate.sourceRect != sourceRect ||
+      oldDelegate.look != look;
+}
+
+/// Gruppechat: the cropped photo with its filter and the drawing on top, as
+/// it will be sent, while the filter is chosen.
+class _LookPreview extends StatelessWidget {
+  final ui.Image image;
+  final Rect cropPx;
+  final List<_Stroke> strokes;
+  final PhotoLook look;
+
+  const _LookPreview({
+    required this.image,
+    required this.cropPx,
+    required this.strokes,
+    required this.look,
+  });
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: AspectRatio(
+      aspectRatio: cropPx.width / cropPx.height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(
+            painter: _CroppedImagePainter(
+              image: image,
+              sourceRect: cropPx,
+              look: look,
+            ),
+          ),
+          CustomPaint(
+            painter: _StrokePainter(strokes: strokes, sourceRect: cropPx),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Paints freehand [strokes] (stored in source-image pixel coordinates) onto a
