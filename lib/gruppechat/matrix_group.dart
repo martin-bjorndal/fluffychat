@@ -322,12 +322,18 @@ extension GruppechatRoomExtension on Room {
         ?.content,
   );
 
-  /// The text replacements for typing in this room: its group's, or the
-  /// defaults for a direct chat or a room outside any joined group. A direct
+  /// Where this room's text replacements are kept: its group, or for a
+  /// direct chat the chat itself, which both people may change. A direct
   /// chat never takes a list from a space, as anyone can list it in theirs.
-  List<TextReplacement> get gruppechatTextReplacements => isDirectChat
-      ? defaultTextReplacements
-      : GruppechatGroup.of(this)?.textReplacements ?? defaultTextReplacements;
+  GruppechatGroup? get gruppechatTextReplacementsGroup =>
+      isDirectChat ? GruppechatGroup(this) : GruppechatGroup.of(this);
+
+  /// The text replacements for typing in this room: its group's or direct
+  /// chat's own list, or the defaults while it has none or for a room
+  /// outside any joined group.
+  List<TextReplacement> get gruppechatTextReplacements =>
+      gruppechatTextReplacementsGroup?.textReplacements ??
+      defaultTextReplacements;
 
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {

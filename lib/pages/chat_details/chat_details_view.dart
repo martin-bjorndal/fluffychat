@@ -7,9 +7,11 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/chat_transcript.dart';
 import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
+import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
+import 'package:fluffychat/gruppechat/text_replacements_menu.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/pages/chat_details/participant_list_item.dart';
@@ -306,6 +308,12 @@ class ChatDetailsView extends StatelessWidget {
                           GruppechatScreenshotBlockTile(
                             room,
                             iconColor: iconColor,
+                          ),
+                        // Gruppechat: lib/gruppechat/text_replacements_menu.dart
+                        // (a group's list is in its group settings)
+                        if (room.isDirectChat)
+                          GruppechatTextReplacementsTile(
+                            group: room.gruppechatTextReplacementsGroup!,
                           ),
                         // Gruppechat: lib/gruppechat/chat_transcript.dart
                         if (gruppechatCanDownloadTranscript(room))

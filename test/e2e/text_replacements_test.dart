@@ -207,6 +207,34 @@ void main() {
       );
       expect(bobChat.gruppechatTextReplacements, defaultTextReplacements);
       expect(typedAndSent(bobChat, 'mvh :)'), 'mvh 🙂');
+
+      // The direct chat has its own list, which both of them may change:
+      // alice adds "gm", and it works for bob too
+      final aliceDmList = aliceChat.gruppechatTextReplacementsGroup!;
+      final bobDmList = bobChat.gruppechatTextReplacementsGroup!;
+      expect(aliceDmList.canSetTextReplacements, isTrue);
+      expect(bobDmList.canSetTextReplacements, isTrue);
+      await aliceDmList.setTextReplacements([
+        ...defaultTextReplacements,
+        const TextReplacement('gm', 'god morgen'),
+      ]);
+      await eventually(
+        "bob gets the direct chat's list",
+        () => bobChat.gruppechatTextReplacements.any(
+          (rule) => rule.from == 'gm',
+        ),
+      );
+      expect(typedAndSent(bobChat, 'gm :)'), 'god morgen 🙂');
+
+      // Bob takes "gm" out again; it stops for alice
+      await bobDmList.setTextReplacements(defaultTextReplacements);
+      await eventually(
+        'alice gets the shorter list',
+        () => !aliceChat.gruppechatTextReplacements.any(
+          (rule) => rule.from == 'gm',
+        ),
+      );
+      expect(typedAndSent(aliceChat, 'gm'), 'gm');
     });
   });
 }
