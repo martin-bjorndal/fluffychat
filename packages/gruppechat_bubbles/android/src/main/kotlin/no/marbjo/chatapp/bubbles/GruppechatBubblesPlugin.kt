@@ -17,6 +17,7 @@ import android.os.PersistableBundle
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import android.view.WindowManager
 import java.io.IOException
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -26,7 +27,8 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Hanne Chat's own Android code. Mostly chat bubbles (Android 11+), plus
- * saving and copying the recovery key reliably. Posts message notifications
+ * saving and copying the recovery key reliably, and keeping the window
+ * secure while a chat that blocks screenshots is on screen. Posts message notifications
  * with bubble metadata (see [BubbleNotifications]) and tells Dart which
  * window shows the app's Flutter engine: the main window or a bubble.
  *
@@ -39,6 +41,13 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
     private lateinit var channel: MethodChannel
     private lateinit var notifications: BubbleNotifications
     private var activity: Activity? = null
+
+    /**
+     * Whether the window that shows the engine is kept secure, so neither
+     * screenshots nor screen recordings show it: a chat that blocks them is
+     * on screen (lib/gruppechat/screenshot_block.dart).
+     */
+    private var secure = false
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         context = binding.applicationContext
@@ -67,7 +76,20 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
     /** A window got the engine: Dart shows what that window is for. */
     private fun attachTo(activity: Activity) {
         this.activity = activity
+        // Before the window shows the chat it had on screen. A window that
+        // lost the engine keeps its flag until it gets the engine back, so
+        // what it showed last stays covered.
+        applySecure()
         channel.invokeMethod("windowChanged", window())
+    }
+
+    private fun applySecure() {
+        val window = activity?.window ?: return
+        if (secure) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     private fun window(): Map<String, Any?> {
@@ -126,8 +148,17 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
                     result.success(null)
                 }
                 "saveToDownloads" -> result.success(
-                    saveToDownloads(call.string("fileName"), call.string("text")),
+                    saveToDownloads(
+                        call.string("fileName"),
+                        call.string("text"),
+                        call.argument<String>("mimeType") ?: "text/plain",
+                    ),
                 )
+                "setSecure" -> {
+                    secure = call.argument<Boolean>("secure") == true
+                    applySecure()
+                    result.success(null)
+                }
                 "copySensitive" -> {
                     copySensitive(call.string("text"))
                     result.success(null)
@@ -179,18 +210,20 @@ class GruppechatBubblesPlugin : FlutterPlugin, ActivityAware, MethodChannel.Meth
     }
 
     /**
-     * Saves [text] as a file in Downloads and checks that it was written,
-     * returning the file's name; null before Android 10, which has no API
-     * for it. Unlike a save dialog, nothing is lost if Android closes the
-     * app's window meanwhile, which left recovery key files empty.
+     * Saves [text] as a file of type [mimeType] in Downloads and checks that
+     * it was written, returning the file's name; null before Android 10,
+     * which has no API for it. Unlike a save dialog, nothing is lost if
+     * Android closes the app's window meanwhile, which left recovery key
+     * files empty. The recovery key is plain text, a downloaded chat
+     * Markdown (lib/gruppechat/chat_transcript.dart).
      */
-    private fun saveToDownloads(fileName: String, text: String): String? {
+    private fun saveToDownloads(fileName: String, text: String, mimeType: String): String? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         val bytes = text.toByteArray()
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-            put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+            put(MediaStore.Downloads.MIME_TYPE, mimeType)
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)

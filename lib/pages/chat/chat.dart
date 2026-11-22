@@ -29,6 +29,7 @@ import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/photo_stacks.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat_view.dart';
@@ -424,6 +425,9 @@ class ChatController extends State<ChatPageWithRoom>
       const Duration(seconds: 30),
       (_) => _hideExpired(),
     );
+    // Gruppechat: no screenshots of a chat that blocks them, nor of what
+    // opens on top of it (lib/gruppechat/screenshot_block.dart)
+    GruppechatSecureWindow.show(this, widget.room);
     inputFocus = FocusNode(onKeyEvent: _customEnterKeyHandling);
 
     scrollController.addListener(_updateScrollController);
@@ -514,6 +518,9 @@ class ChatController extends State<ChatPageWithRoom>
     loadTimelineFuture = _getTimeline();
     try {
       await loadTimelineFuture;
+      // Gruppechat: who is in the chat is loaded now, so a block of someone
+      // who left stops counting (lib/gruppechat/screenshot_block.dart)
+      GruppechatSecureWindow.update();
       if (mounted) _clearNotification();
       // We launched the chat with a given initial event ID:
       if (initialEventId != null) {
@@ -738,6 +745,7 @@ class ChatController extends State<ChatPageWithRoom>
   @override
   void dispose() {
     _lifetimeTimer?.cancel();
+    GruppechatSecureWindow.hide(this);
     timeline?.cancelSubscriptions();
     timeline = null;
     _storeInputTimeoutTimer?.cancel();

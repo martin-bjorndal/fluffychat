@@ -3691,6 +3691,76 @@
     },
     "gruppechatUnbanFromGroupDescription": "They are let back into the group and all its channels, also those they were banned from on their own.",
     "@gruppechatUnbanFromGroupDescription": {},
+    "gruppechatDownloadConversation": "Download conversation",
+    "@gruppechatDownloadConversation": {},
+    "gruppechatDownloadConversationDescription": "The whole conversation as a text file. Pictures and files appear by name only.",
+    "@gruppechatDownloadConversationDescription": {},
+    "gruppechatLoadingConversation": "Fetching the whole conversation …",
+    "@gruppechatLoadingConversation": {},
+    "gruppechatConversationSavedInDownloads": "The conversation is saved in Downloads as {fileName}.",
+    "@gruppechatConversationSavedInDownloads": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatConversationDownloaded": "The conversation was downloaded as {fileName}.",
+    "@gruppechatConversationDownloaded": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatConversationNotSaved": "The conversation wasn't saved: {error}",
+    "@gruppechatConversationNotSaved": {
+        "type": "String",
+        "placeholders": {"error": {"type": "String"}}
+    },
+    "gruppechatTranscriptDownloaded": "Downloaded {time} by {name}.",
+    "@gruppechatTranscriptDownloaded": {
+        "type": "String",
+        "placeholders": {"time": {"type": "String"}, "name": {"type": "String"}}
+    },
+    "gruppechatTranscriptReplyTo": "replying to {name}: “{text}”",
+    "@gruppechatTranscriptReplyTo": {
+        "type": "String",
+        "placeholders": {"name": {"type": "String"}, "text": {"type": "String"}}
+    },
+    "gruppechatTranscriptReplyToMessage": "replying to a message",
+    "@gruppechatTranscriptReplyToMessage": {},
+    "gruppechatTranscriptInThread": "in the thread “{text}”",
+    "@gruppechatTranscriptInThread": {
+        "type": "String",
+        "placeholders": {"text": {"type": "String"}}
+    },
+    "gruppechatTranscriptInAThread": "in a thread",
+    "@gruppechatTranscriptInAThread": {},
+    "gruppechatTranscriptPicture": "Picture",
+    "@gruppechatTranscriptPicture": {},
+    "gruppechatTranscriptVideo": "Video",
+    "@gruppechatTranscriptVideo": {},
+    "gruppechatTranscriptAudio": "Audio file",
+    "@gruppechatTranscriptAudio": {},
+    "gruppechatTranscriptFile": "File",
+    "@gruppechatTranscriptFile": {},
+    "gruppechatTranscriptSticker": "Sticker",
+    "@gruppechatTranscriptSticker": {},
+    "gruppechatTranscriptLocation": "Location",
+    "@gruppechatTranscriptLocation": {},
+    "gruppechatBlockScreenshots": "Block screenshots",
+    "@gruppechatBlockScreenshots": {},
+    "gruppechatBlockScreenshotsDescription": "Stops screenshots and screen recording of this chat for everyone in the chat, in the Android app.",
+    "@gruppechatBlockScreenshotsDescription": {},
+    "gruppechatScreenshotsBlockedBy": "Turned on by {names}",
+    "@gruppechatScreenshotsBlockedBy": {
+        "type": "String",
+        "placeholders": {"names": {"type": "String"}}
+    },
+    "gruppechatScreenshotsAlsoBlockedBy": "Also turned on by {names}",
+    "@gruppechatScreenshotsAlsoBlockedBy": {
+        "type": "String",
+        "placeholders": {"names": {"type": "String"}}
+    },
+    "gruppechatPreviewHidden": "Open the chat to read",
+    "@gruppechatPreviewHidden": {},
+    "gruppechatConversationBlocked": "The conversation can't be downloaded because the chat blocks screenshots.",
+    "@gruppechatConversationBlocked": {},
     "gruppechatAnswerPoll": "Answer the poll: {question}",
     "@gruppechatAnswerPoll": {
         "type": "String",

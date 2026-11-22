@@ -6,6 +6,7 @@
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:matrix/matrix.dart';
 
 extension VisibleInGuiExtension on List<Event> {
@@ -50,7 +51,10 @@ extension IsStateExtension on Event {
       // Gruppechat: messages whose time is up leave no trace, nor does
       // setting the time (lib/gruppechat/message_lifetime.dart)
       type != gruppechatLifetimeType &&
-      !gruppechatIsGone(this);
+      !gruppechatIsGone(this) &&
+      // Gruppechat: nor does blocking screenshots
+      // (lib/gruppechat/screenshot_block.dart)
+      type != gruppechatScreenshotsType;
 
   bool get isState => !{EventTypes.Message, EventTypes.Sticker}.contains(type);
 

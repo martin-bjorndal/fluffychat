@@ -3719,6 +3719,76 @@
     },
     "gruppechatUnbanFromGroupDescription": "Brukeren slippes inn igjen i gruppen og alle kanalene i den, også de brukeren var utestengt fra hver for seg.",
     "@gruppechatUnbanFromGroupDescription": {},
+    "gruppechatDownloadConversation": "Last ned samtalen",
+    "@gruppechatDownloadConversation": {},
+    "gruppechatDownloadConversationDescription": "Hele samtalen som en tekstfil. Bilder og filer står bare med navn.",
+    "@gruppechatDownloadConversationDescription": {},
+    "gruppechatLoadingConversation": "Henter hele samtalen …",
+    "@gruppechatLoadingConversation": {},
+    "gruppechatConversationSavedInDownloads": "Samtalen er lagret i Nedlastinger som {fileName}.",
+    "@gruppechatConversationSavedInDownloads": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatConversationDownloaded": "Samtalen er lastet ned som {fileName}.",
+    "@gruppechatConversationDownloaded": {
+        "type": "String",
+        "placeholders": {"fileName": {"type": "String"}}
+    },
+    "gruppechatConversationNotSaved": "Samtalen ble ikke lagret: {error}",
+    "@gruppechatConversationNotSaved": {
+        "type": "String",
+        "placeholders": {"error": {"type": "String"}}
+    },
+    "gruppechatTranscriptDownloaded": "Lastet ned {time} av {name}.",
+    "@gruppechatTranscriptDownloaded": {
+        "type": "String",
+        "placeholders": {"time": {"type": "String"}, "name": {"type": "String"}}
+    },
+    "gruppechatTranscriptReplyTo": "svar til {name}: «{text}»",
+    "@gruppechatTranscriptReplyTo": {
+        "type": "String",
+        "placeholders": {"name": {"type": "String"}, "text": {"type": "String"}}
+    },
+    "gruppechatTranscriptReplyToMessage": "svar på en melding",
+    "@gruppechatTranscriptReplyToMessage": {},
+    "gruppechatTranscriptInThread": "i tråden «{text}»",
+    "@gruppechatTranscriptInThread": {
+        "type": "String",
+        "placeholders": {"text": {"type": "String"}}
+    },
+    "gruppechatTranscriptInAThread": "i en tråd",
+    "@gruppechatTranscriptInAThread": {},
+    "gruppechatTranscriptPicture": "Bilde",
+    "@gruppechatTranscriptPicture": {},
+    "gruppechatTranscriptVideo": "Video",
+    "@gruppechatTranscriptVideo": {},
+    "gruppechatTranscriptAudio": "Lydfil",
+    "@gruppechatTranscriptAudio": {},
+    "gruppechatTranscriptFile": "Fil",
+    "@gruppechatTranscriptFile": {},
+    "gruppechatTranscriptSticker": "Klistremerke",
+    "@gruppechatTranscriptSticker": {},
+    "gruppechatTranscriptLocation": "Posisjon",
+    "@gruppechatTranscriptLocation": {},
+    "gruppechatBlockScreenshots": "Blokker skjermbilder",
+    "@gruppechatBlockScreenshots": {},
+    "gruppechatBlockScreenshotsDescription": "Hindrer skjermbilder og skjermopptak av denne chatten for alle i chatten, i Android-appen.",
+    "@gruppechatBlockScreenshotsDescription": {},
+    "gruppechatScreenshotsBlockedBy": "Slått på av {names}",
+    "@gruppechatScreenshotsBlockedBy": {
+        "type": "String",
+        "placeholders": {"names": {"type": "String"}}
+    },
+    "gruppechatScreenshotsAlsoBlockedBy": "Også slått på av {names}",
+    "@gruppechatScreenshotsAlsoBlockedBy": {
+        "type": "String",
+        "placeholders": {"names": {"type": "String"}}
+    },
+    "gruppechatPreviewHidden": "Åpne chatten for å lese",
+    "@gruppechatPreviewHidden": {},
+    "gruppechatConversationBlocked": "Samtalen kan ikke lastes ned fordi chatten blokkerer skjermbilder.",
+    "@gruppechatConversationBlocked": {},
     "gruppechatAnswerPoll": "Svar på avstemningen: {question}",
     "@gruppechatAnswerPoll": {
         "type": "String",
