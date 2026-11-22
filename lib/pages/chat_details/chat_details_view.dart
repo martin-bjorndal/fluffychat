@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/gruppechat/chat_transcript.dart';
 import 'package:fluffychat/gruppechat/delete_room.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
@@ -299,6 +301,33 @@ class ChatDetailsView extends StatelessWidget {
                           onTap: () =>
                               gruppechatChooseMessageLifetime(context, room),
                         ),
+                        // Gruppechat: lib/gruppechat/screenshot_block.dart
+                        if (!room.isSpace)
+                          GruppechatScreenshotBlockTile(
+                            room,
+                            iconColor: iconColor,
+                          ),
+                        // Gruppechat: lib/gruppechat/chat_transcript.dart
+                        if (gruppechatCanDownloadTranscript(room))
+                          ListTile(
+                            key: const Key('download_transcript'),
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainer,
+                              foregroundColor: iconColor,
+                              child: const Icon(Icons.download_outlined),
+                            ),
+                            title: Text(
+                              L10n.of(context).gruppechatDownloadConversation,
+                            ),
+                            subtitle: Text(
+                              L10n.of(
+                                context,
+                              ).gruppechatDownloadConversationDescription,
+                            ),
+                            onTap: () =>
+                                gruppechatDownloadTranscript(context, room),
+                          ),
                         if (room.canChangeStateEvent(EventTypes.RoomTopic) ||
                             room.topic.isNotEmpty) ...[
                           ListTile(

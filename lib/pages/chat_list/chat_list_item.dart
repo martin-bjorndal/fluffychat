@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
+import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
 import 'package:fluffychat/pages/chat_list/unread_bubble.dart';
@@ -54,6 +55,10 @@ class ChatListItem extends StatelessWidget {
         room.lastEvent == null || gruppechatIsGone(room.lastEvent!)
         ? null
         : room.lastEvent;
+    // Gruppechat: a chat that blocks screenshots doesn't show its messages
+    // here, where a screenshot of the chat list would catch them
+    // (lib/gruppechat/screenshot_block.dart)
+    final previewHidden = gruppechatScreenshotsBlocked(room);
     final ownMessage = lastEvent?.senderId == room.client.userID;
     final directChatMatrixId = room.directChatMatrixID;
     final isDirectChat = directChatMatrixId != null;
@@ -361,6 +366,8 @@ class ChatListItem extends StatelessWidget {
                                         (isDirectChat
                                             ? L10n.of(context).newChatRequest
                                             : L10n.of(context).inviteGroupChat)
+                                  : previewHidden && lastEvent != null
+                                  ? L10n.of(context).gruppechatPreviewHidden
                                   : snapshot.data?.trim().replaceAll(
                                           '\n',
                                           ' ',

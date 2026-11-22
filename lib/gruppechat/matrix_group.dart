@@ -6,14 +6,17 @@ import 'package:matrix/matrix.dart';
 import 'package:slugify/slugify.dart';
 
 import 'group_state.dart';
+import 'screenshot_block.dart';
 
 /// State the app keeps in memory even for rooms that were never opened: our
 /// event types, plus the power levels every permission check depends on. The
 /// SDK doesn't keep power levels loaded by default, so without this a group
-/// whose space room was never opened can't even be set up.
+/// whose space room was never opened can't even be set up. A chat's
+/// screenshot block too, so the chat list knows it (screenshot_block.dart).
 const Set<String> gruppechatImportantStateEvents = {
   ...GruppechatEventTypes.all,
   EventTypes.RoomPowerLevels,
+  gruppechatScreenshotsType,
 };
 
 /// Reads group state straight from a room's state events.
