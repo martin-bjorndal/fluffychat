@@ -2,9 +2,10 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// A chat's own colour: its top bar, input bar and bubbles take it, for
-// everyone in the chat, while the background stays as it is. The colour is
-// kept with the chat's background (see GruppechatGroup.setChatColor).
+// A chat's own colour: its top bar, input bar and your own bubbles take it,
+// and other people's bubbles a tint of it, for everyone in the chat, while
+// the background stays as it is. The colour is kept with the chat's
+// background (see GruppechatGroup.setChatColor).
 
 import 'dart:async';
 
@@ -37,17 +38,30 @@ const List<int> chatColorChoices = [
   0xFF9E9E9E,
 ];
 
-/// The colours of a coloured chat's top and bottom bars.
+/// The colours of a coloured chat's top and bottom bars, and of other
+/// people's bubbles in it.
 @immutable
 class GruppechatChatColors extends ThemeExtension<GruppechatChatColors> {
   final Color bar;
   final Color onBar;
+  final Color othersBubble;
 
-  const GruppechatChatColors({required this.bar, required this.onBar});
+  const GruppechatChatColors({
+    required this.bar,
+    required this.onBar,
+    required this.othersBubble,
+  });
 
   @override
-  GruppechatChatColors copyWith({Color? bar, Color? onBar}) =>
-      GruppechatChatColors(bar: bar ?? this.bar, onBar: onBar ?? this.onBar);
+  GruppechatChatColors copyWith({
+    Color? bar,
+    Color? onBar,
+    Color? othersBubble,
+  }) => GruppechatChatColors(
+    bar: bar ?? this.bar,
+    onBar: onBar ?? this.onBar,
+    othersBubble: othersBubble ?? this.othersBubble,
+  );
 
   @override
   GruppechatChatColors lerp(GruppechatChatColors? other, double t) =>
@@ -56,22 +70,34 @@ class GruppechatChatColors extends ThemeExtension<GruppechatChatColors> {
       : GruppechatChatColors(
           bar: Color.lerp(bar, other.bar, t)!,
           onBar: Color.lerp(onBar, other.onBar, t)!,
+          othersBubble: Color.lerp(othersBubble, other.othersBubble, t)!,
         );
 
   @override
   bool operator ==(Object other) =>
-      other is GruppechatChatColors && other.bar == bar && other.onBar == onBar;
+      other is GruppechatChatColors &&
+      other.bar == bar &&
+      other.onBar == onBar &&
+      other.othersBubble == othersBubble;
 
   @override
-  int get hashCode => Object.hash(bar, onBar);
+  int get hashCode => Object.hash(bar, onBar, othersBubble);
 }
+
+/// The colour of other people's bubbles, and of their typing bubble, under
+/// [theme]: a tint of the chat's colour in a coloured chat, and grey
+/// elsewhere. Their text stays `onSurface`, which reads on both.
+Color gruppechatOthersBubbleColor(ThemeData theme) =>
+    theme.extension<GruppechatChatColors>()?.othersBubble ??
+    theme.colorScheme.surfaceContainerHigh;
 
 /// The app's theme with [seed] as its colour, for a coloured chat: buttons,
 /// bubbles and the bars follow the seed, while the background, the canvas,
 /// the dividers, the app bar's defaults and Android's navigation bar keep
 /// [base]'s colours. In dark mode the bars are a tint of the seed over the
 /// surface, so they differ from your own bubbles (`primaryContainer`) and
-/// from the bar of an open thread (`secondaryContainer`).
+/// from the bar of an open thread (`secondaryContainer`). Other people's
+/// bubbles are a lighter tint of the seed over the grey they have elsewhere.
 ThemeData gruppechatChatTheme(
   BuildContext context,
   ThemeData base,
@@ -95,6 +121,10 @@ ThemeData gruppechatChatTheme(
                 scheme.surfaceContainer,
               ),
         onBar: light ? scheme.onPrimaryContainer : scheme.onSurface,
+        othersBubble: Color.alphaBlend(
+          scheme.primary.withAlpha(light ? 40 : 48),
+          scheme.surfaceContainerHigh,
+        ),
       ),
     ],
   );

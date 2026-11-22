@@ -8,6 +8,7 @@ import 'dart:ui' as ui;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/hover_reply.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
@@ -112,7 +113,8 @@ class Message extends StatelessWidget {
     final ownMessage = event.senderId == client.userID;
     final alignment = ownMessage ? Alignment.topRight : Alignment.topLeft;
 
-    var color = theme.colorScheme.surfaceContainerHigh;
+    // Gruppechat: other people's bubbles take a tint of the chat's colour
+    var color = gruppechatOthersBubbleColor(theme);
     final displayTime =
         event.type == EventTypes.RoomCreate ||
         previousEvent == null ||

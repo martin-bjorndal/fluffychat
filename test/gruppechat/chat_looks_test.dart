@@ -377,6 +377,27 @@ void main() {
         final contrast =
             (bars.bar.computeLuminance() - bars.onBar.computeLuminance()).abs();
         expect(contrast, greaterThan(0.3));
+        // Wish from 1.1.43: other people's bubbles take a tint of the colour
+        // too, and their text still reads
+        final others = gruppechatOthersBubbleColor(chat);
+        expect(
+          gruppechatOthersBubbleColor(base),
+          base.colorScheme.surfaceContainerHigh,
+        );
+        expect(others, isNot(base.colorScheme.surfaceContainerHigh));
+        // ...and still differ clearly from your own, in lightness or in how
+        // strong the colour is
+        final own = chat.bubbleColor;
+        final fromOwn =
+            (others.r - own.r).abs() +
+            (others.g - own.g).abs() +
+            (others.b - own.b).abs();
+        expect(fromOwn, greaterThan(0.15));
+        final othersContrast =
+            (others.computeLuminance() -
+                    chat.colorScheme.onSurface.computeLuminance())
+                .abs();
+        expect(othersContrast, greaterThan(0.3));
       });
     }
 

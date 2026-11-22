@@ -5,6 +5,7 @@
 
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/widgets/avatar.dart';
@@ -85,7 +86,8 @@ class TypingIndicators extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Material(
-                  color: theme.colorScheme.surfaceContainerHigh,
+                  // Gruppechat: tinted like other people's bubbles
+                  color: gruppechatOthersBubbleColor(theme),
                   borderRadius: const BorderRadius.all(
                     Radius.circular(AppConfig.borderRadius),
                   ),
