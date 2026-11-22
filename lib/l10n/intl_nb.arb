@@ -3718,5 +3718,36 @@
         }
     },
     "gruppechatUnbanFromGroupDescription": "Brukeren slippes inn igjen i gruppen og alle kanalene i den, også de brukeren var utestengt fra hver for seg.",
-    "@gruppechatUnbanFromGroupDescription": {}
+    "@gruppechatUnbanFromGroupDescription": {},
+    "gruppechatAnswerPoll": "Svar på avstemningen: {question}",
+    "@gruppechatAnswerPoll": {
+        "type": "String",
+        "placeholders": {"question": {"type": "String"}}
+    },
+    "gruppechatPhotoFilter": "Filter",
+    "@gruppechatPhotoFilter": {},
+    "gruppechatLookOriginal": "Original",
+    "@gruppechatLookOriginal": {},
+    "gruppechatLookBlackWhite": "Svart-hvitt",
+    "@gruppechatLookBlackWhite": {},
+    "gruppechatLookSepia": "Sepia",
+    "@gruppechatLookSepia": {},
+    "gruppechatLookWarm": "Varm",
+    "@gruppechatLookWarm": {},
+    "gruppechatLookCool": "Kald",
+    "@gruppechatLookCool": {},
+    "gruppechatLookVivid": "Livlig",
+    "@gruppechatLookVivid": {},
+    "gruppechatLookFaded": "Falmet",
+    "@gruppechatLookFaded": {},
+    "gruppechatLookNoir": "Noir",
+    "@gruppechatLookNoir": {},
+    "gruppechatLookRandom": "Overrask meg",
+    "@gruppechatLookRandom": {},
+    "gruppechatLookBrightness": "Lysstyrke",
+    "@gruppechatLookBrightness": {},
+    "gruppechatLookContrast": "Kontrast",
+    "@gruppechatLookContrast": {},
+    "gruppechatLookSaturation": "Metning",
+    "@gruppechatLookSaturation": {}
 }

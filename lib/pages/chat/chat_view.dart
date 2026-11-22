@@ -12,6 +12,7 @@ import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/poll_banner.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
 import 'package:fluffychat/gruppechat/swipe_back.dart';
 import 'package:fluffychat/gruppechat/thread_list.dart';
@@ -108,6 +109,11 @@ class ChatView extends StatelessWidget {
               appbarBottomHeight += ChatAppBarListTile.fixedHeight;
             }
             if (scrollUpBannerEventId != null && activeThreadId == null) {
+              appbarBottomHeight += ChatAppBarListTile.fixedHeight;
+            }
+            // A poll not yet answered (lib/gruppechat/poll_banner.dart)
+            final unansweredPoll = pollBannerFor(controller);
+            if (unansweredPoll != null) {
               appbarBottomHeight += ChatAppBarListTile.fixedHeight;
             }
             // Selecting messages and threads keep their own bar colours
@@ -336,6 +342,8 @@ class ChatView extends StatelessWidget {
                     mainAxisSize: .min,
                     children: [
                       PinnedEvents(controller),
+                      if (unansweredPoll != null)
+                        UnansweredPollBanner(controller, unansweredPoll),
                       if (activeThreadId != null)
                         SizedBox(
                           height: ChatAppBarListTile.fixedHeight,

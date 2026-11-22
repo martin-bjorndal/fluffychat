@@ -133,6 +133,69 @@ bool _endsPoll(Event event, Event poll) {
   return event.senderFromMemoryOrFallback.powerLevel.level >= redactLevel;
 }
 
+/// The polls in [timeline] that [userId] hasn't answered yet, newest first,
+/// for the banner at the top of the chat (poll_banner.dart). Polls started
+/// by [userId], deleted or ended ones, and those in [dismissed] (closed
+/// banners, by event ID) don't count, nor those the chat doesn't show (in a
+/// thread). A vote that failed to send or was deleted doesn't count as an
+/// answer. Only the loaded part of the chat is looked through.
+Iterable<Event> unansweredPolls(
+  Timeline timeline,
+  String userId, {
+  Set<String> dismissed = const {},
+}) sync* {
+  // Only poll starts go through the (costlier) visibility check: this runs
+  // on every build of the chat
+  final polls = timeline.events
+      .where((e) => e.type == PollEventContent.startType)
+      .toList()
+      .filterByVisibleInGui();
+  for (final event in polls) {
+    if (event.redacted ||
+        event.senderId == userId ||
+        dismissed.contains(event.eventId)) {
+      continue;
+    }
+    final live =
+        (timeline.aggregatedEvents[event.eventId]?[RelationshipTypes
+                    .reference] ??
+                const <Event>{})
+            .where((e) => !e.redacted && !e.status.isError);
+    if (live.any(
+      (e) =>
+          (e.type == PollEventContent.responseType && e.senderId == userId) ||
+          _endsPoll(e, event),
+    )) {
+      continue;
+    }
+    // A poll the app can't read shows as a broken bubble, not a banner
+    try {
+      event.parsedPollEventContent;
+    } catch (_) {
+      continue;
+    }
+    yield event;
+  }
+}
+
+/// The newest of [unansweredPolls], or null.
+Event? unansweredPoll(
+  Timeline timeline,
+  String userId, {
+  Set<String> dismissed = const {},
+}) => unansweredPolls(timeline, userId, dismissed: dismissed).firstOrNull;
+
+/// Closes the banner: adds every poll in [timeline] that [userId] hasn't
+/// answered to [dismissed], so older ones don't show up one after another.
+void dismissUnansweredPolls(
+  Timeline timeline,
+  String userId,
+  Set<String> dismissed,
+) => dismissed.addAll([
+  for (final poll in unansweredPolls(timeline, userId, dismissed: dismissed))
+    poll.eventId,
+]);
+
 /// The time a chat item counts as for the dates in the chat: a moved poll
 /// that of the vote it stands at.
 DateTime shownTime(Event event, MovedPolls moved) =>

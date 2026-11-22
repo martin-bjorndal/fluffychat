@@ -3690,5 +3690,36 @@
         }
     },
     "gruppechatUnbanFromGroupDescription": "They are let back into the group and all its channels, also those they were banned from on their own.",
-    "@gruppechatUnbanFromGroupDescription": {}
+    "@gruppechatUnbanFromGroupDescription": {},
+    "gruppechatAnswerPoll": "Answer the poll: {question}",
+    "@gruppechatAnswerPoll": {
+        "type": "String",
+        "placeholders": {"question": {"type": "String"}}
+    },
+    "gruppechatPhotoFilter": "Filter",
+    "@gruppechatPhotoFilter": {},
+    "gruppechatLookOriginal": "Original",
+    "@gruppechatLookOriginal": {},
+    "gruppechatLookBlackWhite": "Black & white",
+    "@gruppechatLookBlackWhite": {},
+    "gruppechatLookSepia": "Sepia",
+    "@gruppechatLookSepia": {},
+    "gruppechatLookWarm": "Warm",
+    "@gruppechatLookWarm": {},
+    "gruppechatLookCool": "Cool",
+    "@gruppechatLookCool": {},
+    "gruppechatLookVivid": "Vivid",
+    "@gruppechatLookVivid": {},
+    "gruppechatLookFaded": "Faded",
+    "@gruppechatLookFaded": {},
+    "gruppechatLookNoir": "Noir",
+    "@gruppechatLookNoir": {},
+    "gruppechatLookRandom": "Surprise me",
+    "@gruppechatLookRandom": {},
+    "gruppechatLookBrightness": "Brightness",
+    "@gruppechatLookBrightness": {},
+    "gruppechatLookContrast": "Contrast",
+    "@gruppechatLookContrast": {},
+    "gruppechatLookSaturation": "Saturation",
+    "@gruppechatLookSaturation": {}
 }
