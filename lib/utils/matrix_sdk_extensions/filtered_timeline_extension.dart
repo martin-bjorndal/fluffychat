@@ -7,6 +7,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
+import 'package:fluffychat/gruppechat/text_replacements.dart';
 import 'package:matrix/matrix.dart';
 
 extension VisibleInGuiExtension on List<Event> {
@@ -54,7 +55,9 @@ extension IsStateExtension on Event {
       !gruppechatIsGone(this) &&
       // Gruppechat: nor does blocking screenshots
       // (lib/gruppechat/screenshot_block.dart)
-      type != gruppechatScreenshotsType;
+      type != gruppechatScreenshotsType &&
+      // nor changing text replacements (lib/gruppechat/text_replacements.dart)
+      type != gruppechatTextReplacementsType;
 
   bool get isState => !{EventTypes.Message, EventTypes.Sticker}.contains(type);
 

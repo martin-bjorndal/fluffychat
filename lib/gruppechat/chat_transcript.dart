@@ -21,6 +21,7 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/gruppechat/change_notices.dart';
+import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/user_ids.dart';
@@ -455,9 +456,7 @@ List<TranscriptItem> chatTranscriptItems(Timeline timeline, L10n l10n) {
             ? null
             : _contextOf(event, timeline, byId, l10n, i18n),
         // As the chat, which says so under the message
-        edited:
-            !note &&
-            event.hasAggregatedEvents(timeline, RelationshipTypes.edit),
+        edited: !note && gruppechatWasEdited(event, timeline),
       ),
     );
   }

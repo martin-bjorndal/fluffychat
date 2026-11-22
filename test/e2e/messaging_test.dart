@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Two people writing to each other in an encrypted direct chat: messages,
-// edits, replies, reactions, typing, emojis, locations, polls (which move
-// down to their newest vote), profiles and deleting.
+// edits (and what an edited message said before), replies, reactions,
+// typing, emojis, locations, polls (which move down to their newest vote),
+// profiles and deleting.
 
 @Timeout(Duration(minutes: 3))
 library;
@@ -15,6 +16,7 @@ import 'dart:ui' show Locale;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as picker;
 import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/clock.dart';
+import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
@@ -147,6 +149,64 @@ void main() {
                 .body ==
             'Endelig tekst',
       );
+    });
+
+    test('tapping "(edited)" shows what the message said before', () async {
+      final eventId = await aliceChat.sendTextEvent('Møte klokka 18');
+      const i18n = MatrixDefaultLocalizations();
+      List<String> history() => gruppechatEditHistory(
+        bobTimeline.events.firstWhere((e) => e.eventId == eventId),
+        bobTimeline,
+        i18n,
+      ).map((v) => v.text).toList();
+      bool edited() => gruppechatWasEdited(
+        bobTimeline.events.firstWhere((e) => e.eventId == eventId),
+        bobTimeline,
+      );
+
+      await arrives(bobTimeline, 'the message', (e) => e.eventId == eventId);
+      // Someone else's "edit" changes nothing, so the message isn't edited
+      final bobsEdit = await bobChat.sendTextEvent(
+        'Bob var her',
+        editEventId: eventId,
+      );
+      await arrives(bobTimeline, "bob's edit", (e) => e.eventId == bobsEdit);
+      expect(edited(), isFalse);
+      expect(history(), isEmpty);
+
+      await aliceChat.sendTextEvent('Møte klokka 19', editEventId: eventId);
+      final second = await aliceChat.sendTextEvent(
+        'Møte klokka 19.30',
+        editEventId: eventId,
+      );
+      await eventually('bob sees both edits', () => history().length == 3);
+      expect(edited(), isTrue);
+      expect(history(), [
+        'Møte klokka 18',
+        'Møte klokka 19',
+        'Møte klokka 19.30',
+      ]);
+      // The newest is what the chat shows
+      expect(
+        history().last,
+        bobTimeline.events
+            .firstWhere((e) => e.eventId == eventId)
+            .getDisplayEvent(bobTimeline)
+            .body,
+      );
+
+      // A deleted edit is gone from the history too
+      await aliceChat.redactEvent(second!);
+      await eventually(
+        'bob sees the edit deleted',
+        () => history().length == 2,
+      );
+      expect(history(), ['Møte klokka 18', 'Møte klokka 19']);
+
+      // And a deleted message keeps nothing of what it said
+      await aliceChat.redactEvent(eventId!);
+      await eventually('bob sees the message deleted', () => !edited());
+      expect(history(), isEmpty);
     });
 
     test('a reply points at the message it answers', () async {

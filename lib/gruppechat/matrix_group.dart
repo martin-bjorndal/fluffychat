@@ -7,16 +7,20 @@ import 'package:slugify/slugify.dart';
 
 import 'group_state.dart';
 import 'screenshot_block.dart';
+import 'text_replacements.dart';
 
 /// State the app keeps in memory even for rooms that were never opened: our
 /// event types, plus the power levels every permission check depends on. The
 /// SDK doesn't keep power levels loaded by default, so without this a group
 /// whose space room was never opened can't even be set up. A chat's
-/// screenshot block too, so the chat list knows it (screenshot_block.dart).
+/// screenshot block too, so the chat list knows it (screenshot_block.dart),
+/// and a group's text replacements, read in its channels
+/// (text_replacements.dart).
 const Set<String> gruppechatImportantStateEvents = {
   ...GruppechatEventTypes.all,
   EventTypes.RoomPowerLevels,
   gruppechatScreenshotsType,
+  gruppechatTextReplacementsType,
 };
 
 /// Reads group state straight from a room's state events.
@@ -102,6 +106,36 @@ class GruppechatGroup {
 
   bool get canSetChatColor =>
       space.canChangeStateEvent(GruppechatEventTypes.chatColor);
+
+  /// Whether this account may change the group's text replacements: only
+  /// moderators and admins, as their list is the only one that counts.
+  bool get canSetTextReplacements =>
+      space.canChangeStateEvent(gruppechatTextReplacementsType) &&
+      space.ownPowerLevel.level >= textReplacementsPowerLevel;
+
+  /// The group's text replacements: its own list, or the defaults while it
+  /// has none. A list set by someone below [textReplacementsPowerLevel]
+  /// doesn't count; in group chats made before the list existed, everyone
+  /// may still set it on the server.
+  List<TextReplacement> get textReplacements {
+    final event = space.getState(gruppechatTextReplacementsType);
+    if (event == null ||
+        space.getPowerLevelByUserId(event.senderId).level <
+            textReplacementsPowerLevel) {
+      return defaultTextReplacements;
+    }
+    return parseTextReplacements(event.content);
+  }
+
+  /// Sets the group's text replacements to [rules], or back to the defaults
+  /// when [rules] is null.
+  Future<void> setTextReplacements(List<TextReplacement>? rules) =>
+      _client.setRoomStateWithKey(
+        space.id,
+        gruppechatTextReplacementsType,
+        '',
+        rules == null ? <String, Object?>{} : textReplacementsContent(rules),
+      );
 
   /// Adds the custom event types to the space's power levels.
   Future<void> setUp() async {
@@ -287,6 +321,13 @@ extension GruppechatRoomExtension on Room {
         .getState(GruppechatEventTypes.chatColor, id)
         ?.content,
   );
+
+  /// The text replacements for typing in this room: its group's, or the
+  /// defaults for a direct chat or a room outside any joined group. A direct
+  /// chat never takes a list from a space, as anyone can list it in theirs.
+  List<TextReplacement> get gruppechatTextReplacements => isDirectChat
+      ? defaultTextReplacements
+      : GruppechatGroup.of(this)?.textReplacements ?? defaultTextReplacements;
 
   /// The shared background to draw in this room, or null for none.
   GroupBackground? gruppechatBackground({required bool enabled}) {

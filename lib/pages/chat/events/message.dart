@@ -9,6 +9,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/gruppechat/chat_colors.dart';
+import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/hover_reply.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
@@ -207,10 +208,9 @@ class Message extends StatelessWidget {
       timeline,
       RelationshipTypes.thread,
     );
-    final isEdited = event.hasAggregatedEvents(
-      timeline,
-      RelationshipTypes.edit,
-    );
+    // Gruppechat: only the sender's own edits count
+    // (lib/gruppechat/edit_history.dart)
+    final isEdited = gruppechatWasEdited(event, timeline);
 
     final showReactionPicker =
         singleSelected && event.room.canSendDefaultMessages;
@@ -595,13 +595,19 @@ class Message extends StatelessWidget {
                                       shadows: wallpaperTextShadow,
                                     ),
                                 if (isEdited) ...[
-                                  Text(' ', style: TextStyle(fontSize: 11)),
-                                  Text(
-                                    L10n.of(context).edited,
-                                    style: TextStyle(
-                                      color: eventStateTextColor,
-                                      fontSize: 11,
-                                      shadows: wallpaperTextShadow,
+                                  // Gruppechat: tap to see what it said
+                                  // before (lib/gruppechat/edit_history.dart)
+                                  GruppechatEditedLabel(
+                                    event: event,
+                                    timeline: timeline,
+                                    enabled: !longPressSelect,
+                                    child: Text(
+                                      L10n.of(context).edited,
+                                      style: TextStyle(
+                                        color: eventStateTextColor,
+                                        fontSize: 11,
+                                        shadows: wallpaperTextShadow,
+                                      ),
                                     ),
                                   ),
                                 ],

@@ -311,6 +311,7 @@ class ChatInputRow extends StatelessWidget {
                         onContentInserted: controller.sendKeyboardContent,
                         focusNode: controller.inputFocus,
                         controller: controller.sendController,
+                        textReplacer: controller.textReplacer,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.only(
                             left: 6.0,
