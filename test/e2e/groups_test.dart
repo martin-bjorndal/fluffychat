@@ -575,6 +575,24 @@ void main() {
       await shows(alice, 'musikk', sunset);
     });
 
+    // Wish from 1.1.45: something with a Christmas theme
+    test('someone gives a channel the Christmas background', () async {
+      final christmas = groupBackgroundPresets
+          .firstWhere((preset) => preset.$1 == 'Christmas')
+          .$2;
+      await groupOf(bob).setChannelBackground(channel(bob, 'spill'), christmas);
+      await shows(alice, 'spill', christmas);
+      await shows(carol, 'spill', christmas);
+      final shown = shownIn(carol, 'spill')!;
+      expect(shown.kind, GroupBackgroundKind.pattern);
+      expect(shown.pattern, GroupBackgroundPattern.snowflakes);
+      expect(shown.colors, [0xFFB71C1C, 0xFFFFFFFF]);
+      // The others keep the group's
+      await shows(carol, 'general', sunset);
+      await groupOf(bob).setChannelBackground(channel(bob, 'spill'), null);
+      await shows(alice, 'spill', sunset);
+    });
+
     // Wish from 1.1.23: chats in pink, with flowers, or in people's own
     // colours, as a pattern, a gradient or one colour
     test('someone makes a channel their own pattern', () async {

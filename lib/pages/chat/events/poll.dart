@@ -6,6 +6,7 @@
 import 'package:async/async.dart';
 import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:fluffychat/widgets/avatar.dart';
@@ -92,10 +93,7 @@ class PollWidget extends StatelessWidget {
           ),
           Divider(color: linkColor.withAlpha(64)),
           ...eventContent.pollStartContent.answers.map((answer) {
-            final votedUserIds = responses.entries
-                .where((entry) => entry.value.contains(answer.id))
-                .map((entry) => entry.key)
-                .toSet();
+            final votedUserIds = pollVoters(responses, answer.id);
             return Material(
               color: Colors.transparent,
               clipBehavior: Clip.hardEdge,

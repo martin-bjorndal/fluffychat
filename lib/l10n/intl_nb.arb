@@ -2439,7 +2439,7 @@
             }
         }
     },
-    "countVotes": "{count, plural, =1{En stemme} other{{count} stemmer}}",
+    "countVotes": "{count, plural, =1{1 stemme} other{{count} stemmer}}",
     "@countVotes": {
         "type": "int",
         "placeholders": {
@@ -3465,6 +3465,12 @@
     "@gruppechatPatternFlowers": {},
     "gruppechatPatternStars": "Stjerner",
     "@gruppechatPatternStars": {},
+    "gruppechatPatternSnowflakes": "Snøfnugg",
+    "@gruppechatPatternSnowflakes": {},
+    "gruppechatPatternTrees": "Juletrær",
+    "@gruppechatPatternTrees": {},
+    "gruppechatPresetChristmas": "Jul",
+    "@gruppechatPresetChristmas": {},
     "gruppechatReadBy": "Lest av",
     "@gruppechatReadBy": {},
     "gruppechatNoReadersYet": "Ingen har vist at de har lest den ennå.",
@@ -3513,6 +3519,10 @@
     "@gruppechatEffectFireworks": {},
     "gruppechatEffectCats": "Katter",
     "@gruppechatEffectCats": {},
+    "gruppechatEffectGlitter": "Gullglitter",
+    "@gruppechatEffectGlitter": {},
+    "gruppechatEffectSnow": "Snø",
+    "@gruppechatEffectSnow": {},
     "gruppechatMessageLifetime": "Forsvinnende meldinger",
     "@gruppechatMessageLifetime": {},
     "gruppechatMessageLifetimeDescription": "Det som sendes i chatten etter at dette er slått på, slettes for alle når tiden er ute.",
@@ -3847,5 +3857,11 @@
     "gruppechatOriginalVersion": "Original",
     "@gruppechatOriginalVersion": {},
     "gruppechatCurrentVersion": "Nå",
-    "@gruppechatCurrentVersion": {}
+    "@gruppechatCurrentVersion": {},
+    "gruppechatAvatarRing": "Ring rundt bildet",
+    "@gruppechatAvatarRing": {},
+    "gruppechatAvatarRingNone": "Ingen ring",
+    "@gruppechatAvatarRingNone": {},
+    "gruppechatAvatarRingDescription": "Velg en farge på ringen rundt profilbildet ditt. Alle ser den.",
+    "@gruppechatAvatarRingDescription": {}
 }

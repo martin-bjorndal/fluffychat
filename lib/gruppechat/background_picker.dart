@@ -9,9 +9,22 @@ import 'package:material_ui/material_ui.dart';
 import 'group_state.dart';
 import 'group_widgets.dart';
 
+/// The icon a [GroupBackgroundKind.pattern] background repeats as its
+/// figure, or null for the figures [GroupPatternPainter] draws itself.
+IconData? groupPatternIcon(GroupBackgroundPattern pattern) => switch (pattern) {
+  GroupBackgroundPattern.dots ||
+  GroupBackgroundPattern.stripes ||
+  GroupBackgroundPattern.checks => null,
+  GroupBackgroundPattern.hearts => Icons.favorite,
+  GroupBackgroundPattern.flowers => Icons.local_florist,
+  GroupBackgroundPattern.stars => Icons.star,
+  GroupBackgroundPattern.snowflakes => Icons.ac_unit,
+  GroupBackgroundPattern.trees => Icons.park,
+};
+
 /// Draws a [GroupBackgroundKind.pattern] background: the ground colour with
-/// the figures repeated over it. Hearts, flowers and stars are icon glyphs
-/// from the app's own icon font, so no pictures are needed.
+/// the figures repeated over it. Icon figures (see [groupPatternIcon]) are
+/// glyphs from the app's own icon font, so no pictures are needed.
 class GroupPatternPainter extends CustomPainter {
   final GroupBackgroundPattern pattern;
   final Color ground;
@@ -41,12 +54,7 @@ class GroupPatternPainter extends CustomPainter {
             row * tile + tile / 2,
           ),
     ];
-    final icon = switch (pattern) {
-      GroupBackgroundPattern.hearts => Icons.favorite,
-      GroupBackgroundPattern.flowers => Icons.local_florist,
-      GroupBackgroundPattern.stars => Icons.star,
-      _ => null,
-    };
+    final icon = groupPatternIcon(pattern);
     if (icon != null) {
       final glyph = TextPainter(
         text: TextSpan(
@@ -92,6 +100,7 @@ class GroupPatternPainter extends CustomPainter {
           }
         }
       default:
+      // Drawn as icons above
     }
   }
 
@@ -278,6 +287,8 @@ String _patternLabel(L10n l10n, GroupBackgroundPattern pattern) =>
       GroupBackgroundPattern.hearts => l10n.gruppechatPatternHearts,
       GroupBackgroundPattern.flowers => l10n.gruppechatPatternFlowers,
       GroupBackgroundPattern.stars => l10n.gruppechatPatternStars,
+      GroupBackgroundPattern.snowflakes => l10n.gruppechatPatternSnowflakes,
+      GroupBackgroundPattern.trees => l10n.gruppechatPatternTrees,
     };
 
 Border _selectionBorder(ThemeData theme, bool selected) => Border.all(

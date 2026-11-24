@@ -201,6 +201,18 @@ SOUNDS = {
         (1.4, meow(2, 1.5, 0.6)),
         (2.1, meow(0, 1.5, 0.7)),
     ),
+    # Gold glitter (1.1.45): a soft shimmer of high sparkles over a bright
+    # chord
+    "gc_effect_glitter": mix(
+        (0, sparkles(40, 1.6, 11)),
+        (0.05, chime(["E6", "G6", "B6", "E7"], 0.09, 1.0, 4, SOFT, 0.3)),
+    ),
+    # Christmas snow (1.1.45): sleigh bells, each a shake of small high
+    # bells, and a slow bell melody
+    "gc_effect_sno": mix(
+        *[(i * 0.22, sparkles(5, 0.06, 20 + i)) for i in range(6)],
+        (0.1, chime(["G5", "E6", "D6", "C6", "G5"], 0.3, 1.0, 3.5, BELL, 0.4)),
+    ),
 }
 
 NOTIFICATION_SOUNDS = {

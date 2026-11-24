@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/gruppechat/avatar_letters.dart';
+import 'package:fluffychat/gruppechat/avatar_ring.dart';
 import 'package:fluffychat/utils/string_color.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:fluffychat/widgets/presence_builder.dart';
@@ -25,6 +26,10 @@ class Avatar extends StatelessWidget {
   final Color? backgroundColor;
   final Color? textColor;
 
+  /// Gruppechat: whose ring to show around the picture; defaults to
+  /// [presenceUserId] (lib/gruppechat/avatar_ring.dart)
+  final String? ringUserId;
+
   const Avatar({
     this.mxContent,
     this.name,
@@ -38,6 +43,7 @@ class Avatar extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.textColor,
+    this.ringUserId,
     super.key,
   });
 
@@ -59,57 +65,65 @@ class Avatar extends StatelessWidget {
     final presenceUserId = this.presenceUserId;
     final container = Stack(
       children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: Material(
-            color: theme.brightness == Brightness.light
-                ? Colors.white
-                : Colors.black,
-            shape:
-                shapeBorder ??
-                RoundedSuperellipseBorder(
-                  borderRadius: borderRadius,
-                  side: BorderSide.none,
-                ),
-            clipBehavior: Clip.antiAlias,
-            child: MxcImage(
-              client: client,
-              borderRadius: borderRadius,
-              key: ValueKey(mxContent.toString()),
-              cacheKey: '${mxContent}_$size',
-              uri: noPic ? null : mxContent,
-              fit: BoxFit.cover,
-              width: size,
-              height: size,
-              placeholder: (_) => noPic
-                  ? Container(
-                      decoration: BoxDecoration(
-                        color:
-                            backgroundColor ??
-                            fallbackLetters.colorScheme.primaryContainer,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        fallbackLetters,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'RobotoMono',
+        AvatarRing(
+          client: client,
+          // The ring is round, so only round avatars get one
+          userId: shapeBorder == null && this.borderRadius == null
+              ? ringUserId ?? presenceUserId
+              : null,
+          size: size,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Material(
+              color: theme.brightness == Brightness.light
+                  ? Colors.white
+                  : Colors.black,
+              shape:
+                  shapeBorder ??
+                  RoundedSuperellipseBorder(
+                    borderRadius: borderRadius,
+                    side: BorderSide.none,
+                  ),
+              clipBehavior: Clip.antiAlias,
+              child: MxcImage(
+                client: client,
+                borderRadius: borderRadius,
+                key: ValueKey(mxContent.toString()),
+                cacheKey: '${mxContent}_$size',
+                uri: noPic ? null : mxContent,
+                fit: BoxFit.cover,
+                width: size,
+                height: size,
+                placeholder: (_) => noPic
+                    ? Container(
+                        decoration: BoxDecoration(
                           color:
-                              textColor ??
-                              fallbackLetters.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                          fontSize: (size / 2.5).roundToDouble(),
+                              backgroundColor ??
+                              fallbackLetters.colorScheme.primaryContainer,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          fallbackLetters,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'RobotoMono',
+                            color:
+                                textColor ??
+                                fallbackLetters.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                            fontSize: (size / 2.5).roundToDouble(),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.person_2,
+                          color: theme.colorScheme.tertiary,
+                          size: size / 1.5,
                         ),
                       ),
-                    )
-                  : Center(
-                      child: Icon(
-                        Icons.person_2,
-                        color: theme.colorScheme.tertiary,
-                        size: size / 1.5,
-                      ),
-                    ),
+              ),
             ),
           ),
         ),

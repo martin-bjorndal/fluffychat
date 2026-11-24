@@ -7,7 +7,8 @@
 // it, or plays it when she opens the chat with it unread
 // (lib/gruppechat/effects.dart). alice gives the chat its own notification
 // sound, which her other devices use too, and only she has
-// (lib/gruppechat/sounds.dart). What it looks and sounds like can only be
+// (lib/gruppechat/sounds.dart). bob also sends gold glitter and Christmas
+// snow. What it looks and sounds like can only be
 // checked on a phone.
 
 @Timeout(Duration(minutes: 3))
@@ -265,6 +266,34 @@ void main() {
       expect(GruppechatSound.kitten.label(l10n), 'Kattunge');
       expect(GruppechatEffect.cats.label(l10n), 'Katter');
       await gruppechatSetChatSound(aliceChat, null);
+    });
+
+    // "Eg vil ha gull glitter😆, og så hadde det vært gøy med noe med
+    // juletema" (1.1.45)
+    test('gold glitter and Christmas snow', () async {
+      for (final (effect, text, label) in [
+        (GruppechatEffect.glitter, 'Du er gull!', 'Gullglitter'),
+        (GruppechatEffect.snow, 'God jul!', 'Snø'),
+      ]) {
+        final eventId = await gruppechatSendWithEffect(bobChat, text, effect);
+        final message = await arrives(
+          aliceTimeline,
+          'the ${effect.name} message',
+          (e) => e.eventId == eventId && e.type == EventTypes.Message,
+        );
+        expect(gruppechatEffectOf(message), effect);
+        expect(message.body, text);
+        expect(
+          gruppechatEffectToPlay(
+            aliceTimeline.events,
+            played: {},
+            openedAt: aliceOpened,
+            unreadAtOpen: 0,
+          )?.eventId,
+          message.eventId,
+        );
+        expect(effect.label(l10n), label);
+      }
     });
   });
 }

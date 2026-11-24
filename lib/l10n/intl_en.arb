@@ -2478,7 +2478,7 @@
     "addAnswerOption": "Add answer option",
     "allowMultipleAnswers": "Allow multiple answers",
     "pollHasBeenEnded": "Poll has been ended",
-    "countVotes": "{count, plural, =1{One vote} other{{count} votes}}",
+    "countVotes": "{count, plural, =1{1 vote} other{{count} votes}}",
     "@countVotes": {
         "type": "int",
         "placeholders": {
@@ -3437,6 +3437,12 @@
     "@gruppechatPatternFlowers": {},
     "gruppechatPatternStars": "Stars",
     "@gruppechatPatternStars": {},
+    "gruppechatPatternSnowflakes": "Snowflakes",
+    "@gruppechatPatternSnowflakes": {},
+    "gruppechatPatternTrees": "Christmas trees",
+    "@gruppechatPatternTrees": {},
+    "gruppechatPresetChristmas": "Christmas",
+    "@gruppechatPresetChristmas": {},
     "gruppechatReadBy": "Read by",
     "@gruppechatReadBy": {},
     "gruppechatNoReadersYet": "No one has shown that they've read it yet.",
@@ -3485,6 +3491,10 @@
     "@gruppechatEffectFireworks": {},
     "gruppechatEffectCats": "Cats",
     "@gruppechatEffectCats": {},
+    "gruppechatEffectGlitter": "Gold glitter",
+    "@gruppechatEffectGlitter": {},
+    "gruppechatEffectSnow": "Snow",
+    "@gruppechatEffectSnow": {},
     "gruppechatMessageLifetime": "Disappearing messages",
     "@gruppechatMessageLifetime": {},
     "gruppechatMessageLifetimeDescription": "What is sent in the chat after this is turned on is deleted for everyone when the time is up.",
@@ -3819,5 +3829,11 @@
     "gruppechatOriginalVersion": "Original",
     "@gruppechatOriginalVersion": {},
     "gruppechatCurrentVersion": "Now",
-    "@gruppechatCurrentVersion": {}
+    "@gruppechatCurrentVersion": {},
+    "gruppechatAvatarRing": "Ring around picture",
+    "@gruppechatAvatarRing": {},
+    "gruppechatAvatarRingNone": "No ring",
+    "@gruppechatAvatarRingNone": {},
+    "gruppechatAvatarRingDescription": "Pick a colour for the ring around your profile picture. Everyone sees it.",
+    "@gruppechatAvatarRingDescription": {}
 }

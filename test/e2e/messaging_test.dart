@@ -21,6 +21,7 @@ import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/read_positions.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -497,9 +498,17 @@ void main() {
                 ?.contains('2') ??
             false,
       );
-      await aliceTimeline.events
-          .firstWhere((e) => e.eventId == pollId)
-          .endPoll();
+      // Synnøve: the count under each answer is a number, "1 stemme"
+      final alicesPoll = aliceTimeline.events.firstWhere(
+        (e) => e.eventId == pollId,
+      );
+      final l10n = await lookupL10n(const Locale('nb'));
+      final responses = alicesPoll.getPollResponses(aliceTimeline);
+      expect(pollVoters(responses, '2'), {bob.userID});
+      expect(pollVoters(responses, '1'), isEmpty);
+      expect(l10n.countVotes(pollVoters(responses, '2').length), '1 stemme');
+      expect(l10n.countVotes(2), '2 stemmer');
+      await alicesPoll.endPoll();
       await eventually(
         'bob sees the poll ended',
         () => bobsPoll().getPollHasBeenEnded(bobTimeline),
