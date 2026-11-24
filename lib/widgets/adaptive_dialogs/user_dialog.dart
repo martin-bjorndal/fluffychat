@@ -81,6 +81,7 @@ class UserDialog extends StatelessWidget {
                     mxContent: avatar,
                     name: displayname,
                     size: Avatar.defaultSize * 1.5,
+                    ringUserId: profile.userId,
                     onTap: avatar != null
                         ? () => showDialog(
                             context: context,

@@ -11,8 +11,9 @@ import 'dart:io';
 
 import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
-import 'package:flutter/material.dart';
+import 'package:fluffychat/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   test('every sound is in the app, and Android has the notification ones', () {
@@ -60,5 +61,48 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       expect(done, isTrue, reason: play.emoji);
     }
+  });
+
+  // With gold glitter and snow (1.1.45) the list grew past the height a
+  // bottom sheet gets on a small phone
+  testWidgets('every effect can be picked on a small phone', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    GruppechatEffect? picked;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('nb'),
+        localizationsDelegates: const [
+          ...L10n.localizationsDelegates,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        supportedLocales: L10n.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async => picked = await gruppechatPickEffect(context),
+            child: const Text('send'),
+          ),
+        ),
+      ),
+    );
+    // The translations load first
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('send'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final last = find.byKey(Key('effect_${GruppechatEffect.values.last.name}'));
+    await tester.scrollUntilVisible(
+      last,
+      100,
+      scrollable: find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(last);
+    await tester.pumpAndSettle();
+    expect(picked, GruppechatEffect.values.last);
   });
 }

@@ -206,6 +206,58 @@ class _GruppechatChatColorThemeState extends State<GruppechatChatColorTheme> {
   }
 }
 
+/// Asks for one of [chatColorChoices], with [current] marked. The answer is a
+/// record, so that "none" ((null,), from the button [noneLabel], when given)
+/// differs from cancelling (null). Without [canPick] the colours only show.
+Future<(int?,)?> showColorChoiceDialog(
+  BuildContext context, {
+  required String title,
+  required String description,
+  required int? current,
+  bool canPick = true,
+  String? noneLabel,
+}) => showDialog<(int?,)>(
+  context: context,
+  builder: (context) => AlertDialog(
+    title: Text(title),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(description),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final color in chatColorChoices)
+                GroupColorSwatch(
+                  color: Color(color),
+                  selected: current == color,
+                  onTap: canPick
+                      ? () => Navigator.of(context).pop((color,))
+                      : null,
+                ),
+            ],
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      if (noneLabel != null)
+        TextButton(
+          onPressed: () => Navigator.of(context).pop((null,)),
+          child: Text(noneLabel),
+        ),
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: Text(L10n.of(context).cancel),
+      ),
+    ],
+  ),
+);
+
 /// Lets someone pick [room]'s colour for everyone in it, or go back to the
 /// app's own.
 Future<void> showChatColorDialog(BuildContext context, Room room) async {
@@ -214,51 +266,17 @@ Future<void> showChatColorDialog(BuildContext context, Room room) async {
   final l10n = L10n.of(context);
   final current = room.gruppechatChatColor;
   final canSet = group.canSetChatColor;
-  // A record, so that "Standard" (null) differs from cancelling
-  final picked = await showDialog<(int?,)>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.gruppechatChatColor),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              canSet
-                  ? l10n.gruppechatChatColorDescription
-                  : l10n.gruppechatNoChatColorPermission,
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final color in chatColorChoices)
-                  GroupColorSwatch(
-                    color: Color(color),
-                    selected: current == color,
-                    onTap: canSet
-                        ? () => Navigator.of(context).pop((color,))
-                        : null,
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        if (canSet && current != null)
-          TextButton(
-            onPressed: () => Navigator.of(context).pop((null,)),
-            child: Text(l10n.gruppechatChatColorDefault),
-          ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-      ],
-    ),
+  final picked = await showColorChoiceDialog(
+    context,
+    title: l10n.gruppechatChatColor,
+    description: canSet
+        ? l10n.gruppechatChatColorDescription
+        : l10n.gruppechatNoChatColorPermission,
+    current: current,
+    canPick: canSet,
+    noneLabel: canSet && current != null
+        ? l10n.gruppechatChatColorDefault
+        : null,
   );
   // Someone else may have changed it while the dialog was open
   if (picked == null || picked.$1 == room.gruppechatChatColor) return;

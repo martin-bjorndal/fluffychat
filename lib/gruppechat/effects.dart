@@ -20,7 +20,9 @@ enum GruppechatEffect {
   hearts('❤️', 'gc_effect_hjerter'),
   balloons('🎈', 'gc_effect_ballonger'),
   fireworks('🎆', 'gc_effect_fyrverkeri'),
-  cats('🐱', 'gc_effect_katter', floats: true);
+  cats('🐱', 'gc_effect_katter', floats: true),
+  glitter('✨', 'gc_effect_glitter'),
+  snow('❄️', 'gc_effect_sno');
 
   final String emoji;
   final String sound;
@@ -39,6 +41,8 @@ enum GruppechatEffect {
     balloons => l10n.gruppechatEffectBalloons,
     fireworks => l10n.gruppechatEffectFireworks,
     cats => l10n.gruppechatEffectCats,
+    glitter => l10n.gruppechatEffectGlitter,
+    snow => l10n.gruppechatEffectSnow,
   };
 
   static GruppechatEffect? byName(Object? name) =>
@@ -317,6 +321,8 @@ class _Particle {
       GruppechatEffect.hearts => 28,
       GruppechatEffect.balloons => 14,
       GruppechatEffect.fireworks => 5,
+      GruppechatEffect.glitter => 120,
+      GruppechatEffect.snow => 70,
       GruppechatEffect.cats || null => 22,
     };
     return [
@@ -327,13 +333,21 @@ class _Particle {
           0.6 + random.nextDouble() * 0.8,
           (random.nextDouble() - 0.5) * 12,
           (random.nextDouble() - 0.5) * 0.15,
-          effect == GruppechatEffect.hearts
-              ? Color.lerp(
-                  const Color(0xFFFF4F8B),
-                  const Color(0xFFE0115F),
-                  random.nextDouble(),
-                )!
-              : _party[random.nextInt(_party.length)],
+          switch (effect) {
+            GruppechatEffect.hearts => Color.lerp(
+              const Color(0xFFFF4F8B),
+              const Color(0xFFE0115F),
+              random.nextDouble(),
+            )!,
+            // From deep gold to pale gold
+            GruppechatEffect.glitter => Color.lerp(
+              const Color(0xFFB8860B),
+              const Color(0xFFFFE680),
+              random.nextDouble(),
+            )!,
+            GruppechatEffect.snow => Colors.white,
+            _ => _party[random.nextInt(_party.length)],
+          },
         ),
     ];
   }
@@ -348,6 +362,11 @@ class _EffectPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Shared by the particles, each setting its own colour
+    final edge = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final glint = Paint();
     for (final p in particles) {
       final t = p.lifeAt(progress);
       if (t <= 0 || t >= 1) continue;
@@ -416,11 +435,60 @@ class _EffectPainter extends CustomPainter {
               paint,
             );
           }
+        case GruppechatEffect.glitter:
+          // Falls slowly from the top, twinkling: each speck flares up and
+          // nearly goes out as it turns
+          final center = Offset(
+            (p.x + p.drift * sin(t * 5)) * size.width,
+            -10 + t * (size.height + 20),
+          );
+          final twinkle = 0.15 + 0.85 * (0.5 + 0.5 * sin(t * 18 + p.spin * 3));
+          final r = 4.5 * p.size * twinkle;
+          final star = _sparkle(center, r, p.spin * t * 0.3);
+          canvas.drawPath(star, paint);
+          // A dark gold edge, so pale gold shows on a light chat too
+          canvas.drawPath(
+            star,
+            edge..color = const Color(0xFF8B6508).withValues(alpha: fade),
+          );
+          canvas.drawCircle(
+            center,
+            r * 0.25,
+            glint..color = Colors.white.withValues(alpha: fade * twinkle),
+          );
+        case GruppechatEffect.snow:
+          // Snowflakes drifting down, with a grey edge so they show on a
+          // light chat too
+          final center = Offset(
+            (p.x + p.drift * 2 * sin(t * 4 + p.spin)) * size.width,
+            -15 + t * (size.height + 30),
+          );
+          final r = 5 * p.size;
+          canvas.drawCircle(center, r, paint);
+          canvas.drawCircle(
+            center,
+            r,
+            edge..color = const Color(0xFF90A4AE).withValues(alpha: fade),
+          );
         case GruppechatEffect.cats:
           // Floating 🐱, drawn by _EmojiPainter
           break;
       }
     }
+  }
+
+  /// A four-pointed star of radius [r] around [c], turned by [angle].
+  Path _sparkle(Offset c, double r, double angle) {
+    final path = Path();
+    for (var i = 0; i < 8; i++) {
+      final a = angle + pi * i / 4;
+      final reach = i.isEven ? r : r * 0.3;
+      final point = c + Offset(cos(a), sin(a)) * reach;
+      i == 0
+          ? path.moveTo(point.dx, point.dy)
+          : path.lineTo(point.dx, point.dy);
+    }
+    return path..close();
   }
 
   void _heart(Canvas canvas, Offset c, double s, Paint paint) {
@@ -488,9 +556,10 @@ Future<GruppechatEffect?> gruppechatPickEffect(BuildContext context) {
   final l10n = L10n.of(context);
   return showModalBottomSheet<GruppechatEffect>(
     context: context,
+    // Scrolls when the effects don't fit, as on a small phone
     builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: ListView(
+        shrinkWrap: true,
         children: [
           ListTile(
             title: Text(

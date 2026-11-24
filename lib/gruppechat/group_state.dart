@@ -148,7 +148,17 @@ class GroupNickname {
 enum GroupBackgroundKind { solid, gradient, pattern, image, none }
 
 /// Figures a [GroupBackgroundKind.pattern] background repeats.
-enum GroupBackgroundPattern { dots, stripes, checks, hearts, flowers, stars }
+enum GroupBackgroundPattern {
+  dots,
+  stripes,
+  checks,
+  hearts,
+  flowers,
+  stars,
+  // Added in 1.1.45, for Christmas
+  snowflakes,
+  trees,
+}
 
 class GroupBackground {
   final GroupBackgroundKind kind;
@@ -381,6 +391,25 @@ const List<(String, GroupBackground)> groupBackgroundPresets = [
       kind: GroupBackgroundKind.pattern,
       pattern: GroupBackgroundPattern.stars,
       colors: [0xFF1B1F3B, 0xFFFFD54F],
+      opacity: 0.6,
+    ),
+  ),
+  // Added in 1.1.45, for Christmas
+  (
+    'Christmas',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.snowflakes,
+      colors: [0xFFB71C1C, 0xFFFFFFFF],
+      opacity: 0.6,
+    ),
+  ),
+  (
+    'ChristmasTrees',
+    GroupBackground(
+      kind: GroupBackgroundKind.pattern,
+      pattern: GroupBackgroundPattern.trees,
+      colors: [0xFF1B5E20, 0xFFFFD54F],
       opacity: 0.6,
     ),
   ),

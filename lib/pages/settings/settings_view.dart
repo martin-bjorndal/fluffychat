@@ -5,6 +5,7 @@
 
 import 'package:async/async.dart';
 import 'package:fluffychat/config/setting_keys.dart';
+import 'package:fluffychat/gruppechat/avatar_ring.dart';
 import 'package:fluffychat/gruppechat/sign_up.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/fluffy_share.dart';
@@ -63,6 +64,7 @@ class SettingsView extends StatelessWidget {
                           mxContent: avatar,
                           name: displayname,
                           size: Avatar.defaultSize * 2.5,
+                          ringUserId: mxid,
                           onTap: avatar != null
                               ? () => showDialog(
                                   context: context,
@@ -110,6 +112,9 @@ class SettingsView extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    // Gruppechat: a ring around your picture
+                    // (lib/gruppechat/avatar_ring.dart)
+                    if (profile != null) const AvatarRingButton(),
                     const SizedBox(height: 8),
                   ],
                 );

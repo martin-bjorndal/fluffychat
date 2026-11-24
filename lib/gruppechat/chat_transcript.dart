@@ -23,6 +23,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/user_ids.dart';
 import 'package:fluffychat/l10n/l10n.dart';
@@ -365,7 +366,7 @@ String _pollText(Event poll, Timeline timeline, L10n l10n, MatrixLocals i18n) {
     '📊 ${start.question.mText}',
     for (final answer in start.answers)
       votesShown
-          ? '• ${answer.mText} – ${l10n.countVotes(responses.values.where((ids) => ids.contains(answer.id)).length)}'
+          ? '• ${answer.mText} – ${l10n.countVotes(pollVoters(responses, answer.id).length)}'
           : '• ${answer.mText}',
   ].join('\n');
 }

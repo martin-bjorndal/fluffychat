@@ -196,6 +196,15 @@ void dismissUnansweredPolls(
     poll.eventId,
 ]);
 
+/// Those who chose [answerId], by user ID, from a poll's [responses]
+/// (`getPollResponses`): the faces and the count ("1 stemme") under the
+/// answer (poll.dart, chat_transcript.dart).
+Set<String> pollVoters(Map<String, Set<String>> responses, String answerId) =>
+    {
+      for (final entry in responses.entries)
+        if (entry.value.contains(answerId)) entry.key,
+    };
+
 /// The time a chat item counts as for the dates in the chat: a moved poll
 /// that of the vote it stands at.
 DateTime shownTime(Event event, MovedPolls moved) =>

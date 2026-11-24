@@ -198,6 +198,8 @@ String groupBackgroundPresetLabel(L10n l10n, String name) => switch (name) {
   'Flowers' => l10n.gruppechatPatternFlowers,
   'Dots' => l10n.gruppechatPatternDots,
   'StarryNight' => l10n.gruppechatPresetStarryNight,
+  'Christmas' => l10n.gruppechatPresetChristmas,
+  'ChristmasTrees' => l10n.gruppechatPatternTrees,
   _ => name,
 };
 

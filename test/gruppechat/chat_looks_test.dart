@@ -18,6 +18,7 @@ import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/send_on_enter.dart';
 import 'package:fluffychat/l10n/l10n.dart';
+import 'package:fluffychat/l10n/l10n_nb.dart';
 import 'package:fluffychat/pages/chat/send_file_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/dialog_text_field.dart';
 import 'package:flutter/services.dart';
@@ -124,6 +125,23 @@ void main() {
       expect(result.pattern, GroupBackgroundPattern.flowers);
       expect(result.colors.first, groupBackgroundPresets.first.$2.colors.first);
       expect(result.isValid, isTrue);
+    });
+
+    // Wish from 1.1.45: something with a Christmas theme
+    test('Christmas backgrounds have snowflakes and trees', () {
+      expect(
+        groupPatternIcon(GroupBackgroundPattern.snowflakes),
+        Icons.ac_unit,
+      );
+      expect(groupPatternIcon(GroupBackgroundPattern.trees), Icons.park);
+      final presets = Map.fromEntries(
+        groupBackgroundPresets.map((preset) => MapEntry(preset.$1, preset.$2)),
+      );
+      expect(presets['Christmas']!.pattern, GroupBackgroundPattern.snowflakes);
+      expect(presets['ChristmasTrees']!.pattern, GroupBackgroundPattern.trees);
+      final nb = L10nNb();
+      expect(groupBackgroundPresetLabel(nb, 'Christmas'), 'Jul');
+      expect(groupBackgroundPresetLabel(nb, 'ChristmasTrees'), 'Juletrær');
     });
 
     test('a picture background starts the picker from a preset', () {
