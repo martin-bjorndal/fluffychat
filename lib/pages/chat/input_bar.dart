@@ -368,9 +368,10 @@ class InputBar extends StatelessWidget {
       );
     }
     if (suggestion['type'] == 'bot_command') {
+      // A command, or a command with what follows it, from the start
       insertText = '${suggestion['name']!} ';
       startText = replaceText.replaceAllMapped(
-        RegExp(r'^!\w*$'),
+        RegExp(r'^!.*$'),
         (Match m) => insertText,
       );
     }
