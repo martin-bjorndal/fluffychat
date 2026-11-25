@@ -3834,6 +3834,10 @@
     "@gruppechatAvatarRing": {},
     "gruppechatAvatarRingNone": "No ring",
     "@gruppechatAvatarRingNone": {},
-    "gruppechatAvatarRingDescription": "Pick a colour for the ring around your profile picture. Everyone sees it.",
-    "@gruppechatAvatarRingDescription": {}
+    "gruppechatAvatarRingDescription": "Pick a colour for the ring around your profile picture, with glitter if you like, or a Christmas ring. Everyone sees it.",
+    "@gruppechatAvatarRingDescription": {},
+    "gruppechatAvatarRingGlitter": "Glitter",
+    "@gruppechatAvatarRingGlitter": {},
+    "gruppechatAvatarRingChristmas": "Christmas ring",
+    "@gruppechatAvatarRingChristmas": {}
 }

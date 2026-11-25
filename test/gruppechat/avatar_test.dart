@@ -45,31 +45,122 @@ void main() {
     });
   }
 
-  testWidgets("a ring keeps the avatar's size, and only shows with a colour", (
+  const pink = Color(0xFFE91E63);
+  const looks = <AvatarRingLook?>[
+    null,
+    AvatarRingLook(pink),
+    AvatarRingLook(pink, AvatarRingKind.glitter),
+    AvatarRingLook.christmas,
+  ];
+
+  AvatarRingLook? ringIn(WidgetTester tester) {
+    final painter = tester
+        .widget<CustomPaint>(find.byKey(avatarRingKey))
+        .foregroundPainter;
+    return painter is AvatarRingPainter ? painter.look : null;
+  }
+
+  testWidgets("a ring keeps the avatar's size, and only shows with a look", (
     tester,
   ) async {
-    for (final color in [null, const Color(0xFFE91E63)]) {
+    for (final look in looks) {
       for (final size in [16.0, Avatar.defaultSize, 120.0]) {
         await tester.pumpWidget(
           Center(
             child: gruppechatRingedAvatar(
               size,
-              color,
+              look,
               SizedBox.square(dimension: size, child: const Placeholder()),
             ),
           ),
         );
+        expect(tester.takeException(), isNull, reason: '$look at $size');
         expect(
           tester.getRect(find.byType(Placeholder).first).width,
-          color == null ? size : lessThan(size),
+          look == null ? size : lessThan(size),
         );
-        expect(
-          find.byKey(avatarRingKey),
-          color == null ? findsNothing : findsOneWidget,
-        );
-        final outer = tester.getSize(find.byType(Container).first);
-        expect(outer, Size.square(size));
+        expect(ringIn(tester), look);
+        expect(tester.getSize(find.byKey(avatarRingKey)), Size.square(size));
       }
     }
+  });
+
+  testWidgets('the picture stays when the ring comes, changes and goes', (
+    tester,
+  ) async {
+    // Not a GlobalKey: that would keep the element whatever the tree
+    const picture = ValueKey('picture');
+    Element? first;
+    for (final look in [...looks, null]) {
+      await tester.pumpWidget(
+        Center(
+          child: gruppechatRingedAvatar(
+            Avatar.defaultSize,
+            look,
+            SizedBox.square(key: picture, dimension: Avatar.defaultSize),
+          ),
+        ),
+      );
+      expect(ringIn(tester), look);
+      // The same element, so a picture in it isn't loaded again
+      final element = tester.element(find.byKey(picture));
+      expect(identical(element, first ??= element), isTrue, reason: '$look');
+    }
+  });
+
+  test('the kind of ring comes from its own profile field', () {
+    AvatarRingKind kind(Object? value) =>
+        avatarRingKindFromProfile({avatarRingStyleField: ?value});
+    expect(kind('glitter'), AvatarRingKind.glitter);
+    expect(kind('christmas'), AvatarRingKind.christmas);
+    expect(kind(null), AvatarRingKind.plain);
+    expect(kind('plain'), AvatarRingKind.plain);
+    expect(kind('rainbow'), AvatarRingKind.plain);
+    expect(kind(1), AvatarRingKind.plain);
+    expect(
+      const AvatarRingLook(pink, AvatarRingKind.glitter),
+      AvatarRingLook(Color(pink.toARGB32()), AvatarRingKind.glitter),
+    );
+    expect(
+      const AvatarRingLook(pink),
+      isNot(const AvatarRingLook(pink, AvatarRingKind.glitter)),
+    );
+    // What a 1.1.45 app shows for a Christmas ring is a colour it offers
+    expect(
+      avatarRingFromProfile({
+        avatarRingField: AvatarRingLook.christmas.color.toARGB32(),
+      }),
+      AvatarRingLook.christmas.color,
+    );
+  });
+
+  test('the ring dialog picks and marks rings as shown', () {
+    final pinkArgb = pink.toARGB32();
+    expect(
+      avatarRingFromSwatch(pinkArgb, glitter: false),
+      const AvatarRingLook(pink),
+    );
+    expect(
+      avatarRingFromSwatch(pinkArgb, glitter: true),
+      const AvatarRingLook(pink, AvatarRingKind.glitter),
+    );
+    expect(avatarRingSwatchIsCurrent(null, pinkArgb), isFalse);
+    expect(
+      avatarRingSwatchIsCurrent(const AvatarRingLook(pink), pinkArgb),
+      isTrue,
+    );
+    expect(
+      avatarRingSwatchIsCurrent(
+        const AvatarRingLook(pink, AvatarRingKind.glitter),
+        pinkArgb,
+      ),
+      isTrue,
+    );
+    final christmasRed = AvatarRingLook.christmas.color.toARGB32();
+    expect(
+      avatarRingSwatchIsCurrent(AvatarRingLook.christmas, christmasRed),
+      isFalse,
+      reason: 'the Christmas tile is marked, not the red swatch',
+    );
   });
 }
