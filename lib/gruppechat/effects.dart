@@ -342,7 +342,7 @@ class _Particle {
             // From deep gold to pale gold
             GruppechatEffect.glitter => Color.lerp(
               const Color(0xFFB8860B),
-              const Color(0xFFFFE680),
+              gruppechatGlitterPaleGold,
               random.nextDouble(),
             )!,
             GruppechatEffect.snow => Colors.white,
@@ -444,12 +444,12 @@ class _EffectPainter extends CustomPainter {
           );
           final twinkle = 0.15 + 0.85 * (0.5 + 0.5 * sin(t * 18 + p.spin * 3));
           final r = 4.5 * p.size * twinkle;
-          final star = _sparkle(center, r, p.spin * t * 0.3);
+          final star = gruppechatSparkle(center, r, p.spin * t * 0.3);
           canvas.drawPath(star, paint);
           // A dark gold edge, so pale gold shows on a light chat too
           canvas.drawPath(
             star,
-            edge..color = const Color(0xFF8B6508).withValues(alpha: fade),
+            edge..color = gruppechatGlitterEdgeGold.withValues(alpha: fade),
           );
           canvas.drawCircle(
             center,
@@ -475,20 +475,6 @@ class _EffectPainter extends CustomPainter {
           break;
       }
     }
-  }
-
-  /// A four-pointed star of radius [r] around [c], turned by [angle].
-  Path _sparkle(Offset c, double r, double angle) {
-    final path = Path();
-    for (var i = 0; i < 8; i++) {
-      final a = angle + pi * i / 4;
-      final reach = i.isEven ? r : r * 0.3;
-      final point = c + Offset(cos(a), sin(a)) * reach;
-      i == 0
-          ? path.moveTo(point.dx, point.dy)
-          : path.lineTo(point.dx, point.dy);
-    }
-    return path..close();
   }
 
   void _heart(Canvas canvas, Offset c, double s, Paint paint) {
@@ -578,4 +564,22 @@ Future<GruppechatEffect?> gruppechatPickEffect(BuildContext context) {
       ),
     ),
   );
+}
+
+/// The glitter's palest gold, and the dark gold edge that makes it show on
+/// a light background; glitter rings use them too (avatar_ring.dart).
+const gruppechatGlitterPaleGold = Color(0xFFFFE680);
+const gruppechatGlitterEdgeGold = Color(0xFF8B6508);
+
+/// A four-pointed star of radius [r] around [c], turned by [angle]: the
+/// glitter of the effect, and of glitter rings (avatar_ring.dart).
+Path gruppechatSparkle(Offset c, double r, double angle) {
+  final path = Path();
+  for (var i = 0; i < 8; i++) {
+    final a = angle + pi * i / 4;
+    final reach = i.isEven ? r : r * 0.3;
+    final point = c + Offset(cos(a), sin(a)) * reach;
+    i == 0 ? path.moveTo(point.dx, point.dy) : path.lineTo(point.dx, point.dy);
+  }
+  return path..close();
 }

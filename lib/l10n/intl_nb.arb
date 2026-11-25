@@ -3862,6 +3862,10 @@
     "@gruppechatAvatarRing": {},
     "gruppechatAvatarRingNone": "Ingen ring",
     "@gruppechatAvatarRingNone": {},
-    "gruppechatAvatarRingDescription": "Velg en farge på ringen rundt profilbildet ditt. Alle ser den.",
-    "@gruppechatAvatarRingDescription": {}
+    "gruppechatAvatarRingDescription": "Velg en farge på ringen rundt profilbildet ditt, gjerne med glitter, eller en julering. Alle ser den.",
+    "@gruppechatAvatarRingDescription": {},
+    "gruppechatAvatarRingGlitter": "Glitter",
+    "@gruppechatAvatarRingGlitter": {},
+    "gruppechatAvatarRingChristmas": "Julering",
+    "@gruppechatAvatarRingChristmas": {}
 }
