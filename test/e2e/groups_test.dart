@@ -469,6 +469,71 @@ void main() {
         (e) => e.body == '@spillkveld jeg også',
       );
       expect(own.mentionsOwnGroupRole, isFalse);
+
+      // Carol quoting alice's mention doesn't call the role again
+      await channel(carol).sendTextEvent('Eg tek brus', inReplyTo: forCarol);
+      final reply = await arrives(
+        bobTimeline,
+        'the reply',
+        (e) => e.body.endsWith('Eg tek brus'),
+      );
+      expect(reply.mentionsOwnGroupRole, isFalse);
+    });
+
+    test('the input bar suggests @alle', () {
+      expect(
+        gruppechatRoleSuggestions(
+          channel(carol),
+          'al',
+        ).map((s) => s['mention']),
+        ['@alle'],
+      );
+      expect(gruppechatRoleSuggestions(channel(carol), 'bo'), isEmpty);
+    });
+
+    test('@alle mentions everyone in the chat but the sender', () async {
+      final aliceTimeline = await channel(alice).getTimeline();
+      final bobTimeline = await channel(bob).getTimeline();
+      final carolTimeline = await channel(carol).getTimeline();
+      await channel(alice).sendTextEvent('@alle møte kl 8');
+      bool isIt(Event e) => e.body == '@alle møte kl 8';
+      final forBob = await arrives(bobTimeline, 'the mention', isIt);
+      final forCarol = await arrives(carolTimeline, 'the mention', isIt);
+      final own = await arrives(aliceTimeline, 'her own mention', isIt);
+      expect(forBob.mentionsAllInChat, isTrue);
+      expect(forCarol.mentionsAllInChat, isTrue);
+      expect(own.mentionsAllInChat, isFalse);
+
+      // Editing or quoting it doesn't call everyone again
+      await channel(
+        alice,
+      ).sendTextEvent('@alle møte kl 9', editEventId: own.eventId);
+      final edit = await arrives(
+        bobTimeline,
+        'the edit',
+        (e) => e.relationshipType == RelationshipTypes.edit,
+      );
+      expect(edit.mentionsAllInChat, isFalse);
+      await channel(carol).sendTextEvent('Eg kjem', inReplyTo: forCarol);
+      final reply = await arrives(
+        bobTimeline,
+        'the reply',
+        (e) => e.body.endsWith('Eg kjem'),
+      );
+      expect(reply.mentionsAllInChat, isFalse);
+    });
+
+    test('a direct chat has no @alle', () async {
+      final (dm, _) = await directChat(alice, carol);
+      expect(gruppechatRoleSuggestions(dm, 'alle'), isEmpty);
+      final carolTimeline = await carol.getRoomById(dm.id)!.getTimeline();
+      await dm.sendTextEvent('@alle hei');
+      final forCarol = await arrives(
+        carolTimeline,
+        'the message',
+        (e) => e.body == '@alle hei',
+      );
+      expect(forCarol.mentionsAllInChat, isFalse);
     });
 
     test('a role can be invited to a channel', () async {

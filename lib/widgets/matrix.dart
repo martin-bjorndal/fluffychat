@@ -7,11 +7,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:fluffychat/gruppechat/calls.dart';
 import 'package:fluffychat/gruppechat/channel_mute.dart';
 import 'package:fluffychat/gruppechat/chat_backup.dart';
 import 'package:fluffychat/gruppechat/chat_notifications.dart';
-import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
 import 'package:fluffychat/gruppechat/web_notifications.dart';
@@ -349,14 +347,10 @@ class MatrixState extends State<Matrix> {
         onNotification[name] ??= c.onNotification.stream.listen(
           showLocalNotification,
         );
-        // Gruppechat: @role mentions and calls in groups notify even where
-        // push rules don't
+        // Gruppechat: @role and @alle mentions and calls in groups notify
+        // even where push rules don't (lib/gruppechat/channel_mute.dart)
         onRoleMention[name] ??= c.onTimelineEvent.stream
-            .where(
-              (event) =>
-                  (event.mentionsOwnGroupRole || event.announcesCallToAll) &&
-                  !c.pushruleEvaluator.match(event).notify,
-            )
+            .where(gruppechatNotifiesLocally)
             .listen(showLocalNotification);
       });
     }

@@ -4,10 +4,11 @@
 
 // Client-side channel mute. FluffyChat mutes a chat with a server push rule
 // that stops every push from it. In an encrypted chat the server can't see
-// mentions, so a muted channel could never wake the phone for @role or
+// mentions, so a muted channel could never wake the phone for @role, @alle or
 // @user. For each muted group channel we therefore add a "wake" rule that
 // still pushes encrypted messages; the app decrypts them and only notifies
-// when the user or one of their roles is mentioned (see push_helper.dart).
+// when the user, one of their roles or @alle is mentioned (see
+// push_helper.dart).
 // The muted state itself stays the room rule FluffyChat already uses, so
 // every mute switch in the app keeps working unchanged.
 
@@ -67,14 +68,31 @@ extension GruppechatChannelMuteEventExtension on Event {
 
 /// Whether the push helper shows a notification for a pushed [event]. The
 /// account's push rules decide, except that a mention of one of the user's
-/// roles always notifies, as does a call starting in a chat that isn't
-/// muted, and a muted channel's wake-up the app couldn't decrypt never does:
-/// there is no telling whether it mentions them.
+/// roles or `@alle` always notifies, as does a call starting in a chat that
+/// isn't muted, and a muted channel's wake-up the app couldn't decrypt never
+/// does: there is no telling whether it mentions them.
 bool gruppechatShouldNotify(Event event) =>
     !event.isUndecryptedWakeUp &&
     (event.room.client.pushruleEvaluator.match(event).notify ||
-        event.mentionsOwnGroupRole ||
-        event.announcesCallToAll);
+        _notifiesDespitePushRules(event));
+
+/// Whether the running app shows a notification of its own for a new
+/// timeline [event] the account's push rules stay quiet about: an @role or
+/// `@alle` mention, or a call in a group. Never while the first sync after
+/// logging in fills the chats with older messages.
+bool gruppechatNotifiesLocally(Event event) {
+  final client = event.room.client;
+  return client.prevBatch != null &&
+      _notifiesDespitePushRules(event) &&
+      !client.pushruleEvaluator.match(event).notify;
+}
+
+/// What notifies whatever the account's push rules say: an @role or `@alle`
+/// mention, or a call in a group.
+bool _notifiesDespitePushRules(Event event) =>
+    event.mentionsOwnGroupRole ||
+    event.mentionsAllInChat ||
+    event.announcesCallToAll;
 
 /// Keeps the account's wake rules in line with which channels are muted.
 class GruppechatWakeRules {
