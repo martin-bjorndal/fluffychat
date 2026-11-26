@@ -130,6 +130,36 @@ void main() {
       expect(await notifies(push), isTrue);
     });
 
+    test('and so does @alle', () async {
+      final eventId = await channel(
+        bob,
+        'spill',
+      ).sendTextEvent('@alle møte i morgon');
+      final push = await waitForPush(pushkey, eventId!);
+      expect(await notifies(push), isTrue);
+    });
+
+    test(
+      'with the app open, @alle in it notifies but chatter does not',
+      () async {
+        final timeline = await channel(carol, 'spill').getTimeline();
+        await channel(bob, 'spill').sendTextEvent('Berre prat igjen');
+        await channel(bob, 'spill').sendTextEvent('@alle kom no');
+        final chatter = await arrives(
+          timeline,
+          'the chatter',
+          (e) => e.body == 'Berre prat igjen',
+        );
+        final call = await arrives(
+          timeline,
+          'the @alle',
+          (e) => e.body == '@alle kom no',
+        );
+        expect(gruppechatNotifiesLocally(chatter), isFalse);
+        expect(gruppechatNotifiesLocally(call), isTrue);
+      },
+    );
+
     test('unmuting removes the wake rule', () async {
       await channel(carol, 'spill').setPushRuleState(PushRuleState.notify);
       await eventually(
@@ -174,6 +204,18 @@ void main() {
       await waitForPush(pushkey, loudId!);
       final pushes = await testServer.recorded('pushes');
       expect(pushes.where((push) => eventIdOfPush(push) == quietId), isEmpty);
+    });
+
+    test('and @alle stays quiet in a silenced channel', () async {
+      final timeline = await channel(carol, 'spill').getTimeline();
+      await channel(alice, 'spill').sendTextEvent('@alle stille no');
+      final event = await arrives(
+        timeline,
+        'the @alle',
+        (e) => e.body == '@alle stille no',
+      );
+      expect(event.mentionsAllInChat, isFalse);
+      expect(gruppechatNotifiesLocally(event), isFalse);
     });
   });
 }

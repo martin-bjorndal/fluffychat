@@ -148,6 +148,20 @@ void main() {
       expect(mentionedRoleIds('admins', roles), isEmpty);
     });
 
+    test('@alle as a word mentions everyone', () {
+      for (final text in [
+        '@alle',
+        '@Alle!',
+        'hei @alle, kom',
+        'Møte (@ALLE)',
+      ]) {
+        expect(mentionsEveryone(text), isTrue, reason: text);
+      }
+      for (final text in ['@allen', 'e@alle', 'alle', '@alle-gruppa', '']) {
+        expect(mentionsEveryone(text), isFalse, reason: text);
+      }
+    });
+
     test('ignores roles that are not mentionable', () {
       expect(mentionedRoleIds('@quiet please', roles), isEmpty);
     });

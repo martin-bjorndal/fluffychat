@@ -363,12 +363,42 @@ extension GruppechatUserExtension on User {
 extension GruppechatEventExtension on Event {
   /// Whether this message mentions a role the current user has.
   bool get mentionsOwnGroupRole {
-    final userId = room.client.userID;
-    if (userId == null || senderId == userId) return false;
-    if (type != EventTypes.Message) return false;
     final state = GruppechatGroup.of(room)?.state;
     if (state == null) return false;
-    return mentionsAnyRole(body, state.roles, state.roleIdsOf(userId));
+    final text = _newMentionText;
+    if (text == null) return false;
+    return mentionsAnyRole(
+      text,
+      state.roles,
+      state.roleIdsOf(room.client.userID!),
+    );
+  }
+
+  /// Whether this message should notify the user for calling everyone in a
+  /// group chat with `@alle`. Bot notices don't count, and neither do fully
+  /// silenced chats (unlike @role): this is a notify decision, not only
+  /// what the text says.
+  bool get mentionsAllInChat {
+    if (messageType != MessageTypes.Text && messageType != MessageTypes.Emote) {
+      return false;
+    }
+    if (room.isDirectChat || room.pushRuleState == PushRuleState.dontNotify) {
+      return false;
+    }
+    final text = _newMentionText;
+    return text != null && mentionsEveryone(text);
+  }
+
+  /// The text a message from someone else can mention people in, or null
+  /// for the user's own messages, other events and edits. The quote in a
+  /// reply is left out, so editing or quoting an old mention doesn't
+  /// mention them again.
+  String? get _newMentionText {
+    final userId = room.client.userID;
+    if (userId == null || senderId == userId) return null;
+    if (type != EventTypes.Message) return null;
+    if (relationshipType == RelationshipTypes.edit) return null;
+    return calcUnlocalizedBody(hideReply: true);
   }
 }
 
@@ -421,13 +451,18 @@ Iterable<Map<String, String?>> gruppechatUserSuggestions(
   }
 }
 
-/// Input bar suggestions for `@role` mentions matching [search].
+/// Input bar suggestions for `@role` mentions matching [search], and for
+/// `@alle` in any chat that isn't a direct chat.
 List<Map<String, String?>> gruppechatRoleSuggestions(Room room, String search) {
   final state = GruppechatGroup.of(room)?.state;
-  if (state == null) return [];
   return [
-    for (final role in state.roles)
+    if (!room.isDirectChat && 'alle'.startsWith(search))
+      {'type': 'role', 'mention': '@alle', 'displayname': '@alle'},
+    for (final role in state?.roles ?? const <GroupRole>[])
+      // A role called «Alle» is already covered by @alle
       if (role.mentionable &&
+          role.id != 'alle' &&
+          role.name.toLowerCase() != 'alle' &&
           (role.id.contains(search) ||
               role.name.toLowerCase().contains(search)))
         {

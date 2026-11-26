@@ -550,6 +550,11 @@ Set<String> mentionedRoleIds(String text, Iterable<GroupRole> roles) => {
       role.id,
 };
 
+/// Whether [text] calls everyone in the chat with `@alle`.
+bool mentionsEveryone(String text) => _allePattern.hasMatch(text);
+
+final RegExp _allePattern = _mentionPattern('alle');
+
 /// Whether [text] mentions any of the roles in [ownRoleIds].
 bool mentionsAnyRole(
   String text,
