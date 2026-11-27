@@ -1269,6 +1269,70 @@ void main() {
       );
       await groupOf(alice).setBackground(null);
     });
+
+    test("a nickname set from the group's own member list shows in its first "
+        'channel', () async {
+      final general = await channel(alice, 'general').getTimeline();
+      final space = await groupOf(alice).space.getTimeline();
+      // The nickname dialog, opened from the member list of the group
+      await changeGroupNickname(
+        groupOf(bob),
+        alice.userID!,
+        'Sjefen',
+        from: groupOf(bob).space,
+      );
+      final line = await arrives(
+        general,
+        "bob's nickname line in general",
+        (e) =>
+            e.type == gruppechatChangeType &&
+            e.senderId == bob.userID &&
+            e.content['user'] == alice.userID,
+      );
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatGaveNickname(nameOf(bob), nameOf(alice), 'Sjefen'),
+      );
+      // Once, not in every channel, nor in the space
+      final afterId = await channel(bob, 'spill').sendTextEvent('Etter');
+      await arrives(
+        aliceTimeline,
+        'the message after',
+        (e) => e.eventId == afterId,
+      );
+      bool aboutAlice(Event e) =>
+          e.type == gruppechatChangeType && e.content['user'] == alice.userID;
+      expect(aliceTimeline.events.where(aboutAlice), isEmpty);
+      expect(space.events.where(aboutAlice), isEmpty);
+      await groupOf(alice).setNickname(alice.userID!, '');
+    });
+
+    test("so does a picture set from the group's own member list", () async {
+      final general = await channel(carol, 'general').getTimeline();
+      final picture = Uri.parse('mxc://localhost/fra-gruppa');
+      expect(
+        await changeGroupAvatar(
+          groupOf(bob),
+          carol.userID!,
+          picture,
+          from: groupOf(bob).space,
+        ),
+        isTrue,
+      );
+      final line = await arrives(
+        general,
+        "bob's picture line in general",
+        (e) =>
+            e.type == gruppechatChangeType &&
+            e.senderId == bob.userID &&
+            e.content['kind'] == 'avatar',
+      );
+      expect(
+        groupChangeText(line, l10n),
+        l10n.gruppechatGaveGroupPicture(nameOf(bob), nameOf(carol)),
+      );
+      await groupOf(bob).setMemberAvatar(carol.userID!, null);
+    });
   });
 
   group('Thrown out of a chat', skip: skipWithoutTestServer, () {

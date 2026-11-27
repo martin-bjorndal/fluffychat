@@ -3669,6 +3669,43 @@
             }
         }
     },
+    "gruppechatPinnedCount": "{count} pinned",
+    "@gruppechatPinnedCount": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatPinnedMessages": "Pinned messages",
+    "@gruppechatPinnedMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUnpinFromChat": "Unpin from room",
+    "@gruppechatUnpinFromChat": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPinnedMessage": "{name} pinned a message",
+    "@gruppechatPinnedMessage": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUnpinnedMessage": "{name} unpinned a message",
+    "@gruppechatUnpinnedMessage": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "gruppechatTookGroupPicture": "{name} changed their picture in the group",
     "@gruppechatTookGroupPicture": {
         "type": "String",

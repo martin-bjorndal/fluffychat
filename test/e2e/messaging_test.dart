@@ -5,7 +5,7 @@
 // Two people writing to each other in an encrypted direct chat: messages,
 // edits (and what an edited message said before), replies, reactions,
 // typing, emojis, locations, polls (which move down to their newest vote),
-// profiles and deleting.
+// profiles, pinning and deleting.
 
 @Timeout(Duration(minutes: 3))
 library;
@@ -14,15 +14,18 @@ import 'dart:typed_data';
 import 'dart:ui' show Locale;
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as picker;
+import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/chat_reading.dart';
 import 'package:fluffychat/gruppechat/clock.dart';
 import 'package:fluffychat/gruppechat/edit_history.dart';
 import 'package:fluffychat/gruppechat/emoji.dart';
 import 'package:fluffychat/gruppechat/message_actions.dart';
+import 'package:fluffychat/gruppechat/pinned_messages.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/read_positions.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/client_download_content_extension.dart';
+import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/date_symbol_data_local.dart';
@@ -679,6 +682,114 @@ void main() {
         });
         await alice.setAvatar(null);
       }
+    });
+
+    test('pinning and unpinning a message shows a line in the chat', () async {
+      final l10n = await lookupL10n(const Locale('nb'));
+      final messageId = await bobChat.sendTextEvent('Husk møtet i morgon');
+      await arrives(
+        aliceTimeline,
+        'the message',
+        (e) => e.eventId == messageId,
+      );
+      String aliceName() => bobChat
+          .unsafeGetUserFromMemoryOrFallback(alice.userID!)
+          .calcDisplayname();
+
+      Future<Event> line(String what, String eventId) =>
+          arrives(bobTimeline, what, (e) => e.eventId == eventId);
+      void expectShown(Event line, String text) {
+        expect(line.type, EventTypes.RoomPinnedEvents);
+        expect(line.isVisibleInGui, isTrue, reason: 'shown in the chat');
+        expect(line.isCollapsedState, isFalse, reason: 'not folded away');
+        expect(groupChangeText(line, l10n), text);
+      }
+
+      // The message menu's pin button, tapped twice; it says what it does
+      expect(pinMenuText(l10n, aliceChat, messageId!), 'Fest til chatten');
+      final pin = await togglePinnedMessage(aliceChat, messageId);
+      expectShown(
+        await line('the pin', pin),
+        l10n.gruppechatPinnedMessage(aliceName()),
+      );
+      expect(bobChat.pinnedEventIds, [messageId]);
+      await eventually(
+        'alice sees it pinned',
+        () => aliceChat.pinnedEventIds.contains(messageId),
+      );
+      expect(pinMenuText(l10n, aliceChat, messageId), 'Løsne fra chat');
+      expect(pinMenuText(l10n, bobChat, messageId), 'Løsne fra chat');
+      final unpin = await togglePinnedMessage(aliceChat, messageId);
+      expectShown(
+        await line('the unpin', unpin),
+        l10n.gruppechatUnpinnedMessage(aliceName()),
+      );
+      expect(bobChat.pinnedEventIds, isEmpty);
+      await eventually(
+        'alice sees it unpinned',
+        () => aliceChat.pinnedEventIds.isEmpty,
+      );
+      expect(pinMenuText(l10n, aliceChat, messageId), 'Fest til chatten');
+
+      // Pinned again, then the pinned bar's unpin button
+      await line(
+        'the second pin',
+        await togglePinnedMessage(aliceChat, messageId),
+      );
+      final barUnpin = await unpinMessage(aliceChat, messageId);
+      expectShown(
+        await line('the unpin from the bar', barUnpin),
+        l10n.gruppechatUnpinnedMessage(aliceName()),
+      );
+      expect(bobChat.pinnedEventIds, isEmpty);
+    });
+
+    test('several pinned messages are counted on the bar and listed in its '
+        'menu, newest first', () async {
+      final l10n = await lookupL10n(const Locale('nb'));
+      final first = await bobChat.sendTextEvent('Lista til hytteturen');
+      final second = await aliceChat.sendTextEvent('Bussen går 08:15');
+      await arrives(
+        bobTimeline,
+        'the second message',
+        (e) => e.eventId == second,
+      );
+      await arrives(
+        aliceTimeline,
+        'the first message',
+        (e) => e.eventId == first,
+      );
+
+      addTearDown(() => bobChat.setPinnedEvents([]));
+
+      // One pinned: no count, as before
+      await togglePinnedMessage(aliceChat, first!);
+      await eventually('bob sees one pinned', () {
+        return bobChat.pinnedEventIds.length == 1;
+      });
+      expect(pinnedCountText(l10n, pinnedCount(bobChat)), isNull);
+      expect(
+        [for (final e in await pinnedMessages(bobChat)) e.eventId],
+        [first],
+      );
+
+      // Two pinned, and one whose message the server doesn't have, which
+      // the menu leaves out instead of showing an entry that goes nowhere.
+      // Another app has listed the first one twice: counted and listed once.
+      await togglePinnedMessage(bobChat, second!);
+      await eventually('alice sees two pinned', () {
+        return aliceChat.pinnedEventIds.length == 2;
+      });
+      const missing = r'$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+      await aliceChat.setPinnedEvents([first, missing, first, second]);
+      await eventually('bob sees the new pinned list', () {
+        return bobChat.pinnedEventIds.length == 4;
+      });
+      expect(pinnedCountText(l10n, pinnedCount(bobChat)), '3 festet');
+      expect(
+        [for (final e in await pinnedMessages(bobChat)) e.eventId],
+        [second, first],
+      );
     });
   });
 

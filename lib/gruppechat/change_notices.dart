@@ -9,12 +9,14 @@ import 'package:matrix/matrix.dart';
 
 import 'group_state.dart';
 import 'matrix_group.dart';
+import 'membership.dart';
 
 /// A small line in a chat saying who changed its background, colour or a
 /// nickname, like the lines Matrix shows when someone joins. The changes
 /// themselves live in the group's space (see [GruppechatGroup]), which nobody
 /// reads as a chat, so the app also posts this line in the chat the change
-/// was made from.
+/// was made from, or for a nickname or picture set from the space's member
+/// list, in its first channel.
 ///
 /// It is sent unencrypted, also in encrypted chats: an encrypted event
 /// matches the default push rule for encrypted messages and would wake
@@ -78,9 +80,21 @@ GroupChange backgroundChangeFor(GruppechatGroup group, Room? channel) =>
     ? GroupChange.groupBackground
     : GroupChange.chatBackground;
 
+/// The chat a nickname or picture change made from [from]'s member list is
+/// told in: [from] itself, or when that is [group]'s space, which nobody
+/// reads as a chat, the first of its channels this user may post the line
+/// in, in the order of [gruppechatChannelsInOrder], so it is the same channel
+/// every time.
+Room? changeLineChatFor(GruppechatGroup group, Room? from) {
+  if (from == null || !from.isSpace || from.id != group.space.id) return from;
+  return gruppechatChannelsInOrder(from).firstWhereOrNull(
+    (room) => !room.isSpace && room.canSendEvent(gruppechatChangeType),
+  );
+}
+
 /// Sets [userId]'s group nickname, as the nickname dialog does, and says so
-/// in [from], the chat whose member list it was set from. Saving the name
-/// it already has changes nothing and says nothing.
+/// in the chat whose member list it was set from (see [changeLineChatFor]).
+/// Saving the name it already has changes nothing and says nothing.
 Future<void> changeGroupNickname(
   GruppechatGroup group,
   String userId,
@@ -90,7 +104,7 @@ Future<void> changeGroupNickname(
   if ((group.state.nicknameOf(userId)?.name ?? '') == name.trim()) return;
   await group.setNickname(userId, name);
   await announceGroupChange(
-    from,
+    changeLineChatFor(group, from),
     GroupChange.nickname,
     userId: userId,
     nickname: name,
@@ -106,8 +120,9 @@ bool mayChangeGroupAvatar(GruppechatGroup group, String userId) =>
         !group.state.isNicknameLocked(userId));
 
 /// Gives [userId] the picture [url] in [group], or with null removes the
-/// one they have there, as the member menu does, and says so in [from]. The
-/// line holds no picture, only that it changed. Picking the picture they
+/// one they have there, as the member menu does, and says so in the chat
+/// whose member list it was set from (see [changeLineChatFor]). The line
+/// holds no picture, only that it changed. Picking the picture they
 /// have, removing one they don't have, or changing a locked one does
 /// nothing. Returns whether it changed.
 Future<bool> changeGroupAvatar(
@@ -120,7 +135,7 @@ Future<bool> changeGroupAvatar(
   if (group.state.avatarOf(userId) == url) return false;
   await group.setMemberAvatar(userId, url);
   await announceGroupChange(
-    from,
+    changeLineChatFor(group, from),
     GroupChange.avatar,
     userId: userId,
     removed: url == null,
@@ -187,12 +202,45 @@ const int gruppechatMaxNicknameLength = 64;
   return (change, user);
 }
 
-/// Whether [event] is a change line this version can show.
-bool isGroupChangeLine(Event event) => _parse(event) != null;
+/// What an `m.room.pinned_events` event did, for the line saying so.
+enum PinChange { pinned, unpinned }
 
-/// The line a [gruppechatChangeType] event shows, or null for any other
-/// event or one this version doesn't understand.
+/// Whether [event] pinned or unpinned a message, comparing its list with
+/// the one before (`prev_content`, which the server leaves out only when
+/// nothing was pinned yet). Null for any other event, or one that changed
+/// nothing. A list that both gains and loses a message counts as pinned.
+PinChange? pinChangeOf(Event event) {
+  if (event.type != EventTypes.RoomPinnedEvents || event.redacted) {
+    return null;
+  }
+  Set<Object?> idsIn(Map<String, Object?>? content) =>
+      switch (content?['pinned']) {
+        final List<Object?> ids => ids.toSet(),
+        _ => const {},
+      };
+  final now = idsIn(event.content);
+  final before = idsIn(event.prevContent);
+  if (now.difference(before).isNotEmpty) return PinChange.pinned;
+  if (before.difference(now).isNotEmpty) return PinChange.unpinned;
+  return null;
+}
+
+/// Whether [event] is a line saying who changed what that this version can
+/// show: a [gruppechatChangeType] line, or a message pinned or unpinned.
+bool isGroupChangeLine(Event event) =>
+    _parse(event) != null || pinChangeOf(event) != null;
+
+/// The line a [gruppechatChangeType] event or a pin shows, or null for any
+/// other event or one this version doesn't understand.
 String? groupChangeText(Event event, L10n l10n) {
+  final pin = pinChangeOf(event);
+  if (pin != null) {
+    final name = event.senderFromMemoryOrFallback.calcDisplayname();
+    return switch (pin) {
+      PinChange.pinned => l10n.gruppechatPinnedMessage(name),
+      PinChange.unpinned => l10n.gruppechatUnpinnedMessage(name),
+    };
+  }
   final parsed = _parse(event);
   if (parsed == null) return null;
   final (change, userId) = parsed;

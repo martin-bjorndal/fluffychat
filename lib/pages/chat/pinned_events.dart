@@ -5,6 +5,7 @@
 
 import 'dart:async';
 
+import 'package:fluffychat/gruppechat/pinned_messages.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/chat.dart';
 import 'package:fluffychat/pages/chat/chat_app_bar_list_tile.dart';
@@ -23,37 +24,32 @@ class PinnedEvents extends StatelessWidget {
     final l10n = L10n.of(context);
     final eventsResult = await showFutureLoadingDialog(
       context: context,
-      future: () => Future.wait(
-        controller.room.pinnedEventIds.map(
-          (eventId) => controller.room.getEventById(eventId),
-        ),
-      ),
+      // Gruppechat: newest first, without ones the server doesn't have
+      future: () => pinnedMessages(controller.room),
     );
     final events = eventsResult.result;
-    if (events == null) return;
+    if (events == null || events.isEmpty) return;
     if (!context.mounted) return;
 
     final eventId = events.length == 1
-        ? events.single?.eventId
+        ? events.single.eventId
         : await showModalActionPopup<String>(
             context: context,
-            title: l10n.pin,
+            title: l10n.gruppechatPinnedMessages,
             cancelLabel: l10n.cancel,
             actions: events
                 .map(
                   (event) => AdaptiveModalAction(
-                    value: event?.eventId ?? '',
+                    value: event.eventId,
                     icon: const Icon(Icons.push_pin_outlined),
-                    label:
-                        event
-                            ?.calcLocalizedBodyFallback(
-                              MatrixLocals(l10n),
-                              withSenderNamePrefix: true,
-                              hideReply: true,
-                            )
-                            .trim()
-                            .replaceAll('\n', ' ') ??
-                        'UNKNOWN',
+                    label: event
+                        .calcLocalizedBodyFallback(
+                          MatrixLocals(l10n),
+                          withSenderNamePrefix: true,
+                          hideReply: true,
+                        )
+                        .trim()
+                        .replaceAll('\n', ' '),
                   ),
                 )
                 .toList(),
@@ -93,9 +89,11 @@ class PinnedEvents extends StatelessWidget {
             icon: const Icon(Icons.push_pin),
             tooltip: L10n.of(context).unpin,
             onPressed: controller.room.canSendEvent(EventTypes.RoomPinnedEvents)
-                ? () => controller.unpinEvent(event!.eventId)
+                ? () => controller.unpinEvent(pinnedEventIds.last)
                 : null,
           ),
+          // Gruppechat: how many are pinned, when there is a menu of them
+          trailing: pinnedCountBadge(context, controller.room),
           onTap: () => _displayPinnedEventsDialog(context),
         );
       },

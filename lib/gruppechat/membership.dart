@@ -106,6 +106,47 @@ Future<void> gruppechatEachThenRethrowFirst<T>(
   return (channels: channels, outOfReach: outOfReach);
 }
 
+/// The channels of [space] this user is in ([gruppechatChannelsOf]), in the
+/// order the server lists a space's children: by `order`, then the oldest,
+/// then by room ID.
+List<Room> gruppechatChannelsInOrder(Room space) {
+  final channels = [
+    for (final room in gruppechatChannelsOf(space).channels)
+      (room: room, key: _childKey(space, room.id)),
+  ]..sort((a, b) => _compareKeys(a.key, b.key));
+  return [for (final channel in channels) channel.room];
+}
+
+typedef _ChildKey = ({String? order, int time, String id});
+
+_ChildKey _childKey(Room space, String roomId) {
+  final child = space.getState(EventTypes.SpaceChild, roomId);
+  return (
+    order: _childOrder(child),
+    time: child is Event ? child.originServerTs.millisecondsSinceEpoch : 0,
+    id: roomId,
+  );
+}
+
+int _compareKeys(_ChildKey a, _ChildKey b) {
+  if (a.order != b.order) {
+    if (a.order == null) return 1;
+    if (b.order == null) return -1;
+    return a.order!.compareTo(b.order!);
+  }
+  final byAge = a.time.compareTo(b.time);
+  return byAge != 0 ? byAge : a.id.compareTo(b.id);
+}
+
+/// A child's `order`, when it is one the spec counts: up to 50 printable
+/// ASCII characters.
+String? _childOrder(StrippedStateEvent? child) {
+  final order = child?.content.tryGet<String>('order');
+  if (order == null || order.length > 50) return null;
+  if (order.codeUnits.any((unit) => unit < 0x20 || unit > 0x7E)) return null;
+  return order;
+}
+
 /// Thrown when someone was put out of a group, or let back in, but this
 /// user couldn't do the same in [channels]: they aren't in them, or may not
 /// do it there.

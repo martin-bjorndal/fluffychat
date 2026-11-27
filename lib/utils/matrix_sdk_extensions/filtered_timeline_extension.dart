@@ -61,14 +61,15 @@ extension IsStateExtension on Event {
 
   bool get isState => !{EventTypes.Message, EventTypes.Sticker}.contains(type);
 
-  bool get isCollapsedState => !{
-    EventTypes.Message,
-    EventTypes.Sticker,
-    EventTypes.RoomCreate,
-    EventTypes.RoomTombstone,
-    // Gruppechat: who changed what stays in sight
-    gruppechatChangeType,
-  }.contains(type);
+  bool get isCollapsedState =>
+      !{
+        EventTypes.Message,
+        EventTypes.Sticker,
+        EventTypes.RoomCreate,
+        EventTypes.RoomTombstone,
+      }.contains(type) &&
+      // Gruppechat: who changed or pinned what stays in sight
+      !isGroupChangeLine(this);
 
   bool get isKnownHiddenStates =>
       {PollEventContent.responseType}.contains(type) ||

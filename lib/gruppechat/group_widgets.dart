@@ -605,7 +605,8 @@ Future<void> showGroupNicknameDialog({
   if (name == null || !context.mounted) return;
   await showFutureLoadingDialog(
     context: context,
-    // A line in the chat whose member list it was set from
+    // A line in the chat whose member list it was set from, or for the
+    // group's own, its first channel
     future: () => changeGroupNickname(group, user.id, name, from: user.room),
   );
 }

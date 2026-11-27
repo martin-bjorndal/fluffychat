@@ -125,6 +125,91 @@ void main() {
     expect(event.isCollapsedState, isFalse);
   });
 
+  group('pinning', () {
+    Event pins(
+      List<String> now, {
+      List<String>? before,
+      bool redacted = false,
+    }) => Event(
+      type: EventTypes.RoomPinnedEvents,
+      content: {'pinned': now},
+      senderId: bob,
+      stateKey: '',
+      eventId: '\$pin${now.join()}${before?.join()}',
+      originServerTs: DateTime(2026, 11, 27),
+      room: room,
+      unsigned: {
+        if (before != null) 'prev_content': {'pinned': before},
+        if (redacted)
+          'redacted_because': {
+            'type': EventTypes.Redaction,
+            'event_id': r'$redaction',
+            'sender': bob,
+            'origin_server_ts': 0,
+            'content': <String, Object?>{},
+          },
+      },
+    );
+
+    test('a pin and an unpin name who did it', () {
+      expect(
+        groupChangeText(pins([r'$a']), l10n),
+        l10n.gruppechatPinnedMessage(nameOf(bob)),
+        reason: 'the first pin has no list before it',
+      );
+      expect(
+        groupChangeText(pins([r'$a', r'$b'], before: [r'$a']), l10n),
+        l10n.gruppechatPinnedMessage(nameOf(bob)),
+      );
+      expect(
+        groupChangeText(pins([r'$a'], before: [r'$a', r'$b']), l10n),
+        l10n.gruppechatUnpinnedMessage(nameOf(bob)),
+      );
+      expect(
+        groupChangeText(pins([], before: [r'$a']), l10n),
+        l10n.gruppechatUnpinnedMessage(nameOf(bob)),
+      );
+      expect(pinChangeOf(pins([r'$b'], before: [r'$a'])), PinChange.pinned);
+    });
+
+    test('a pin shows in the chat and does not fold away', () {
+      final event = pins([r'$a'], before: []);
+      expect(isGroupChangeLine(event), isTrue);
+      expect(event.isVisibleInGui, isTrue);
+      expect(event.isCollapsedState, isFalse);
+    });
+
+    test('a list that changed nothing, or was deleted, says nothing', () {
+      for (final event in [
+        pins([r'$a', r'$b'], before: [r'$b', r'$a']),
+        pins([]),
+        pins([r'$a'], before: [], redacted: true),
+      ]) {
+        expect(groupChangeText(event, l10n), isNull);
+        expect(isGroupChangeLine(event), isFalse);
+        expect(event.isCollapsedState, isTrue);
+      }
+    });
+
+    test('a list that is no list is no pin, and breaks nothing', () {
+      final odd = Event(
+        type: EventTypes.RoomPinnedEvents,
+        content: {'pinned': r'$a'},
+        senderId: bob,
+        stateKey: '',
+        eventId: r'$odd',
+        originServerTs: DateTime(2026, 11, 27),
+        room: room,
+        unsigned: {
+          'prev_content': {'pinned': <String, Object?>{}},
+        },
+      );
+      expect(pinChangeOf(odd), isNull);
+      expect(groupChangeText(odd, l10n), isNull);
+      expect(odd.isCollapsedState, isTrue);
+    });
+  });
+
   test("a space's background is the group's, a chat's its own", () {
     final space = Room(id: '!space:example.invalid', client: client)
       ..setState(
@@ -149,4 +234,84 @@ void main() {
       GroupChange.chatBackground,
     );
   });
+
+  test(
+    "a change from the group's member list is told in its first channel",
+    () {
+      final space = Room(id: '!group:example.invalid', client: client)
+        ..setState(
+          StrippedStateEvent(
+            type: EventTypes.RoomCreate,
+            content: {'type': RoomCreationTypes.mSpace},
+            senderId: bob,
+            stateKey: '',
+          ),
+        );
+      final group = GruppechatGroup(space);
+      final added = <String>{};
+      addTearDown(() => client.rooms.removeWhere((r) => added.contains(r.id)));
+      Room channel(String id, {String? order, int ts = 0, bool may = true}) {
+        space.setState(
+          Event(
+            type: EventTypes.SpaceChild,
+            content: {
+              'via': ['example.invalid'],
+              'order': ?order,
+            },
+            senderId: bob,
+            stateKey: id,
+            eventId: '\$child$id',
+            originServerTs: DateTime.fromMillisecondsSinceEpoch(ts),
+            room: space,
+          ),
+        );
+        final room = Room(id: id, client: client, membership: Membership.join);
+        if (!may) {
+          room.setState(
+            StrippedStateEvent(
+              type: EventTypes.RoomPowerLevels,
+              content: {'events_default': 100},
+              senderId: bob,
+              stateKey: '',
+            ),
+          );
+        }
+        client.rooms.add(room);
+        added.add(id);
+        return room;
+      }
+
+      final general = channel('!d:example.invalid', ts: 1);
+      final older = channel('!c:example.invalid', ts: 1);
+      expect(
+        changeLineChatFor(group, space),
+        older,
+        reason: 'the oldest, then by room ID',
+      );
+      final ordered = channel('!z:example.invalid', order: 'b', ts: 9);
+      channel('!y:example.invalid', order: 'a', ts: 9, may: false);
+      // Too long to count as an order
+      channel('!x:example.invalid', order: '0' * 51, ts: 9);
+      // A space inside the group is no chat
+      channel(
+        '!w:example.invalid',
+        order: '0',
+        ts: 9,
+      ).setState(space.getState(EventTypes.RoomCreate)!);
+      expect(
+        changeLineChatFor(group, space),
+        ordered,
+        reason: 'by order first, where the line may be posted',
+      );
+      expect(changeLineChatFor(group, general), general, reason: 'a channel');
+      expect(changeLineChatFor(group, null), isNull);
+      final otherSpace = Room(id: '!other:example.invalid', client: client)
+        ..setState(space.getState(EventTypes.RoomCreate)!);
+      expect(
+        changeLineChatFor(group, otherSpace),
+        otherSpace,
+        reason: "only the group's own space",
+      );
+    },
+  );
 }
