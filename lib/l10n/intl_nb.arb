@@ -3697,6 +3697,43 @@
             }
         }
     },
+    "gruppechatPinnedCount": "{count} festet",
+    "@gruppechatPinnedCount": {
+        "type": "String",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "gruppechatPinnedMessages": "Festede meldinger",
+    "@gruppechatPinnedMessages": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatUnpinFromChat": "Løsne fra chat",
+    "@gruppechatUnpinFromChat": {
+        "type": "String",
+        "placeholders": {}
+    },
+    "gruppechatPinnedMessage": "{name} festet en melding",
+    "@gruppechatPinnedMessage": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "gruppechatUnpinnedMessage": "{name} løsnet en melding",
+    "@gruppechatUnpinnedMessage": {
+        "type": "String",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "gruppechatTookGroupPicture": "{name} byttet sitt bilde i gruppen",
     "@gruppechatTookGroupPicture": {
         "type": "String",

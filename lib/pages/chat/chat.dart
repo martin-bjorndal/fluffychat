@@ -28,6 +28,7 @@ import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
 import 'package:fluffychat/gruppechat/message_lifetime.dart';
 import 'package:fluffychat/gruppechat/photo_stacks.dart';
+import 'package:fluffychat/gruppechat/pinned_messages.dart';
 import 'package:fluffychat/gruppechat/polls.dart';
 import 'package:fluffychat/gruppechat/screenshot_block.dart';
 import 'package:fluffychat/gruppechat/sounds.dart';
@@ -1645,29 +1646,21 @@ class ChatController extends State<ChatPageWithRoom>
     );
     if (!mounted) return;
     if (response == OkCancelResult.ok) {
-      final events = room.pinnedEventIds
-        ..removeWhere((oldEvent) => oldEvent == eventId);
+      // Gruppechat: in lib/gruppechat/pinned_messages.dart, for the tests
       showFutureLoadingDialog(
         context: context,
-        future: () => room.setPinnedEvents(events),
+        future: () => unpinMessage(room, eventId),
       );
     }
   }
 
   void pinEvent() {
-    final pinnedEventIds = room.pinnedEventIds;
-    final selectedEventIds = selectedEvents.map((e) => e.eventId).toSet();
-    final unpin =
-        selectedEventIds.length == 1 &&
-        pinnedEventIds.contains(selectedEventIds.single);
-    if (unpin) {
-      pinnedEventIds.removeWhere(selectedEventIds.contains);
-    } else {
-      pinnedEventIds.addAll(selectedEventIds);
-    }
+    // Gruppechat: one message at a time (canPinSelectedEvents), in
+    // lib/gruppechat/pinned_messages.dart for the tests
+    final eventId = selectedEvents.single.eventId;
     showFutureLoadingDialog(
       context: context,
-      future: () => room.setPinnedEvents(pinnedEventIds),
+      future: () => togglePinnedMessage(room, eventId),
     );
   }
 

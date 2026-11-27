@@ -12,6 +12,7 @@ import 'package:fluffychat/gruppechat/chat_colors.dart';
 import 'package:fluffychat/gruppechat/effects.dart';
 import 'package:fluffychat/gruppechat/group_widgets.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
+import 'package:fluffychat/gruppechat/pinned_messages.dart';
 import 'package:fluffychat/gruppechat/poll_banner.dart';
 import 'package:fluffychat/gruppechat/read_positions_widgets.dart';
 import 'package:fluffychat/gruppechat/swipe_back.dart';
@@ -215,13 +216,11 @@ class ChatView extends StatelessWidget {
                             PopupMenuItem(
                               onTap: controller.pinEvent,
                               value: null,
-                              child: Row(
-                                mainAxisSize: .min,
-                                children: [
-                                  const Icon(Icons.push_pin_outlined),
-                                  const SizedBox(width: 12),
-                                  Text(L10n.of(context).pinMessage),
-                                ],
+                              // Gruppechat: "Unpin from room" when pinned
+                              child: PinMenuLabel(
+                                room: controller.room,
+                                eventId:
+                                    controller.selectedEvents.single.eventId,
                               ),
                             ),
                           if (controller.canSaveSelectedEvent)
