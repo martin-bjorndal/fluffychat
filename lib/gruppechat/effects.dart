@@ -71,13 +71,7 @@ const gruppechatFloatingEmojis = [
 /// [gruppechatFloatingEmojis] and nothing else. ❤ counts as ❤️, as some
 /// keyboards leave out the variation selector.
 String? gruppechatFloatingEmojiOf(Event event) {
-  if (event.type != EventTypes.Message ||
-      event.redacted ||
-      event.messageType != MessageTypes.Text ||
-      event.relationshipType == RelationshipTypes.edit ||
-      event.content[gruppechatEffectKey] != null) {
-    return null;
-  }
+  if (!_maySetOff(event, const {MessageTypes.Text})) return null;
   // Longer than three of any of them with spaces: not worth looking at
   if (event.body.length > 40) return null;
   final body = _bare(event.body);
@@ -99,23 +93,63 @@ final _floatingByBare = {
   for (final emoji in gruppechatFloatingEmojis) _bare(emoji): emoji,
 };
 
+/// «Gratulerer» and «gratulere», in any case, as a word of its own. Without
+/// a lookbehind, which Safari before 16.4 can't read.
+final _congratulations = RegExp(
+  r'(^|[^\p{L}])gratulerer?(?!\p{L})',
+  caseSensitive: false,
+  unicode: true,
+);
+
+/// Whether [event] says congratulations, which sets off fireworks over the
+/// chat: a text or /me message, not an edit and without an effect, with the
+/// word «gratulerer» in it, not only in the message it replies to.
+bool gruppechatCongratulatesOf(Event event) =>
+    _maySetOff(event, const {MessageTypes.Text, MessageTypes.Emote}) &&
+    // This runs for every message on each timeline update: the cheap check
+    // first, on the body with the quote of a reply
+    event.body.toLowerCase().contains('gratuler') &&
+    _congratulations.hasMatch(event.calcUnlocalizedBody(hideReply: true));
+
+/// Whether [event] may set off something over the chat its sender didn't
+/// choose: a message of one of [types], not deleted, not an edit and
+/// without an effect.
+bool _maySetOff(Event event, Set<String> types) =>
+    event.type == EventTypes.Message &&
+    !event.redacted &&
+    types.contains(event.messageType) &&
+    event.relationshipType != RelationshipTypes.edit &&
+    event.content[gruppechatEffectKey] == null;
+
 /// What [played] in [gruppechatEffectToPlay] knows a message by: the id
 /// the sender's phone gave it, if it has one, as one's own message has
 /// another id until the server has it.
 String gruppechatPlayKey(Event event) => event.transactionId ?? event.eventId;
 
-/// What plays over the chat for a message: the effect it was sent with, if
-/// any, and the emoji its animation shows; without an effect it is a quiet
-/// burst of a [gruppechatFloatingEmojiOf] emoji.
-typedef GruppechatPlay = ({GruppechatEffect? effect, String emoji});
+/// What plays over the chat for a message: an effect, if any, and the emoji
+/// its animation shows; without an effect it is a burst of a
+/// [gruppechatFloatingEmojiOf] emoji. [chosen] is whether the sender sent
+/// it with the effect, which plays with its sound; what the message's own
+/// words or emojis set off plays quietly.
+typedef GruppechatPlay = ({
+  GruppechatEffect? effect,
+  String emoji,
+  bool chosen,
+});
 
-/// What plays over the chat for [event], if anything.
+/// What plays over the chat for [event], if anything: the effect it was
+/// sent with, a floating emoji, or fireworks for congratulations
+/// ([gruppechatCongratulatesOf]).
 GruppechatPlay? gruppechatPlayOf(Event event) {
   if (gruppechatEffectOf(event) case final effect?) {
-    return (effect: effect, emoji: effect.emoji);
+    return (effect: effect, emoji: effect.emoji, chosen: true);
   }
   if (gruppechatFloatingEmojiOf(event) case final emoji?) {
-    return (effect: null, emoji: emoji);
+    return (effect: null, emoji: emoji, chosen: false);
+  }
+  if (gruppechatCongratulatesOf(event)) {
+    const fireworks = GruppechatEffect.fireworks;
+    return (effect: fireworks, emoji: fireworks.emoji, chosen: false);
   }
   return null;
 }
@@ -172,11 +206,12 @@ String? _mentioned(Room room, String word) =>
     word.isValidMatrixIdStrict() ? word : room.getMention(word);
 
 /// The message in [newestFirst], the chat's timeline, whose effect should
-/// play now: the newest one with an effect or a floating emoji
-/// ([gruppechatPlayOf]) not [played] yet that came in
-/// after the chat opened at [openedAt], or was among the [unreadAtOpen]
-/// newest messages from others when it opened. Of floating emojis only the
-/// newest plays, so a row of hearts floats once. [played] holds
+/// play now: the newest one with something to play ([gruppechatPlayOf])
+/// not [played] yet that came in after the chat opened at [openedAt], or
+/// was among the [unreadAtOpen] newest messages from others when it
+/// opened. Of what the sender did not choose, only the newest floating
+/// emoji and the newest congratulations play, so a row of hearts floats
+/// once and a row of «gratulerer» sets off fireworks once. [played] holds
 /// [gruppechatPlayKey]s.
 Event? gruppechatEffectToPlay(
   List<Event> newestFirst, {
@@ -186,7 +221,7 @@ Event? gruppechatEffectToPlay(
 }) {
   final ownId = newestFirst.firstOrNull?.room.client.userID;
   var fromOthers = 0;
-  var newerFloats = false;
+  final newerUnchosen = <GruppechatEffect?>{};
   for (final event in newestFirst) {
     if (event.type != EventTypes.Message || event.status.isError) continue;
     final mine = event.senderId == ownId;
@@ -197,10 +232,8 @@ Event? gruppechatEffectToPlay(
     if (old && !unread && fromOthers >= unreadAtOpen) break;
     final play = gruppechatPlayOf(event);
     if (play == null) continue;
-    if (play.effect == null) {
-      if (newerFloats) continue;
-      newerFloats = true;
-    }
+    // Floating emojis by null, congratulations by their fireworks
+    if (!play.chosen && !newerUnchosen.add(play.effect)) continue;
     if (played.contains(gruppechatPlayKey(event))) continue;
     return event;
   }
@@ -208,8 +241,8 @@ Event? gruppechatEffectToPlay(
 }
 
 /// Plays [play] ([gruppechatPlayOf]) over whatever is under it, then
-/// removes itself: its effect with the effect's sound, or without one, its
-/// emoji floating up without a sound.
+/// removes itself: its effect, with the effect's sound if the sender chose
+/// it, or without one, its emoji floating up without a sound.
 class GruppechatEffectOverlay extends StatefulWidget {
   final GruppechatPlay play;
   final VoidCallback onDone;
@@ -252,7 +285,9 @@ class _GruppechatEffectOverlayState extends State<GruppechatEffectOverlay>
   @override
   void initState() {
     super.initState();
-    if (_effect case final effect?) GruppechatSounds.play(effect.asset);
+    if (_effect case final effect? when widget.play.chosen) {
+      GruppechatSounds.play(effect.asset);
+    }
   }
 
   @override
@@ -267,7 +302,8 @@ class _GruppechatEffectOverlayState extends State<GruppechatEffectOverlay>
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).disableAnimations) {
-      // Only the sound for those who turned animations off
+      // Only the sound, if the sender chose it, for those who turned
+      // animations off
       return const SizedBox.shrink();
     }
     return IgnorePointer(

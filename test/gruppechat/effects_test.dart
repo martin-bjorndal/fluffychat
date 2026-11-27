@@ -31,13 +31,19 @@ void main() {
   });
 
   testWidgets('an effect plays over the chat, then goes', (tester) async {
-    // Each effect, and an emoji floating up on its own (lib/gruppechat/
-    // effects.dart, gruppechatFloatingEmojiOf)
-    for (final play in [
+    // Each effect, an emoji floating up on its own (lib/gruppechat/
+    // effects.dart, gruppechatFloatingEmojiOf), and the quiet fireworks of
+    // congratulations (gruppechatCongratulatesOf)
+    final sounds = <String>[];
+    GruppechatSounds.onPlay = (asset, _) => sounds.add(asset);
+    addTearDown(() => GruppechatSounds.onPlay = null);
+    for (final play in <GruppechatPlay>[
       for (final effect in GruppechatEffect.values)
-        (effect: effect, emoji: effect.emoji),
-      (effect: null, emoji: '🥰'),
+        (effect: effect, emoji: effect.emoji, chosen: true),
+      (effect: null, emoji: '🥰', chosen: false),
+      (effect: GruppechatEffect.fireworks, emoji: '🎆', chosen: false),
     ]) {
+      sounds.clear();
       var done = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -60,6 +66,8 @@ void main() {
       expect(done, isFalse);
       await tester.pump(const Duration(seconds: 3));
       expect(done, isTrue, reason: play.emoji);
+      // Only an effect the sender chose plays its sound
+      expect(sounds, [if (play.chosen) play.effect!.asset], reason: play.emoji);
     }
   });
 

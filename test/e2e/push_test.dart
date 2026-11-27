@@ -174,6 +174,69 @@ void main() {
       );
     });
 
+    // A group chat outside any group, muted from the chat list, as people
+    // do with busy chats: @alle in it must still wake the phone
+    test('@alle notifies in a muted group chat outside a group', () async {
+      final roomId = await alice.createGroupChat(
+        groupName: 'Klassefest',
+        enableEncryption: true,
+        invite: [bob.userID!, carol.userID!],
+      );
+      final aliceRoom = await joined(alice, roomId);
+      await accept(bob, roomId);
+      final carolRoom = await accept(carol, roomId);
+      await seesMembers(aliceRoom, [bob.userID!, carol.userID!]);
+      await carolRoom.setPushRuleState(PushRuleState.mentionsOnly);
+      addTearDown(() async {
+        await carolRoom.setPushRuleState(PushRuleState.notify);
+        await GruppechatWakeRules(carol).update();
+      });
+      await eventually(
+        'carol sees the group chat muted',
+        () => carolRoom.pushRuleState == PushRuleState.mentionsOnly,
+      );
+      await GruppechatWakeRules(carol).update();
+      await eventually(
+        'carol\'s app knows the wake rule',
+        () =>
+            carol.globalPushRules?.override?.any(
+              (rule) => rule.ruleId == wakeRuleId(roomId),
+            ) ??
+            false,
+      );
+
+      final quietId = await aliceRoom.sendTextEvent('Kven tek med kake?');
+      final quiet = await fetch(await waitForPush(pushkey, quietId!));
+      // Read, so it is the mention check that keeps it quiet
+      expect(quiet?.type, EventTypes.Message);
+      expect(gruppechatShouldNotify(quiet!), isFalse);
+      final eventId = await aliceRoom.sendTextEvent('@Alle festen er i morgon');
+      expect(await notifies(await waitForPush(pushkey, eventId!)), isTrue);
+    });
+
+    test('a muted direct chat gets no wake rule', () async {
+      final (dm, theirs) = await directChat(alice, carol);
+      await theirs.setPushRuleState(PushRuleState.mentionsOnly);
+      // The next test may get the same direct chat
+      addTearDown(() async {
+        await theirs.setPushRuleState(PushRuleState.notify);
+        await eventually(
+          'carol sees the direct chat unmuted',
+          () => theirs.pushRuleState == PushRuleState.notify,
+        );
+      });
+      await eventually(
+        'carol sees the direct chat muted',
+        () => theirs.pushRuleState == PushRuleState.mentionsOnly,
+      );
+      await GruppechatWakeRules(carol).update();
+      final rules = await carol.getPushRules();
+      expect(
+        rules.override?.map((rule) => rule.ruleId),
+        isNot(contains(wakeRuleId(dm.id))),
+      );
+    });
+
     test('a call in a direct chat rings', () async {
       final (dm, _) = await directChat(alice, carol);
       final eventId = await dm.announceCall();

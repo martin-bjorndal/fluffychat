@@ -16,6 +16,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/gruppechat/avatar_letters.dart';
 import 'package:fluffychat/gruppechat/change_notices.dart';
 import 'package:fluffychat/gruppechat/delete_room.dart';
+import 'package:fluffychat/gruppechat/group_mentions.dart';
 import 'package:fluffychat/gruppechat/group_state.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/gruppechat/membership.dart';
@@ -534,6 +535,35 @@ void main() {
         (e) => e.body == '@alle hei',
       );
       expect(forCarol.mentionsAllInChat, isFalse);
+    });
+
+    test('role and @alle tags are marked like a @username', () async {
+      List<String> marked(Room room, String text) => [
+        for (final (start, end) in gruppechatMentionRanges(room, text))
+          text.substring(start, end),
+      ];
+      final carolTimeline = await channel(carol).getTimeline();
+      const text = '@spillkveld og @alle, pizza? Sjå https://example.org/@alle';
+      await channel(alice).sendTextEvent(text);
+      final forCarol = await arrives(
+        carolTimeline,
+        'the tags',
+        (e) => e.body == text,
+      );
+      // Carol isn't in the role, but sees it marked; the link stays whole
+      expect(marked(channel(carol), forCarol.body), ['@spillkveld', '@alle']);
+      expect(marked(channel(carol), 'mail til x@alle.no'), isEmpty);
+
+      final (dm, carolsDm) = await directChat(alice, carol);
+      final dmTimeline = await carolsDm.getTimeline();
+      await dm.sendTextEvent('@alle og @spillkveld');
+      final inDm = await arrives(
+        dmTimeline,
+        'the direct message',
+        (e) => e.body == '@alle og @spillkveld',
+      );
+      // A direct chat has no @alle and no group roles
+      expect(marked(carolsDm, inDm.body), isEmpty);
     });
 
     test('a role can be invited to a channel', () async {
