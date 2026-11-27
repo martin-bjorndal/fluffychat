@@ -536,10 +536,20 @@ class GroupState {
   );
 }
 
-RegExp _mentionPattern(String token) => RegExp(
-  '(?<![A-Za-z0-9_@.:])@${RegExp.escape(token)}(?![A-Za-z0-9_:@-])',
-  caseSensitive: false,
-);
+// Messages on screen match the same few role names over and over; the
+// cache starts over if it grows past what any set of groups needs.
+final Map<String, RegExp> _mentionPatterns = {};
+
+RegExp _mentionPattern(String token) {
+  if (_mentionPatterns.length > 500) _mentionPatterns.clear();
+  return _mentionPatterns.putIfAbsent(
+    token,
+    () => RegExp(
+      '(?<![A-Za-z0-9_@.:])@${RegExp.escape(token)}(?![A-Za-z0-9_:@-])',
+      caseSensitive: false,
+    ),
+  );
+}
 
 /// IDs of the mentionable roles that [text] mentions, as `@id` or `@Name`.
 Set<String> mentionedRoleIds(String text, Iterable<GroupRole> roles) => {
@@ -549,6 +559,38 @@ Set<String> mentionedRoleIds(String text, Iterable<GroupRole> roles) => {
             _mentionPattern(role.name).hasMatch(text)))
       role.id,
 };
+
+/// Where [text] tags a mentionable role (as `@id` or `@Name`) or, when
+/// [everyone], `@alle`: start and end of each tag, in order. The tags are
+/// found as the notifications find them; whether a message notifies also
+/// depends on who sent it and where (see `mentionsAllInChat`). Of two tags
+/// starting at the same place the longer wins, and a tag inside another is
+/// left out.
+List<(int, int)> groupMentionRanges(
+  String text,
+  Iterable<GroupRole> roles, {
+  required bool everyone,
+}) {
+  if (!text.contains('@')) return const [];
+  final found = <(int, int)>[
+    if (everyone)
+      for (final match in _allePattern.allMatches(text))
+        (match.start, match.end),
+    for (final role in roles)
+      if (role.mentionable)
+        for (final pattern in [
+          _mentionPattern(role.id),
+          _mentionPattern(role.name),
+        ])
+          for (final match in pattern.allMatches(text))
+            (match.start, match.end),
+  ]..sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : b.$2 - a.$2);
+  final ranges = <(int, int)>[];
+  for (final range in found) {
+    if (ranges.isEmpty || range.$1 >= ranges.last.$2) ranges.add(range);
+  }
+  return ranges;
+}
 
 /// Whether [text] calls everyone in the chat with `@alle`.
 bool mentionsEveryone(String text) => _allePattern.hasMatch(text);

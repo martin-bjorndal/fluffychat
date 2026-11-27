@@ -171,6 +171,52 @@ void main() {
       expect(mentionsAnyRole('@admins look', roles, {'game-night'}), isFalse);
       expect(mentionsAnyRole('@admins look', roles, {}), isFalse);
     });
+
+    group('where they are in the text', () {
+      List<String> marked(
+        String text, {
+        bool everyone = true,
+        List<GroupRole> among = roles,
+      }) => [
+        for (final (start, end) in groupMentionRanges(
+          text,
+          among,
+          everyone: everyone,
+        ))
+          text.substring(start, end),
+      ];
+
+      test('marks role IDs, role names and @alle', () {
+        expect(marked('@admins og @Game night, @ALLE!'), [
+          '@admins',
+          '@Game night',
+          '@ALLE',
+        ]);
+        expect(marked('pizza @game-night?'), ['@game-night']);
+      });
+
+      test('the same text that notifies, nothing else', () {
+        expect(marked('x@admins.org @adminsfoo @allen admins'), isEmpty);
+        expect(marked('@quiet please'), isEmpty);
+        expect(marked('@admins:example.org'), isEmpty);
+        expect(marked('hei'), isEmpty);
+      });
+
+      test('@alle only where it calls everyone', () {
+        expect(marked('@alle og @admins', everyone: false), ['@admins']);
+      });
+
+      test('the longer of two overlapping mentions wins', () {
+        const overlapping = [
+          GroupRole(id: 'game', name: 'Game'),
+          GroupRole(id: 'game-night', name: 'Game night'),
+        ];
+        expect(marked('@game night og @game', among: overlapping), [
+          '@game night',
+          '@game',
+        ]);
+      });
+    });
   });
 
   group('role IDs', () {

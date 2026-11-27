@@ -7,6 +7,7 @@ import 'package:collection/collection.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
+import 'package:fluffychat/gruppechat/group_mentions.dart';
 import 'package:fluffychat/gruppechat/matrix_group.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/code_highlight_theme.dart';
@@ -173,11 +174,17 @@ class HtmlMessage extends StatelessWidget {
       // Single linebreak nodes between Elements are ignored:
       if (text == '\n') text = '';
 
-      return LinkifySpan(
-        text: text,
-        options: const LinkifyOptions(humanize: false),
-        linkStyle: linkStyle,
-        onOpen: onOpen,
+      // Gruppechat: @role and @alle marked like a @username
+      return gruppechatMentionSpan(
+        room,
+        text,
+        linkColor: linkStyle.color,
+        plain: (text) => LinkifySpan(
+          text: text,
+          options: const LinkifyOptions(humanize: false),
+          linkStyle: linkStyle,
+          onOpen: onOpen,
+        ),
       );
     }
 

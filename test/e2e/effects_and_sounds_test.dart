@@ -8,8 +8,8 @@
 // (lib/gruppechat/effects.dart). alice gives the chat its own notification
 // sound, which her other devices use too, and only she has
 // (lib/gruppechat/sounds.dart). bob also sends gold glitter and Christmas
-// snow. What it looks and sounds like can only be
-// checked on a phone.
+// snow, and congratulates alice, which sets off fireworks. What it looks
+// and sounds like can only be checked on a phone.
 
 @Timeout(Duration(minutes: 3))
 library;
@@ -294,6 +294,77 @@ void main() {
         );
         expect(effect.label(l10n), label);
       }
+    });
+
+    // "Når noen skriver "gratulerer", gjør sånn at det kommer fyverkeri opp
+    // på skjermen" (1.1.48)
+    test('saying «gratulerer» sets off quiet fireworks, once for a row of '
+        'them', () async {
+      final opened = DateTime.now();
+      Future<Event> send(Client from, String text, {Event? inReplyTo}) async {
+        final chat = from == bob ? bobChat : aliceChat;
+        final eventId = await chat.sendTextEvent(text, inReplyTo: inReplyTo);
+        return arrives(
+          aliceTimeline,
+          text,
+          (e) => e.eventId == eventId && e.type == EventTypes.Message,
+        );
+      }
+
+      final congrats = await send(bob, 'Gratulerer med dagen, Alice! 🎂');
+      expect(gruppechatCongratulatesOf(congrats), isTrue);
+      expect(gruppechatPlayOf(congrats), (
+        effect: GruppechatEffect.fireworks,
+        emoji: '🎆',
+        chosen: false,
+      ));
+      // An effect the sender chose plays instead, with its sound
+      expect(gruppechatCongratulatesOf(confetti), isFalse);
+      expect(gruppechatPlayOf(confetti)?.effect, GruppechatEffect.confetti);
+      expect(gruppechatPlayOf(confetti)?.chosen, isTrue);
+
+      // alice thanks bob: the «gratulerer» she replies to sets off nothing
+      final thanks = await send(alice, 'Tusen takk!', inReplyTo: congrats);
+      expect(thanks.body, contains('Gratulerer'));
+      expect(gruppechatCongratulatesOf(thanks), isFalse);
+
+      for (final (text, says) in [
+        ('GRATULERE!!', true),
+        ('gratulerer 🎉', true),
+        ('Takk for gratulasjonane', false),
+        ('Han gratulerte meg', false),
+      ]) {
+        expect(
+          gruppechatCongratulatesOf(await send(bob, text)),
+          says,
+          reason: text,
+        );
+      }
+      final last = await send(bob, 'Gratulerer frå meg òg');
+      final heart = await send(alice, '❤️');
+
+      // Of the row of «gratulerer» only the newest sets off fireworks, and
+      // the heart after it does not take its place
+      final played = <String>{};
+      for (final expected in [heart, last]) {
+        final next = gruppechatEffectToPlay(
+          aliceTimeline.events,
+          played: played,
+          openedAt: opened,
+          unreadAtOpen: 0,
+        );
+        expect(next?.eventId, expected.eventId, reason: expected.body);
+        played.add(gruppechatPlayKey(next!));
+      }
+      expect(
+        gruppechatEffectToPlay(
+          aliceTimeline.events,
+          played: played,
+          openedAt: opened,
+          unreadAtOpen: 0,
+        ),
+        isNull,
+      );
     });
   });
 }
